@@ -1,0 +1,50 @@
+# hush-noise — Overview
+
+hush-noise is a Rust implementation of the [Noise Protocol Framework](https://noiseprotocol.org/) — a specification for building authenticated, forward-secret encrypted channels between two peers. It is the cryptographic transport layer of the hush stack.
+
+## What It Does
+
+hush-noise takes a raw connection — a TCP socket, an in-memory pipe, anything that implements `Read + Write` — and turns it into an encrypted, authenticated channel. After a handshake completes, both sides can send and receive arbitrary byte payloads with the guarantee that:
+
+- The content is encrypted and cannot be read by anyone on the wire.
+- The message has not been tampered with — any modification is detected and rejected.
+- The remote peer is who they claim to be (depending on the handshake pattern).
+- Past traffic cannot be decrypted if session keys are later compromised — forward secrecy.
+
+## Cipher Suite
+
+All sessions use a fixed cipher suite: `X25519_ChaChaPoly_BLAKE2s`.
+
+- **X25519** — Diffie-Hellman key agreement. Produces a shared secret from two keypairs without either side transmitting their private key.
+- **ChaCha20-Poly1305** — Authenticated encryption. Encrypts the payload and produces a 16-byte authentication tag. Any modification to the ciphertext or associated data causes decryption to fail.
+- **BLAKE2s** — Hashing. Used for key derivation (HKDF) and the running handshake hash that binds all handshake messages together.
+
+ChaCha20-Poly1305 was chosen over AES-GCM because it runs in constant time in software — no timing side-channels without hardware AES acceleration. This matters for devices that may not have AES-NI.
+
+## Two Handshake Patterns
+
+hush-noise implements two patterns from the Noise specification:
+
+**`Noise_XX_25519_ChaChaPoly_BLAKE2s`** — mutual authentication. Neither peer has prior knowledge of the other's static key. After the handshake, both sides have verified each other's identity. Used for Receive Sessions between devices and the relay.
+
+**`Noise_NK_25519_ChaChaPoly_BLAKE2s`** — one-way authentication. The Initiator knows the Responder's static key before the handshake begins. The Responder never learns the Initiator's static key — the Initiator is anonymous. Used for Push Sessions, where a device sends blobs to the relay without revealing its identity.
+
+See [XX Pattern](./xx-pattern.md) and [NK Pattern](./nk-pattern.md) for full details on each.
+
+## Spec Compliance
+
+hush-noise is verified against the official [cacophony test vectors](https://github.com/noiseprotocol/noise_wiki/wiki/Test-vectors) for both patterns. These vectors are published by the Noise Protocol authors and encode the exact byte-level output of a correct implementation for fixed input keys and payloads. Passing them proves spec-compliance — not just self-consistency.
+
+## Standalone
+
+hush-noise has no dependency on the rest of the hush stack. It knows nothing about sync groups, relays, envelopes, or devices. It produces encrypted channels. What travels over those channels is the caller's concern.
+
+It can be used independently in any application that needs authenticated, forward-secret transport — with no hush-sync or hush-relay in sight.
+
+## Framing
+
+Every message is prefixed with a 2-byte big-endian length. This is required because Noise encrypts per-message — without framing, a stream receiver cannot determine where one message ends and the next begins. The maximum message size is 65535 bytes, imposed by the 2-byte length prefix and the Noise spec hard cap. Payloads larger than this must be chunked by the caller.
+
+## Platforms
+
+hush-noise is implemented in Rust and compiles to every platform the hush stack targets: macOS, Linux, iOS, and Android. Swift and Kotlin bindings are generated automatically via UniFFI — iOS and Android callers import the same implementation without hand-written FFI glue.
