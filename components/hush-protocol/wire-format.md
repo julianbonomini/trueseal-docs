@@ -1,0 +1,114 @@
+# Wire Format
+
+All hush-protocol messages share a common framing. Every message on the wire is:
+
+```
+[type: u8][len: u32 BE][body: bytes]
+```
+
+- **type** — 1-byte message type tag
+- **len** — 4-byte big-endian unsigned integer, the length of `body` in bytes
+- **body** — zero or more bytes, type-dependent
+
+Minimum message size is 5 bytes (type + len with no body). A parser that receives fewer than 5 bytes must treat the message as malformed.
+
+## Message Types
+
+| Tag | Name | Direction | Body |
+|---|---|---|---|
+| `0x01` | Push | client → relay | `[recipient_pub: 32 bytes][envelope: bytes]` |
+| `0x02` | Deliver | relay → client | `[envelope: bytes]` |
+| `0x03` | Heartbeat | both | empty |
+| `0x04` | Ack | relay → client | empty |
+| `0x05` | Error | relay → client | empty |
+
+Unknown type tags must be treated as malformed and the connection closed.
+
+---
+
+## Push (`0x01`)
+
+Sent by the client to deliver a blob to a recipient device.
+
+**Body layout:**
+```
+[recipient_pub: 32 bytes][envelope: bytes]
+```
+
+- `recipient_pub` — the recipient device's X25519 noise public key. The relay uses this to route the blob to the correct Inbox. It is the only routing information in the push body.
+- `envelope` — the raw serialized protobuf Envelope bytes, as defined by hush-sync. The relay treats this as opaque — it never inspects, modifies, or decrypts the envelope.
+
+A Push body shorter than 32 bytes is malformed. The relay must reject it with an Error frame and must not Ack.
+
+---
+
+## Deliver (`0x02`)
+
+Sent by the relay to deliver a blob to a connected device.
+
+**Body layout:**
+```
+[envelope: bytes]
+```
+
+The body is the raw serialized protobuf Envelope bytes, forwarded verbatim from the Push that stored it. The relay never modifies the envelope between storage and delivery. What the sender sent is exactly what the recipient receives.
+
+---
+
+## Heartbeat (`0x03`)
+
+Sent by either side to keep the connection alive. The receiver must respond with a Heartbeat of its own. Body is always empty.
+
+---
+
+## Ack (`0x04`)
+
+Sent by the relay after a Push is successfully persisted to the Inbox. Body is always empty.
+
+**Ack means:** the envelope has been durably stored and will be delivered to the recipient when they connect. It does not mean the recipient has received it.
+
+**Ack does not mean:** the envelope was delivered to the recipient. The relay may have stored it for later delivery if the recipient is offline.
+
+A client that receives an Ack for a Push may mark that blob as delivered in its local outbox.
+
+---
+
+## Error (`0x05`)
+
+Sent by the relay when a Push is permanently rejected. Body is always empty.
+
+**Error means:** the relay will not store this blob. The client must not retry the same blob — it is a permanent, non-retryable rejection.
+
+**Current rejection reasons:**
+- Push body shorter than 32 bytes (malformed)
+- Envelope exceeds the protocol size limit (see below)
+
+A client that receives an Error must remove the blob from its retry queue. Retrying will produce the same result.
+
+---
+
+## Envelope Size Limit
+
+The protocol defines a maximum envelope size of **1 MiB (1,048,576 bytes)**. This applies to the `envelope` portion of the Push body — the bytes after the 32-byte `recipient_pub`.
+
+Enforcement is two-layered:
+
+**Client-side (hush-sync):** checks before opening a Push Session. An oversized envelope is rejected immediately with a non-retryable error. No NK handshake is opened, no bytes are sent to the relay.
+
+**Relay-side (hush-relay):** checks on receipt as a backstop. Rejects with an Error frame, does not Ack, does not store. This catches bugs in client implementations and future third-party clients that skip the client-side check.
+
+Relay operators may configure a stricter limit. The relay communicates rejection via the Error frame regardless of which limit triggered it.
+
+---
+
+## Session Types
+
+hush-protocol uses two distinct session types, each with a different Noise handshake pattern:
+
+**Push Session** — client opens, sends one or more Push frames, closes. Uses `Noise NK` — the relay authenticates itself to the client, but the client's identity is never revealed. The relay cannot link a Push Session to any device. Short-lived by design.
+
+**Receive Session** — client opens, stays connected. Uses `Noise XX` — mutual authentication. The relay learns the device's stable noise public key and uses it to deliver blobs immediately on arrival. Long-lived by design.
+
+The two session types run on separate TCP listeners. This separation keeps the routing logic clean: Push Sessions are anonymous and stateless; Receive Sessions are identified and stateful.
+
+<!-- TODO: diagram — Push Session flow (NK), Receive Session flow (XX), message exchange for each -->

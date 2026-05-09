@@ -1,6 +1,6 @@
 # Architecture
 
-hush is three independent components with clearly defined responsibilities. Each can be understood, deployed, and replaced in isolation. Together they form a zero-trust sync stack where no single component is a point of failure — or a point of trust.
+hush is three independent components bound together by a shared wire protocol specification. Each component can be understood, deployed, and replaced in isolation. Together they form a zero-trust sync stack where no single component is a point of failure — or a point of trust.
 
 ## Components at a Glance
 
@@ -9,6 +9,8 @@ hush is three independent components with clearly defined responsibilities. Each
 **hush-sync** is the sync engine. It owns device identity, pairing, group membership, envelope construction, addressed encryption, the operation log, and outbox replay. It uses hush-noise for live sessions to the relay. It has no opinion about what the bytes inside a blob mean — that is the caller's domain.
 
 **hush-relay** is the infrastructure. It accepts connections from devices, stores ciphertext blobs addressed to offline recipients, and delivers them when those devices reconnect. It never decrypts anything. It has no concept of groups, users, or relationships between devices.
+
+**hush-protocol** is the wire protocol specification that governs all communication between sync clients and relays. It is pure documentation — no code, no library. It defines wire framing, message types, push body layout, Ack and Error semantics, and the protocol-level envelope size limit. Any client that implements hush-protocol works against any relay that implements hush-protocol.
 
 ## Responsibilities
 
@@ -23,6 +25,7 @@ hush is three independent components with clearly defined responsibilities. Each
 | Operation log and outbox replay | hush-sync |
 | Blob routing and deferred delivery | hush-relay |
 | Blob retention and TTL reaping | hush-relay |
+| Wire protocol specification | hush-protocol |
 
 ## What the Relay Sees
 
@@ -98,5 +101,6 @@ The relay is in the path for step 2 — the joiner addresses the `Pair` message 
 hush-noise, hush-sync, and hush-relay are independently usable:
 
 - **hush-noise** can be used as a standalone Noise Protocol library for any application that needs authenticated encrypted channels — with no dependency on the rest of hush.
-- **hush-relay** is a generic encrypted blob router. Third-party clients can interact with it directly using any Noise XX implementation, without using hush-sync. hush-sync is one opinionated protocol built on the relay, not the only possible one.
-- **hush-sync** can target any relay that speaks the hush-relay protocol — including a self-hosted instance, a community-hosted instance, or any future compatible implementation.
+- **hush-relay** is a generic encrypted blob router. Any client that implements hush-protocol can use it — hush-sync is one implementation, not the only one.
+- **hush-sync** can target any relay that implements hush-protocol — a self-hosted instance, a community instance, or any future compatible implementation.
+- **hush-protocol** is the contract that makes this possible. Relay and client implementations are interchangeable as long as both speak the spec.
