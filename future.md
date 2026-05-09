@@ -1,48 +1,36 @@
 # Future Directions
 
-Speculative ideas that are out of scope for now but worth preserving. None of this is planned. All of it is interesting.
+This document captures the long-term vision for hush — where it could go if the primitive proves itself and the hard problems get solved. Not a roadmap. Not promises. A north star.
+
+---
+
+## The End Goal: The Encrypted Replication Layer Beneath Applications
+
+hush starts as a sync primitive. The end goal is something more fundamental.
+
+Every application that needs to share state across devices or users faces the same problem: how do you replicate data to the right places, with the right access, without a central authority that can be compromised, coerced, or captured? Today the answer is always a server with an ACL system and an identity layer. That server is a liability — it knows who you are, what you're doing, and who you're talking to.
+
+The vision for hush is to make that server unnecessary. Not by removing replication — you still need data to move — but by making the replication layer structurally incapable of knowing what it's replicating or who it's replicating to.
+
+**The target:** selective replication without identity, without ACL systems, without a central authority. A device receives exactly the data it holds a capability for. Capabilities are cryptographic — hold the key, decrypt the blob; don't hold it, the blob is noise. No accounts. No permissions database. No server that can be subpoenaed.
+
+This is an unsolved problem. Everyone who has tried has either introduced a central issuer (UCAN, Macaroons), used group keys that break anonymity (Signal Sender Keys), or punted the problem to the application layer. The combination of fine-grained capability distribution, zero-trust relay, and anonymity — all three together — does not exist as a working primitive today.
+
+If hush solves it, it stops being a library. It becomes infrastructure. The encrypted replication layer beneath applications — sitting below databases, event systems, collaborative tools, agent coordination layers. Anything that moves state between parties who should not have to trust each other.
+
+That is the end goal. Build the primitive. Prove it with real applications. Then go after the unsolved problem.
 
 ---
 
 ## Selective Replication
 
-Today every group member receives every blob. A future primitive could support partial subscriptions — a device receives only the blobs it holds a capability for.
+The architectural step toward the end goal. Today every group member receives every blob — full fan-out. Selective replication means a device receives only the blobs it holds a capability for.
 
 The mechanism maps naturally onto the existing addressed encryption scheme: the recipient key IS the capability. Hold the key, decrypt the blob. Don't hold it, the blob is noise. No identity system, no ACL, no central authority.
 
-The pieces needed:
-- **Object capabilities** — a blob addressed to a sub-key rather than a device key. The device holds that sub-key as a capability grant.
-- **Topic capabilities** — a key that unlocks a class of blobs (a namespace, a channel, a data type). Devices subscribe to a topic by holding its key.
-- **Sub-key distribution** — how does a device receive a new capability without a full pairing ceremony? Needs a composable key distribution mechanism (similar in spirit to UCAN or Macaroons, but without a central issuer).
+What needs to be solved:
+- **Object capabilities** — a blob addressed to a sub-key rather than a device key.
+- **Topic capabilities** — a key that unlocks a class of blobs (a namespace, a data type, an event stream).
+- **Sub-key distribution** — how does a device receive a new capability without a full pairing ceremony, and without a central issuer?
 
-The hard problem is key distribution at granularity finer than group membership. Pairing solves it coarsely today. Fine-grained capability distribution without identity is unsolved at this layer.
-
-**Why this matters:** selective replication without identity or ACL systems is what turns hush from a sync primitive into an encrypted replication layer beneath applications — approaching secure distributed databases, local-first infrastructure, and encrypted event systems. A very strong position if achieved without compromising the anonymity and zero-trust principles.
-
----
-
-## LAN Sync
-
-Direct device-to-device sync on the same network, bypassing the relay entirely. No NAT traversal problems on a LAN — direct connections are trivial. The relay remains the fallback for remote sync.
-
-Requires: local device discovery (mDNS or similar) and a direct connection path using the existing hush-noise session infrastructure.
-
----
-
-## Outbox TTL / Bounded Accumulation
-
-Configurable TTL on outbox entries, or a max outbox size with oldest-first eviction. Prevents indefinite accumulation on the sender's device when a group member goes permanently offline or is lost.
-
-See the open question in the delivery guarantees docs.
-
----
-
-## Short Authentication String (SAS) for Pairing
-
-A visual confirmation step after the QR-based key exchange: both devices display a short code, the user confirms they match. Closes the interception window that exists in the current explicit-accept-only v0 pairing flow.
-
----
-
-## PAKE for Keyboard Pairing
-
-For devices without cameras — headless servers, devices in different rooms — a keyboard-entry pairing path using SPAKE2 or similar. Required if a low-entropy shared secret (e.g. a 6-digit code) is ever used as the pairing mechanism. Cannot be bolted on cosmetically — must be implemented correctly or not at all.
+The last point is the hard one. Pairing solves key distribution coarsely. Fine-grained capability distribution without identity is the research problem.
