@@ -60,3 +60,35 @@ A topic has its own X25519 keypair. Blobs are encrypted with the topic public ke
 **Forward secrecy** — a shared topic key does not provide per-device forward secrecy. Anyone who ever held the key could decrypt everything encrypted to it, including past blobs.
 
 These are known tradeoffs, not blockers. The right time to tackle this is after hush-clip stress-tests the primitive and reveals whether groups-as-capabilities is sufficient for real use cases, or whether topic-level granularity is genuinely needed.
+
+---
+
+## Key Encapsulation: Solving Selective Replication Without New Crypto
+
+A concrete construction that solves selective replication with cryptographic revocation, no identity system, no central server, and no changes to the relay.
+
+**Two-layer encryption:**
+
+**Layer 1 — Content encryption (once per blob):**
+Encrypt the blob with a topic key. One encryption operation, sent to all group members as a standard blob. Cheap — cost does not scale with group size.
+
+**Layer 2 — Key encapsulation (once per member, only on topic key rotation):**
+Wrap the topic key individually for each authorized device using the existing addressed encryption scheme. A device receives the content blob and its wrapped key, decrypts the topic key, then decrypts the blob. Devices without a wrapped key receive ciphertext they cannot read.
+
+**Revocation:** generate a new topic key, wrap it for remaining members only, push it as a new message. The removed device never receives the new wrapped key — cryptographic exclusion without rotating any device keypairs.
+
+**Forward secrecy:** ratchet the topic key periodically, even without membership changes. Each ratchet distributes a new set of wrapped keys to current members. This bounds the compromise window.
+
+**The manifest as the distribution list:** topic key rotation and membership changes are the same operation. On every new Group Manifest version, generate a new topic key and distribute wrapped keys to all current members. The manifest version IS the key epoch.
+
+**What this solves:**
+- Selective decryption without selective delivery — the relay routes everything to everyone, stays blind
+- Cryptographic revocation without device key rotation
+- Composes entirely with existing addressed encryption — no new cryptographic primitives needed
+- The relay is untouched by design — it sees opaque blobs, has no concept of topics, keys, or capabilities
+
+**What remains open:**
+- Past blobs — a removed device already decrypted everything before removal. Ratcheting limits future exposure but doesn't reach back. This is the same fundamental limit as Signal, iMessage, and every E2EE group system.
+- Compromise window — if a device is compromised before removal, the attacker holds the current topic key. Ratcheting bounds the window; it does not eliminate it.
+
+These residual problems are not design flaws — they are known hard limits of any E2EE group system without a central authority. The construction above solves selective replication well enough to be genuinely useful and technically serious.
