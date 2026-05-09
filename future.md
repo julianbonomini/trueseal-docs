@@ -34,3 +34,29 @@ What needs to be solved:
 - **Sub-key distribution** — how does a device receive a new capability without a full pairing ceremony, and without a central issuer?
 
 The last point is the hard one. Pairing solves key distribution coarsely. Fine-grained capability distribution without identity is the research problem.
+
+---
+
+## Broadcast Encryption with Selective Decryption
+
+A concrete mechanism toward selective replication that keeps the relay completely blind.
+
+**The idea:** instead of sending blobs to only the devices that have access (selective delivery), send to everyone but encrypt with a topic key — only devices holding that topic's private key can decrypt. Devices without the key receive ciphertext they cannot read.
+
+A topic has its own X25519 keypair. Blobs are encrypted with the topic public key using the existing addressed encryption scheme. Topic key distribution is just another addressed encryption operation — the granting device sends the topic private key encrypted to the recipient's device key. No central server. No ACL. The capability IS the key.
+
+**Why this is elegant:**
+- The relay remains completely blind — it routes blobs, has no idea who can decrypt what
+- No change to the relay protocol
+- Composes naturally with the existing addressed encryption primitive
+- Groups-as-capabilities still work — a Sync Group is just a topic where every member holds the key
+
+**The hard parts:**
+
+**Revocation** — removing a device's access to a topic requires rotating the topic key and re-distributing to remaining holders. Cooperative revocation (stop sending new blobs encrypted to the old key) is cheap. Cryptographic revocation (rotate, re-distribute) is the same problem as group Destroy Group, just at topic granularity.
+
+**Compromise blast radius** — with device keys, a compromised device exposes only that device's data. With a shared topic key, any device holding the key can decrypt all blobs ever encrypted to it. Compromise is broader.
+
+**Forward secrecy** — a shared topic key does not provide per-device forward secrecy. Anyone who ever held the key could decrypt everything encrypted to it, including past blobs.
+
+These are known tradeoffs, not blockers. The right time to tackle this is after hush-clip stress-tests the primitive and reveals whether groups-as-capabilities is sufficient for real use cases, or whether topic-level granularity is genuinely needed.
