@@ -27,10 +27,12 @@ A Receive Session is long-lived and authenticated. A device opens one and keeps 
 **Flow:**
 1. Device opens TCP connection to the receive listener (default `:7700`)
 2. Noise XX handshake completes — both sides authenticated
-3. Relay flushes any blobs already in the device's Inbox
+3. Relay flushes any blobs already in the device's Inbox — delivers them without deleting
 4. Relay delivers new blobs as they arrive — immediately, without polling
-5. Either side sends `Heartbeat` on idle to prevent NAT/firewall timeout; the other side echoes it
-6. Session stays open until the device disconnects or the connection drops
+5. For each Deliver frame received, the client durably persists the blob then sends a **DeliverAck** with the blob's ID
+6. On receiving a DeliverAck, the relay deletes the blob from the Inbox. If the session drops before a DeliverAck arrives, the blob is re-delivered on the next Receive Session — clients must handle duplicates
+7. Either side sends `Heartbeat` on idle to prevent NAT/firewall timeout; the other side echoes it
+8. Session stays open until the device disconnects or the connection drops
 
 Only one Receive Session per device is expected at a time. The relay allows concurrent sessions for the same key — this can happen briefly during reconnect. Atomic Inbox flushing prevents double-delivery: only one session wins the flush race.
 

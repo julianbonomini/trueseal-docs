@@ -70,15 +70,17 @@ When a device connects to the relay:
 
 1. **Open a Receive Session.** hush-sync opens a Noise XX connection using the device's stable noise keypair. The relay and device mutually authenticate. The relay registers this device as online and begins delivering blobs immediately on arrival.
 
-2. **Relay flushes the Inbox.** All blobs held for this device are delivered over the Receive Session and deleted from the relay.
+2. **Relay delivers Inbox blobs.** All blobs held for this device are delivered over the Receive Session. Blobs are not deleted at this point — deletion is gated on DeliverAck.
 
-3. **Decrypt and verify.** For each received envelope, hush-sync:
+3. **Client sends DeliverAck.** After durably persisting each blob, the client sends a DeliverAck with the blob's ID. The relay deletes the blob on receipt. If the session drops before a DeliverAck arrives, the blob survives and is re-delivered on the next Receive Session — clients must handle duplicates.
+
+4. **Decrypt and verify.** For each received envelope, hush-sync:
    - Decrypts the payload using the device's private key.
    - Extracts `author_pub` from the first 32 bytes of plaintext.
    - Verifies the envelope signature using the extracted `author_pub`.
    - Checks `author_pub` against the current Group Manifest — blobs from devices not in the manifest are discarded.
 
-4. **Fire the callback.** The decrypted, verified payload is delivered to the caller's `on_message` handler. The caller never handles keys, sessions, or verification.
+5. **Fire the callback.** The decrypted, verified payload is delivered to the caller's `on_message` handler. The caller never handles keys, sessions, or verification.
 
 ## Pairing Flow
 

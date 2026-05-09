@@ -17,10 +17,11 @@ Minimum message size is 5 bytes (type + len with no body). A parser that receive
 | Tag | Name | Direction | Body |
 |---|---|---|---|
 | `0x01` | Push | client → relay | `[recipient_pub: 32 bytes][envelope: bytes]` |
-| `0x02` | Deliver | relay → client | `[envelope: bytes]` |
+| `0x02` | Deliver | relay → client | `[blob_id: 8 bytes u64 BE][envelope: bytes]` |
 | `0x03` | Heartbeat | both | empty |
 | `0x04` | Ack | relay → client | empty |
 | `0x05` | Error | relay → client | empty |
+| `0x06` | DeliverAck | client → relay | `[blob_id: 8 bytes u64 BE]` |
 
 Unknown type tags must be treated as malformed and the connection closed.
 
@@ -48,10 +49,13 @@ Sent by the relay to deliver a blob to a connected device.
 
 **Body layout:**
 ```
-[envelope: bytes]
+[blob_id: 8 bytes u64 BE][envelope: bytes]
 ```
 
-The body is the raw serialized protobuf Envelope bytes, forwarded verbatim from the Push that stored it. The relay never modifies the envelope between storage and delivery. What the sender sent is exactly what the recipient receives.
+- `blob_id` — an opaque 8-byte identifier assigned by the relay. The client echoes it back in a DeliverAck frame after durably persisting the blob. The client must strip these 8 bytes before decoding the Envelope.
+- `envelope` — the raw serialized protobuf Envelope bytes. Forwarded verbatim — the relay never modifies it.
+
+The blob is not deleted from the relay's InboxStore at delivery time. It is deleted only after the relay receives a DeliverAck for its `blob_id`. If the session drops before a DeliverAck arrives, the blob will be re-delivered on the next Receive Session. **Clients must handle duplicate delivery — deduplication is the client's responsibility.**
 
 ---
 
@@ -70,6 +74,21 @@ Sent by the relay after a Push is successfully persisted to the Inbox. Body is a
 **Ack does not mean:** the envelope was delivered to the recipient. The relay may have stored it for later delivery if the recipient is offline.
 
 A client that receives an Ack for a Push may mark that blob as delivered in its local outbox.
+
+---
+
+## DeliverAck (`0x06`)
+
+Sent by the client after it has durably persisted a Deliver frame.
+
+**Body layout:**
+```
+[blob_id: 8 bytes u64 BE]
+```
+
+- `blob_id` — the opaque identifier from the corresponding Deliver frame, echoed back verbatim.
+
+On receipt, the relay deletes the blob from the InboxStore. A blob that has not been DeliverAck'd survives session drops and is re-delivered on the next Receive Session.
 
 ---
 

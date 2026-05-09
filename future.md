@@ -92,3 +92,21 @@ Wrap the topic key individually for each authorized device using the existing ad
 - Compromise window — if a device is compromised before removal, the attacker holds the current topic key. Ratcheting bounds the window; it does not eliminate it.
 
 These residual problems are not design flaws — they are known hard limits of any E2EE group system without a central authority. The construction above solves selective replication well enough to be genuinely useful and technically serious.
+
+---
+
+## Multi-Language SDKs
+
+For hush to be usable by any developer — not just Rust developers — the sync primitive needs to be importable in the languages developers actually build with.
+
+**Planned SDKs:**
+
+- **Swift** — via UniFFI bindings generated from the hush-sync Rust core. First-class support for iOS and macOS apps.
+- **Kotlin** — via UniFFI bindings. First-class support for Android apps.
+- **TypeScript** — via WebAssembly. The hush-sync Rust core compiled to WASM, consumed as a TypeScript package. Targets web, Electron, Node, and React Native.
+
+**Why WASM for TypeScript and not a native reimplementation:**
+A native TypeScript reimplementation of hush-sync would need to be kept in sync with the Rust core indefinitely. Protocol divergence becomes a maintenance risk. Compiling the Rust core to WASM guarantees protocol correctness by construction — the same code runs everywhere. Bundle size and startup overhead are acceptable for desktop and server targets. Browser use cases can be evaluated once the WASM path is proven.
+
+**The hosted relay:**
+SDKs are only half the story. Developers who don't want to run their own relay need a hosted instance they can point at. A publicly hosted relay with a published public key removes the last barrier to "import and go" adoption. Self-hosting remains the default for production deployments — the hosted relay is for development and low-trust experimentation.
