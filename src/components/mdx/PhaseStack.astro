@@ -1,0 +1,165 @@
+---
+interface Check {
+  label: string;
+}
+
+interface PhaseCode {
+  lang: string;
+  content: string;
+}
+
+interface Phase {
+  number: string;
+  title: string;
+  description: string;
+  code?: PhaseCode;
+  checks?: Check[];
+}
+
+interface Props {
+  phases: Phase[];
+}
+
+const { phases } = Astro.props;
+---
+
+<div class="phase-stack">
+  {phases.map((phase, i) => (
+    <div class:list={['phase-row', { 'phase-row--last': i === phases.length - 1 }]}>
+
+      <!-- Left column -->
+      <div class="phase-row__label">
+        <span class="phase-row__number">PHASE {phase.number}</span>
+        <span class="phase-row__title">{phase.title}</span>
+      </div>
+
+      <!-- Right column -->
+      <div class="phase-row__content">
+        <p class="phase-row__desc">{phase.description}</p>
+
+        {phase.code && (
+          <div class="phase-row__code">
+            <pre><code>{phase.code.content.trim()}</code></pre>
+          </div>
+        )}
+
+        {phase.checks && phase.checks.length > 0 && (
+          <ul class="phase-row__checks">
+            {phase.checks.map(check => (
+              <li class="phase-check">
+                <span class="material-symbols-outlined">check_box</span>
+                <span>{check.label}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+    </div>
+  ))}
+</div>
+
+<style>
+  .phase-stack {
+    border: 1px solid var(--color-outline-variant);
+    margin-bottom: var(--space-lg);
+  }
+
+  .phase-row {
+    display: grid;
+    grid-template-columns: 1fr 3fr;
+    gap: var(--space-xl);
+    padding: var(--space-xl);
+    border-bottom: 1px solid var(--color-outline-variant);
+  }
+
+  .phase-row--last {
+    border-bottom: none;
+  }
+
+  /* Left column */
+  .phase-row__label {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  .phase-row__number {
+    font-family: var(--font-mono);
+    font-size: var(--text-mono-label-size);
+    font-weight: var(--text-mono-label-weight);
+    letter-spacing: var(--text-mono-label-tracking);
+    text-transform: uppercase;
+    color: var(--color-secondary);
+  }
+
+  .phase-row__title {
+    font-family: var(--font-mono);
+    font-size: var(--text-mono-code-size);
+    font-weight: 700;
+    color: var(--color-on-surface);
+  }
+
+  /* Right column */
+  .phase-row__content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  .phase-row__desc {
+    font-family: var(--font-sans);
+    font-size: var(--text-body-sm-size);
+    line-height: var(--text-body-sm-leading);
+    color: var(--color-on-surface-variant);
+    margin: 0;
+  }
+
+  /* Inline code block */
+  .phase-row__code {
+    border: 1px solid var(--color-outline-variant);
+    background: var(--color-surface-container-lowest);
+    overflow-x: auto;
+  }
+
+  .phase-row__code pre {
+    margin: 0;
+    padding: var(--space-md);
+    background: none;
+    border: none;
+  }
+
+  .phase-row__code code {
+    font-family: var(--font-mono);
+    font-size: var(--text-mono-code-size);
+    line-height: var(--text-mono-code-leading);
+    color: var(--color-on-surface);
+    background: none;
+    border: none;
+    padding: 0;
+  }
+
+  /* Checklist */
+  .phase-row__checks {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    border-left: 2px solid var(--color-outline-variant);
+    padding-left: var(--space-md);
+  }
+
+  .phase-check {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-secondary);
+  }
+
+  .phase-check .material-symbols-outlined {
+    font-size: 14px;
+    color: var(--color-on-surface);
+  }
+</style>

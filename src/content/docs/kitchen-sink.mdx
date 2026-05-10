@@ -1,0 +1,153 @@
+---
+title: Kitchen Sink
+description: Every MDX component rendered in one place for visual testing.
+---
+
+import Callout from '../../components/mdx/Callout.astro';
+import CodeBlock from '../../components/mdx/CodeBlock';
+import NextPage from '../../components/mdx/NextPage.astro';
+import FlowDiagram from '../../components/mdx/FlowDiagram.astro';
+import PhaseStack from '../../components/mdx/PhaseStack.astro';
+
+# Kitchen Sink
+
+Everything in one page. Use this to test components before wiring into real content.
+
+---
+
+## Callouts
+
+<Callout variant="note">
+  This is a **note**. Use it for general supplementary information.
+</Callout>
+
+<Callout variant="tip">
+  This is a **tip**. Use it for helpful shortcuts or recommendations.
+</Callout>
+
+<Callout variant="warning">
+  This is a **warning**. Use it when something could go wrong.
+</Callout>
+
+<Callout variant="danger">
+  This is a **danger**. Use it for irreversible or destructive actions.
+</Callout>
+
+---
+
+## Code Block — single language
+
+<CodeBlock client:load lang="rust" code={`let session = HushSession::create("my-app", relay_url, relay_pub_key).await?;
+session.start_pairing(on_member_request).await?;`} />
+
+## Code Block — multi language tabs
+
+<CodeBlock client:load tabs={[
+  { lang: 'rust', code: `let session = HushSession::create("my-app", relay_url, relay_pub_key).await?;\nsession.start_pairing(on_member_request).await?;` },
+  { lang: 'go', code: `relay := hushrelay.New(hushrelay.Config{\n    ListenAddr: ":8080",\n    StorageDSN: "file:relay.db",\n})\nrelay.Start(ctx)` },
+  { lang: 'bash', code: `cargo add hush-sync\n# or\nbun add @hush/core` },
+]} />
+
+---
+
+## Tables
+
+| Name | Type | Description |
+|---|---|---|
+| `session_id` | `String` | Unique identifier for this session |
+| `relay_url` | `String` | WebSocket URL of the relay |
+| `keypair` | `Keypair` | Device identity keypair, generated on first launch |
+| `timeout_ms` | `Integer?` | Optional timeout. Defaults to `5000` |
+
+---
+
+## Flow Diagram
+
+<FlowDiagram
+  left={{
+    id: "NODE_A",
+    role: "INITIATOR",
+    steps: [
+      { icon: "key", label: "Gen Ephemeral Key" },
+      { icon: "lock_clock", label: "Nonce Timestamp" },
+    ]
+  }}
+  center={{
+    icon: "hub",
+    title: "HUSH RELAY NETWORK",
+    subtitle: "Blind Forwarding",
+    meta: [{ label: "latency", value: "<10ms" }, { label: "drop", value: "0%" }]
+  }}
+  right={{
+    id: "NODE_B",
+    role: "RECEIVER",
+    steps: [
+      { icon: "verified", label: "Verify Signature" },
+      { icon: "vpn_key", label: "Derive Shared Secret" },
+    ]
+  }}
+/>
+
+---
+
+## Phase Stack
+
+<PhaseStack phases={[
+  {
+    number: "01",
+    title: "Handshake",
+    description: "The initial connection requires mutual authentication. Both devices exchange ephemeral public keys encrypted with the relay's static public key.",
+    code: {
+      lang: "json",
+      content: `{
+  "v": "1.2",
+  "type": "HS_INIT",
+  "payload": {
+    "eph_key": "x25519_pub_...",
+    "ts": 1715428912,
+    "sig": "ed25519_sig_..."
+  }
+}`
+    }
+  },
+  {
+    number: "02",
+    title: "Relay Validation",
+    description: "The relay blindly routes the encrypted packet, validating only the outer envelope headers without accessing the inner payload.",
+    checks: [
+      { label: "Header Length Check" },
+      { label: "TTL > 0 Validation" },
+      { label: "Recipient key exists in active sessions" },
+    ]
+  },
+  {
+    number: "03",
+    title: "State Sync",
+    description: "Once the secure tunnel is established, the sender's outbox is flushed. Each envelope is addressed individually to the recipient's noise public key.",
+  }
+]} />
+
+---
+
+## Typography scale
+
+# h1 — Display heading
+
+## h2 — Section heading
+
+### h3 — Subsection heading
+
+#### h4 — Label heading
+
+Regular body paragraph. hush provides composable infrastructure for encrypted sync,
+device identity, and relay delivery without trusting any server or platform.
+
+**Bold text.** _Italic text._ `inline code`. [Link text](#).
+
+> Blockquote — used for pull quotes or notable statements.
+
+---
+
+## Next page
+
+<NextPage href="/docs/introduction" label="Introduction" />

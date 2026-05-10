@@ -1,0 +1,231 @@
+---
+interface Step {
+  icon: string;
+  label: string;
+}
+
+interface NodePanel {
+  id: string;
+  role: string;
+  steps: Step[];
+}
+
+interface CenterPanel {
+  icon: string;
+  title: string;
+  subtitle: string;
+  meta: { label: string; value: string }[];
+}
+
+interface Props {
+  left: NodePanel;
+  center: CenterPanel;
+  right: NodePanel;
+}
+
+const { left, center, right } = Astro.props;
+---
+
+<div class="flow-diagram">
+  <!-- Left node -->
+  <div class="flow-node">
+    <div class="flow-node__header">
+      <span class="flow-node__id">{left.id}</span>
+      <span class="flow-node__role flow-node__role--outline">{left.role}</span>
+    </div>
+    <div class="flow-node__steps">
+      {left.steps.map(step => (
+        <div class="flow-step">
+          <span class="material-symbols-outlined">{step.icon}</span>
+          <span>{step.label}</span>
+        </div>
+      ))}
+    </div>
+    <!-- Arrow -->
+    <div class="flow-arrow flow-arrow--right">
+      <span class="material-symbols-outlined">arrow_forward</span>
+    </div>
+  </div>
+
+  <!-- Center relay -->
+  <div class="flow-relay">
+    <span class="material-symbols-outlined flow-relay__icon">{center.icon}</span>
+    <span class="flow-relay__title">{center.title}</span>
+    <span class="flow-relay__subtitle">{center.subtitle}</span>
+    <div class="flow-relay__divider" />
+    <div class="flow-relay__meta">
+      {center.meta.map(m => (
+        <span>{m.label}: {m.value}</span>
+      ))}
+    </div>
+    <!-- Arrow -->
+    <div class="flow-arrow flow-arrow--right flow-arrow--center">
+      <span class="material-symbols-outlined">arrow_forward</span>
+    </div>
+  </div>
+
+  <!-- Right node -->
+  <div class="flow-node">
+    <div class="flow-node__header">
+      <span class="flow-node__id">{right.id}</span>
+      <span class="flow-node__role flow-node__role--solid">{right.role}</span>
+    </div>
+    <div class="flow-node__steps">
+      {right.steps.map(step => (
+        <div class="flow-step">
+          <span class="material-symbols-outlined">{step.icon}</span>
+          <span>{step.label}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+</div>
+
+<style>
+  .flow-diagram {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    border: 1px solid var(--color-outline-variant);
+    background: var(--color-primary);
+    gap: 1px;
+    margin-bottom: var(--space-lg);
+  }
+
+  /* Node panels */
+  .flow-node {
+    background: var(--color-surface);
+    padding: var(--space-lg);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  .flow-node__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .flow-node__id {
+    font-family: var(--font-mono);
+    font-size: var(--text-mono-code-size);
+    font-weight: 700;
+    color: var(--color-on-surface);
+    letter-spacing: 0.02em;
+  }
+
+  .flow-node__role {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 2px var(--space-sm);
+    border: 1px solid var(--color-primary);
+  }
+
+  .flow-node__role--outline {
+    color: var(--color-on-surface);
+    background: transparent;
+  }
+
+  .flow-node__role--solid {
+    color: var(--color-on-primary);
+    background: var(--color-primary);
+  }
+
+  .flow-node__steps {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .flow-step {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-secondary);
+  }
+
+  .flow-step .material-symbols-outlined {
+    font-size: 16px;
+  }
+
+  /* Center relay panel */
+  .flow-relay {
+    background: var(--color-surface-container-low);
+    padding: var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    gap: var(--space-xs);
+  }
+
+  .flow-relay__icon {
+    font-size: 32px;
+    color: var(--color-on-surface);
+    margin-bottom: var(--space-xs);
+  }
+
+  .flow-relay__title {
+    font-family: var(--font-mono);
+    font-size: var(--text-mono-label-size);
+    font-weight: var(--text-mono-label-weight);
+    letter-spacing: var(--text-mono-label-tracking);
+    text-transform: uppercase;
+    color: var(--color-on-surface);
+  }
+
+  .flow-relay__subtitle {
+    font-family: var(--font-mono);
+    font-size: var(--text-mono-code-size);
+    color: var(--color-secondary);
+  }
+
+  .flow-relay__divider {
+    width: 100%;
+    border-top: 1px dashed var(--color-outline);
+    margin: var(--space-sm) 0;
+  }
+
+  .flow-relay__meta {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-secondary);
+    padding: 0 var(--space-md);
+  }
+
+  /* Arrows */
+  .flow-arrow {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translate(50%, -50%);
+    width: 32px;
+    height: 32px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+  }
+
+  .flow-arrow--center {
+    background: var(--color-surface-container-low);
+  }
+
+  .flow-arrow .material-symbols-outlined {
+    font-size: 18px;
+    color: var(--color-on-surface);
+  }
+</style>

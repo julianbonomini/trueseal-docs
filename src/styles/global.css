@@ -55,8 +55,10 @@ code, kbd, samp {
   line-height: var(--text-headline-lg-leading);
   letter-spacing: var(--text-headline-lg-tracking);
   color: var(--color-on-surface);
-  margin-top: var(--space-xl);
+  margin-top: calc(var(--space-xl) * 1.5);
   margin-bottom: var(--space-md);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--color-outline-variant);
 }
 
 .prose h3 {
@@ -66,6 +68,8 @@ code, kbd, samp {
   color: var(--color-on-surface);
   margin-top: var(--space-xl);
   margin-bottom: var(--space-sm);
+  padding-bottom: var(--space-xs);
+  border-bottom: 1px solid var(--color-surface-container-high);
 }
 
 .prose h4 {
@@ -74,6 +78,11 @@ code, kbd, samp {
   color: var(--color-on-surface);
   margin-top: var(--space-lg);
   margin-bottom: var(--space-xs);
+  font-family: var(--font-mono);
+  font-size: var(--text-mono-label-size);
+  letter-spacing: var(--text-mono-label-tracking);
+  text-transform: uppercase;
+  color: var(--color-secondary);
 }
 
 .prose p {
@@ -177,6 +186,91 @@ code, kbd, samp {
   color: var(--color-on-surface);
 }
 
+/* ─── CodeBlock (React island, global styles) ───────────── */
+.code-block {
+  position: relative;
+  margin-bottom: var(--space-lg);
+  border: 1px solid var(--color-outline-variant);
+}
+
+.code-block__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--color-surface-container-low);
+  border-bottom: 1px solid var(--color-outline-variant);
+  padding: 0 var(--space-xs);
+}
+
+.code-block__tabs {
+  display: flex;
+}
+
+.code-block__tab {
+  font-family: var(--font-mono);
+  font-size: var(--text-mono-label-size);
+  font-weight: var(--text-mono-label-weight);
+  letter-spacing: var(--text-mono-label-tracking);
+  color: var(--color-secondary);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: var(--space-xs) var(--space-md);
+  cursor: pointer;
+  transition: color 0.1s, border-color 0.1s;
+  line-height: 2;
+}
+
+.code-block__tab:hover {
+  color: var(--color-on-surface);
+}
+
+.code-block__tab--active {
+  color: var(--color-on-surface);
+  border-bottom-color: var(--color-primary);
+}
+
+.code-block__copy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--color-outline-variant);
+  background: transparent;
+  color: var(--color-secondary);
+  cursor: pointer;
+  transition: color 0.1s, border-color 0.1s;
+  flex-shrink: 0;
+}
+
+.code-block__copy:hover {
+  color: var(--color-on-surface);
+  border-color: var(--color-primary);
+}
+
+.code-block__copy .material-symbols-outlined {
+  font-size: 14px;
+}
+
+.code-block .code-block__pre {
+  background: var(--color-surface-container-lowest);
+  padding: var(--space-md);
+  overflow-x: auto;
+  margin: 0;
+  border: none;
+}
+
+.code-block .code-block__pre code {
+  font-family: var(--font-mono);
+  font-size: var(--text-mono-code-size);
+  line-height: var(--text-mono-code-leading);
+  color: var(--color-on-surface);
+  background: none;
+  border: none;
+  padding: 0;
+}
+
 /* ─── Utilities ─────────────────────────────────────────── */
 .tech-grid {
   background-size: 24px 24px;
@@ -190,8 +284,7 @@ code, kbd, samp {
   user-select: none;
 }
 
-.theme-toggle {
-  display: flex;
+.theme-toggle {  display: flex;
   align-items: center;
   justify-content: center;
   width: 36px;
