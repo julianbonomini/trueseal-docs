@@ -5,12 +5,13 @@ interface Props {
   description: string;
   href: string;
   active?: boolean;
+  isSpec?: boolean;
 }
 
-const { layer, name, description, href, active = false } = Astro.props;
+const { layer, name, description, href, active = false, isSpec = false } = Astro.props;
 ---
 
-<div class:list={['stack-layer', { 'stack-layer--active': active }]}>
+<div class:list={['stack-layer', { 'stack-layer--active': active, 'stack-layer--spec': isSpec }]}>
   <div class="stack-layer__indicator" />
 
   <div class="stack-layer__id">
@@ -140,7 +141,20 @@ const { layer, name, description, href, active = false } = Astro.props;
     gap: var(--space-sm);
   }
 
-  .stack-layer__link .material-symbols-outlined {
-    font-size: 14px;
+  .stack-layer--spec {
+    background: var(--color-surface-container-low);
+  }
+
+  .stack-layer--spec .stack-layer__name {
+    color: var(--color-secondary);
+  }
+
+  .stack-layer--spec .stack-layer__link {
+    border-bottom-color: var(--color-outline);
+    color: var(--color-secondary);
+  }
+
+  .stack-layer--spec:hover {
+    background: var(--color-surface-container);
   }
 </style>

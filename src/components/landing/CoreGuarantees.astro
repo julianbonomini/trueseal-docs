@@ -15,21 +15,28 @@ const guarantees = [
     title: 'Anonymity',
     icon: 'visibility_off',
     description:
-      'No accounts, no registration, no human identity. A device is a keypair. Push sessions use fresh ephemeral keys — the relay cannot link a push to any device or construct a communication graph.',
+      'No accounts, no registration, no human identity. A device is a keypair. Push sessions use fresh ephemeral keys. The relay server cannot compose a communication graph.',
   },
   {
     number: '03',
+    title: 'Guaranteed Delivery',
+    icon: 'all_inbox',
+    description:
+    'A blob sent will reach every group member eventually, unconditionally. Undelivered blobs are held by the relay and stored in the sender’s outbox until confirmed.',
+  },
+  {
+    number: '04',
     title: 'No Lock-In',
     icon: 'lock_open',
     description:
-      'Any deployed relay instance works. Run your own on any server or use a public instance. The security model is identical regardless of who operates the relay.',
+    'Any relay instance works, self-hosted or public. The hush wire protocol is the only dependency, and it’s an open spec anyone can implement. Wit hush protocol relay is structurally incapable of reading it.',
   },
 ];
 ---
 
 <section class="core-guarantees">
   <div class="core-guarantees__inner">
-    <SectionHeader title="Core Guarantees" subtitle="SYSTEM_CONSTRAINTS" />
+    <SectionHeader title="DESIGN_PRINCIPLES" subtitle="CORE GUARANTEES THAT THE DESIGN IS BASED ON" />
 
     <div class="core-guarantees__grid">
       {guarantees.map(g => <GuaranteeCard {...g} />)}
@@ -59,7 +66,7 @@ const guarantees = [
 
   @media (min-width: 768px) {
     .core-guarantees__grid {
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, 1fr);
     }
   }
 </style>

@@ -1,0 +1,162 @@
+---
+---
+
+<section class="cta-section">
+  <div class="cta-section__inner">
+    <div class="cta-section__content">
+      <p class="cta-section__label">START BUILDING</p>
+      <h2 class="cta-section__headline">
+        Pick your platform.<br />Your data stays yours.
+      </h2>
+      <p class="cta-section__body">
+        hush-sync ships as a native SDK for Go, Swift, and Kotlin.
+        Drop it in and encryption happens before data leaves the device —
+        no server changes, no key management, no trust required.
+      </p>
+      <a href="/docs/sdks" class="cta-section__btn">
+        Browse SDKs
+        <span class="material-symbols-outlined">arrow_forward</span>
+      </a>
+    </div>
+
+    <div class="cta-section__aside tech-grid">
+      <div class="cta-section__aside-inner">
+        <span class="cta-section__aside-label">SUPPORTED PLATFORMS</span>
+        <div class="cta-section__platforms">
+          <span>Go</span>
+          <span>Swift</span>
+          <span>Kotlin</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .cta-section {
+    width: 100%;
+    border-top: 1px solid var(--color-outline-variant);
+    background: var(--color-surface-container-low);
+  }
+
+  .cta-section__inner {
+    max-width: var(--layout-max-width);
+    margin: 0 auto;
+    padding: calc(var(--space-xl) * 2) var(--space-xl);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-xl);
+    align-items: center;
+  }
+
+  @media (min-width: 768px) {
+    .cta-section__inner {
+      grid-template-columns: 3fr 2fr;
+    }
+  }
+
+  .cta-section__content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+
+  .cta-section__label {
+    font-family: var(--font-mono);
+    font-size: var(--text-mono-label-size);
+    font-weight: var(--text-mono-label-weight);
+    letter-spacing: var(--text-mono-label-tracking);
+    color: var(--color-secondary);
+    margin: 0;
+  }
+
+  .cta-section__headline {
+    font-family: var(--font-sans);
+    font-size: var(--text-headline-lg-size);
+    font-weight: var(--text-headline-lg-weight);
+    line-height: var(--text-headline-lg-leading);
+    letter-spacing: var(--text-headline-lg-tracking);
+    color: var(--color-on-surface);
+    margin: 0;
+  }
+
+  .cta-section__body {
+    font-family: var(--font-sans);
+    font-size: var(--text-body-sm-size);
+    line-height: var(--text-body-sm-leading);
+    color: var(--color-on-surface-variant);
+    max-width: 480px;
+    margin: 0;
+  }
+
+  .cta-section__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    font-family: var(--font-mono);
+    font-size: var(--text-mono-label-size);
+    font-weight: var(--text-mono-label-weight);
+    letter-spacing: var(--text-mono-label-tracking);
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: var(--space-sm) var(--space-lg);
+    border: 1px solid var(--color-primary);
+    transition: background 0.1s, color 0.1s;
+    align-self: flex-start;
+  }
+
+  .cta-section__btn:hover {
+    background: var(--color-surface);
+    color: var(--color-primary);
+  }
+
+  .cta-section__btn .material-symbols-outlined {
+    font-size: 16px;
+  }
+
+  /* Aside */
+  .cta-section__aside {
+    border: 1px solid var(--color-outline-variant);
+    background: var(--color-surface-container-lowest);
+    padding: var(--space-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cta-section__aside-inner {
+    border: 1px solid var(--color-outline-variant);
+    background: var(--color-surface);
+    padding: var(--space-xl);
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+    align-items: center;
+    text-align: center;
+  }
+
+  .cta-section__aside-label {
+    font-family: var(--font-mono);
+    font-size: var(--text-mono-label-size);
+    font-weight: var(--text-mono-label-weight);
+    letter-spacing: var(--text-mono-label-tracking);
+    color: var(--color-secondary);
+  }
+
+  .cta-section__platforms {
+    display: flex;
+    gap: var(--space-md);
+  }
+
+  .cta-section__platforms span {
+    font-family: var(--font-mono);
+    font-size: var(--text-mono-code-size);
+    font-weight: 700;
+    color: var(--color-on-surface);
+    border: 1px solid var(--color-outline-variant);
+    padding: var(--space-xs) var(--space-md);
+  }
+</style>

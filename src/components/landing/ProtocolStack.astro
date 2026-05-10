@@ -4,7 +4,15 @@ import StackLayer from './StackLayer.astro';
 
 const layers = [
   {
-    layer: 'L3 // Application',
+    layer: 'OPEN SPEC // WIRE PROTOCOL',
+    name: 'hush-protocol',
+    description:
+    'The wire protocol specification governing all communication between sync clients and relays. Pure documentation, no code, no library. Any client that speaks the spec works against any relay that speaks it.',
+    href: '/docs/components/hush-protocol/overview',
+    active: false,
+  },
+  {
+    layer: 'DEVICE // SYNC ENGINE',
     name: 'hush-sync',
     description:
       'E2EE sync engine. Device pairing, group membership, addressed encryption, and guaranteed outbox replay. Drop it in and your data is encrypted before it leaves the device.',
@@ -12,19 +20,19 @@ const layers = [
     active: false,
   },
   {
-    layer: 'L2 // Transport',
+    layer: 'DEVICE // CRYPTO PRIMITIVE',
+    name: 'hush-noise',
+    description:
+      'Noise Protocol Framework in Rust. Authenticated, forward-secret encrypted channels. The same foundation as WireGuard and Signal.',
+    href: '/docs/components/hush-noise/overview',
+    active: false,
+  },
+  {
+    layer: 'SERVER // TRANSPORT',
     name: 'hush-relay',
     description:
       'Zero-knowledge blob router. Holds ciphertext for offline devices and delivers on reconnect. Self-hostable on any server. Structurally incapable of reading content.',
     href: '/docs/components/hush-relay/overview',
-    active: false,
-  },
-  {
-    layer: 'L1 // Crypto Primitive',
-    name: 'hush-noise',
-    description:
-      'Noise Protocol Framework in Rust. Authenticated, forward-secret encrypted channels — the same foundation as WireGuard and Signal.',
-    href: '/docs/components/hush-noise/overview',
     active: false,
   },
 ];
@@ -32,7 +40,7 @@ const layers = [
 
 <section class="protocol-stack">
   <div class="protocol-stack__inner">
-    <SectionHeader title="Protocol Stack" subtitle="ARCHITECTURE_LAYERS" />
+    <SectionHeader title="Hush_Stack" subtitle="MADE OF COMPOSABLE PRIMITIVES IMPLEMENTING HUSH PROTOCOL" />
 
     <div class="protocol-stack__grid">
       {layers.map(layer => <StackLayer {...layer} />)}

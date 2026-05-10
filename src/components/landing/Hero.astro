@@ -6,15 +6,15 @@ import HeroVisual from './HeroVisual.astro';
 
 <section class="hero">
   <div class="hero__content">
-    <StatusBadge text="SYSTEM_STATE: ONLINE // V2.0.4-STABLE" />
+    <StatusBadge text="// E2EE SYNC MADE EASY //" />
 
     <h1 class="hero__headline">
-      Zero-trust cryptographic primitives for the next web.
+      Private by default,<br />not by promise.
     </h1>
 
     <p class="hero__sub">
-      hush provides composable infrastructure for encrypted sync, device identity,
-      and relay delivery — without trusting any server, without accounts,
+      hush provides composable infrastructure for encrypted sync, device pairing,
+      and relay delivery, all without trusting any server, without accounts,
       and without lock-in.
     </p>
 
@@ -22,8 +22,8 @@ import HeroVisual from './HeroVisual.astro';
       <Button href="/docs/introduction" variant="primary" icon="arrow_forward">
         Read the docs
       </Button>
-      <Button variant="secondary" icon="terminal" iconPosition="left">
-        cargo add hush-sync
+      <Button href="/showcase" variant="secondary" icon="arrow_outward" iconPosition="left">
+        See who's building
       </Button>
     </div>
   </div>
@@ -67,6 +67,7 @@ import HeroVisual from './HeroVisual.astro';
     font-weight: var(--text-display-weight);
     line-height: var(--text-display-leading);
     letter-spacing: var(--text-display-tracking);
+    text-transform: uppercase;
     color: var(--color-on-surface);
   }
 
