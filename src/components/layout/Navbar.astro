@@ -1,0 +1,166 @@
+---
+interface NavLink {
+  label: string;
+  href: string;
+}
+
+interface Props {
+  activeItem?: string;
+}
+
+const { activeItem = 'ecosystem' } = Astro.props;
+
+const links: NavLink[] = [
+  { label: 'Ecosystem', href: '/' },
+  { label: 'Docs',      href: '/docs/introduction' },
+  { label: 'Spec',      href: '/docs/components/hush-protocol/overview' },
+];
+---
+
+<nav class="navbar">
+  <div class="navbar__container">
+  <div class="navbar__left">
+    <a class="navbar__logo" href="/">hush</a>
+    <div class="navbar__links">
+      {links.map(link => (
+        <a
+          href={link.href}
+          class:list={[
+            'navbar__link',
+            { 'navbar__link--active': activeItem === link.label.toLowerCase() },
+          ]}
+        >
+          {link.label.toUpperCase()}
+        </a>
+      ))}
+    </div>
+  </div>
+
+  <div class="navbar__right">
+    <button class="navbar__search">
+      <span class="material-symbols-outlined">search</span>
+      SEARCH DOCS...
+    </button>
+    <a class="navbar__cta" href="/docs/introduction">Connect</a>
+  </div>
+  </div>
+</nav>
+
+<style>
+  .navbar {
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-primary);
+    width: 100%;
+    padding: 0 var(--space-xl);
+    height: 64px;
+    display: flex;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .navbar__container {
+    max-width: var(--layout-max-width);
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .navbar__left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xl);
+  }
+
+  .navbar__logo {
+    font-family: var(--font-sans);
+    font-size: var(--text-headline-md-size);
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    text-transform: uppercase;
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  .navbar__links {
+    display: flex;
+    gap: var(--space-lg);
+  }
+
+  .navbar__link {
+    font-family: var(--font-mono);
+    font-size: var(--text-mono-label-size);
+    font-weight: var(--text-mono-label-weight);
+    letter-spacing: var(--text-mono-label-tracking);
+    color: var(--color-secondary);
+    text-decoration: none;
+    padding-bottom: 2px;
+    transition: color 0.1s;
+  }
+
+  .navbar__link:hover {
+    background: var(--color-surface-container-low);
+    color: var(--color-on-surface);
+  }
+
+  .navbar__link--active {
+    color: var(--color-primary);
+    font-weight: 700;
+    border-bottom: 2px solid var(--color-primary);
+  }
+
+  .navbar__right {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+  }
+
+  .navbar__search {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--color-outline);
+    background: transparent;
+    font-family: var(--font-mono);
+    font-size: var(--text-mono-label-size);
+    font-weight: var(--text-mono-label-weight);
+    letter-spacing: var(--text-mono-label-tracking);
+    color: var(--color-secondary);
+    cursor: pointer;
+    transition: border-color 0.1s, color 0.1s;
+    line-height: 1;
+  }
+
+  .navbar__search:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+
+  .navbar__search .material-symbols-outlined {
+    font-size: 16px;
+  }
+
+  .navbar__cta {
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    font-family: var(--font-mono);
+    font-size: var(--text-mono-label-size);
+    font-weight: var(--text-mono-label-weight);
+    letter-spacing: var(--text-mono-label-tracking);
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: var(--space-sm) var(--space-lg);
+    border: 1px solid var(--color-primary);
+    line-height: 1;
+    transition: background 0.1s, color 0.1s;
+  }
+
+  .navbar__cta:hover {
+    background: var(--color-surface);
+    color: var(--color-primary);
+  }
+</style>

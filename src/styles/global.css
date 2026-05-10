@@ -174,3 +174,16 @@ code, kbd, samp {
   font-weight: 600;
   color: var(--color-on-surface);
 }
+
+/* ─── Utilities ─────────────────────────────────────────── */
+.tech-grid {
+  background-size: 24px 24px;
+  background-image:
+    linear-gradient(to right, var(--color-outline-variant) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-outline-variant) 1px, transparent 1px);
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  user-select: none;
+}

@@ -1,0 +1,68 @@
+---
+const links = [
+  { label: 'Security Policy', href: '#' },
+  { label: 'Audit Reports',   href: '#' },
+  { label: 'GitHub',          href: 'https://github.com' },
+  { label: 'Whitepaper',      href: '/docs/introduction' },
+];
+---
+
+<footer class="footer">
+  <div class="footer__copy">
+    © 2024 HUSH ZERO-TRUST ECOSYSTEM. ALL RIGHTS RESERVED.
+  </div>
+  <nav class="footer__links">
+    {links.map(link => (
+      <a href={link.href} class="footer__link">{link.label}</a>
+    ))}
+  </nav>
+</footer>
+
+<style>
+  .footer {
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-primary);
+    width: 100%;
+    padding: var(--space-xl) var(--space-xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+    align-items: center;
+  }
+
+  @media (min-width: 768px) {
+    .footer {
+      flex-direction: row;
+      justify-content: space-between;
+    }
+  }
+
+  .footer__copy {
+    font-family: var(--font-mono);
+    font-size: var(--text-mono-label-size);
+    font-weight: var(--text-mono-label-weight);
+    letter-spacing: var(--text-mono-label-tracking);
+    color: var(--color-on-surface);
+  }
+
+  .footer__links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-lg);
+  }
+
+  .footer__link {
+    font-family: var(--font-mono);
+    font-size: var(--text-mono-label-size);
+    font-weight: var(--text-mono-label-weight);
+    letter-spacing: var(--text-mono-label-tracking);
+    color: var(--color-secondary);
+    text-decoration: none;
+    transition: color 0.1s;
+  }
+
+  .footer__link:hover {
+    color: var(--color-primary);
+  }
+</style>

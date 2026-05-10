@@ -1,0 +1,63 @@
+---
+interface Props {
+  variant?: 'primary' | 'secondary';
+  href?: string;
+  icon?: string;
+  iconPosition?: 'left' | 'right';
+}
+
+const { variant = 'primary', href, icon, iconPosition = 'right' } = Astro.props;
+const Tag = href ? 'a' : 'button';
+---
+
+<Tag href={href} class:list={['btn', `btn--${variant}`]}>
+  {icon && iconPosition === 'left' && (
+    <span class="material-symbols-outlined">{icon}</span>
+  )}
+  <slot />
+  {icon && iconPosition === 'right' && (
+    <span class="material-symbols-outlined">{icon}</span>
+  )}
+</Tag>
+
+<style>
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-xl);
+    font-family: var(--font-mono);
+    font-size: var(--text-mono-label-size);
+    font-weight: var(--text-mono-label-weight);
+    letter-spacing: var(--text-mono-label-tracking);
+    text-transform: uppercase;
+    text-decoration: none;
+    border: 1px solid var(--color-primary);
+    cursor: pointer;
+    transition: background-color 0.1s, color 0.1s;
+    white-space: nowrap;
+  }
+
+  .btn .material-symbols-outlined {
+    font-size: 14px;
+  }
+
+  .btn--primary {
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+  }
+
+  .btn--primary:hover {
+    background: var(--color-surface);
+    color: var(--color-primary);
+  }
+
+  .btn--secondary {
+    background: var(--color-surface);
+    color: var(--color-primary);
+  }
+
+  .btn--secondary:hover {
+    background: var(--color-surface-container-low);
+  }
+</style>

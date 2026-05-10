@@ -1,12 +1,18 @@
 ---
 import LandingLayout from '../layouts/LandingLayout.astro';
+import Navbar from '../components/layout/Navbar.astro';
+import Footer from '../components/layout/Footer.astro';
+import Hero from '../components/landing/Hero.astro';
+import ProtocolStack from '../components/landing/ProtocolStack.astro';
+import CoreGuarantees from '../components/landing/CoreGuarantees.astro';
 ---
 
 <LandingLayout>
-  <main style="padding: 4rem 2rem; max-width: 640px; margin: 0 auto;">
-    <h1>hush</h1>
-    <p>Zero-trust sync primitive for developers.</p>
-    <br />
-    <a href="/docs/introduction">Read the docs →</a>
+  <Navbar activeItem="ecosystem" />
+  <main>
+    <Hero />
+    <ProtocolStack />
+    <CoreGuarantees />
   </main>
+  <Footer />
 </LandingLayout>
