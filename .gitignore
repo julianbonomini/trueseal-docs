@@ -2,3 +2,8 @@
 .DS_Store
 .AppleDouble
 .LSOverride
+
+# Astro
+dist/
+.astro/
+node_modules/

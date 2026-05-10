@@ -17,7 +17,7 @@ hush exists to close that gap.
 hush is a stack of three independent components that together give any developer zero-trust sync as a drop-in primitive:
 
 
-![instro-diagram](./assets/introduction_diagram.png)
+![intro-diagram](/assets/introduction_diagram.png)
 
 **hush-noise** implements the [Noise Protocol Framework](https://noiseprotocol.org/) in Rust — the same foundation WireGuard and Signal are built on. It provides authenticated, forward-secret encrypted channels between devices. Standalone, spec-verified, no dependencies on the rest of the hush stack.
 

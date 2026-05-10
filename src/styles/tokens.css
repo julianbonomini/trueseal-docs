@@ -1,0 +1,104 @@
+/*
+ * Design tokens — generated from Figma via Token Studio + Style Dictionary
+ * These are placeholder values. Replace once Figma tokens are exported.
+ *
+ * Convention:
+ *   --color-*     Color system
+ *   --font-*      Font families
+ *   --text-*      Type scale (font-size)
+ *   --space-*     Spacing scale
+ *   --radius-*    Border radius
+ *   --shadow-*    Box shadow
+ */
+
+/* ─── Light theme (default) ─────────────────────────────── */
+:root,
+[data-theme='light'] {
+  /* Surface */
+  --color-bg-primary:    #ffffff;
+  --color-bg-secondary:  #f6f6f6;
+  --color-bg-tertiary:   #efefef;
+
+  /* Text */
+  --color-text-primary:   #111111;
+  --color-text-secondary: #555555;
+  --color-text-muted:     #999999;
+
+  /* Border */
+  --color-border:         #e4e4e4;
+  --color-border-subtle:  #f0f0f0;
+
+  /* Accent */
+  --color-accent:         #111111;
+  --color-accent-hover:   #333333;
+
+  /* Code */
+  --color-code-bg:        #f4f4f4;
+
+  /* Typography */
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+
+  /* Type scale */
+  --text-xs:   0.75rem;   /*  12px */
+  --text-sm:   0.875rem;  /*  14px */
+  --text-base: 1rem;      /*  16px */
+  --text-lg:   1.125rem;  /*  18px */
+  --text-xl:   1.25rem;   /*  20px */
+  --text-2xl:  1.5rem;    /*  24px */
+  --text-3xl:  1.875rem;  /*  30px */
+  --text-4xl:  2.25rem;   /*  36px */
+  --text-5xl:  3rem;      /*  48px */
+
+  /* Spacing */
+  --space-1:  0.25rem;   /*  4px */
+  --space-2:  0.5rem;    /*  8px */
+  --space-3:  0.75rem;   /* 12px */
+  --space-4:  1rem;      /* 16px */
+  --space-6:  1.5rem;    /* 24px */
+  --space-8:  2rem;      /* 32px */
+  --space-12: 3rem;      /* 48px */
+  --space-16: 4rem;      /* 64px */
+  --space-24: 6rem;      /* 96px */
+
+  /* Radius */
+  --radius-sm:   4px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-full: 9999px;
+
+  /* Shadow */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.07);
+  --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.09);
+}
+
+/* ─── Dark theme ─────────────────────────────────────────── */
+[data-theme='dark'] {
+  /* Surface */
+  --color-bg-primary:    #0d0d0d;
+  --color-bg-secondary:  #161616;
+  --color-bg-tertiary:   #1e1e1e;
+
+  /* Text */
+  --color-text-primary:   #f0f0f0;
+  --color-text-secondary: #a0a0a0;
+  --color-text-muted:     #555555;
+
+  /* Border */
+  --color-border:        #2a2a2a;
+  --color-border-subtle: #1e1e1e;
+
+  /* Accent */
+  --color-accent:        #f0f0f0;
+  --color-accent-hover:  #cccccc;
+
+  /* Code */
+  --color-code-bg:       #1a1a1a;
+
+  /* Shadow */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 12px 24px rgba(0, 0, 0, 0.6);
+}
