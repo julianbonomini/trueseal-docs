@@ -1,8 +1,8 @@
 # Noise Protocol Primer
 
-The Noise Protocol Framework is a specification for building secure channel protocols. WireGuard is built on it. Signal uses it. It defines a small set of primitives and rules for combining them into a handshake — a short exchange of messages that establishes a shared secret between two peers, after which they can communicate securely.
+The Noise Protocol Framework is a specification for building secure channel protocols. WireGuard is built on it. Signal uses it. hush-noise wraps [snow](https://github.com/mcginty/snow), a Rust implementation of the spec.
 
-This page explains what Noise is, why it exists, and how it works internally — without assuming prior knowledge of cryptographic protocols.
+This page explains what Noise is and how it works — without assuming prior knowledge of cryptographic protocols.
 
 ## Why Not TLS?
 

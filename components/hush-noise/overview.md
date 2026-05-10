@@ -1,6 +1,6 @@
 # hush-noise — Overview
 
-hush-noise is a Rust implementation of the [Noise Protocol Framework](https://noiseprotocol.org/) — a specification for building authenticated, forward-secret encrypted channels between two peers. It is the cryptographic transport layer of the hush stack.
+hush-noise is a Rust wrapper around [snow](https://github.com/mcginty/snow) — a well-tested Noise Protocol implementation — exposing the two handshake patterns used by the hush stack. It is the cryptographic transport layer of hush.
 
 ## What It Does
 
@@ -33,7 +33,7 @@ See [XX Pattern](./xx-pattern.md) and [NK Pattern](./nk-pattern.md) for full det
 
 ## Spec Compliance
 
-hush-noise is verified against the official [cacophony test vectors](https://github.com/noiseprotocol/noise_wiki/wiki/Test-vectors) for both patterns. These vectors are published by the Noise Protocol authors and encode the exact byte-level output of a correct implementation for fixed input keys and payloads. Passing them proves spec-compliance — not just self-consistency.
+snow is verified against the official [cacophony test vectors](https://github.com/noiseprotocol/noise_wiki/wiki/Test-vectors). These vectors are published by the Noise Protocol authors and encode the exact byte-level output of a correct implementation for fixed input keys and payloads. hush-noise inherits this compliance by wrapping snow.
 
 ## Standalone
 
