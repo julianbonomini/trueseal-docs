@@ -187,3 +187,25 @@ code, kbd, samp {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
   user-select: none;
 }
+
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--color-outline);
+  background: transparent;
+  color: var(--color-secondary);
+  cursor: pointer;
+  transition: border-color 0.1s, color 0.1s;
+}
+
+.theme-toggle:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.theme-toggle .material-symbols-outlined {
+  font-size: 18px;
+}

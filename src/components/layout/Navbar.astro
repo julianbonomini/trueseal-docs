@@ -1,4 +1,6 @@
 ---
+import ThemeToggle from '../ui/ThemeToggle';
+
 interface NavLink {
   label: string;
   href: string;
@@ -37,6 +39,7 @@ const links: NavLink[] = [
   </div>
 
   <div class="navbar__right">
+    <ThemeToggle client:load />
     <button class="navbar__search">
       <span class="material-symbols-outlined">search</span>
       SEARCH DOCS...
