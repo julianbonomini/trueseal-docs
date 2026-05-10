@@ -1,0 +1,217 @@
+---
+import { docsNav } from '../../config/nav';
+
+const currentPath = Astro.url.pathname;
+---
+
+<aside class="docs-sidebar">
+  <!-- Brand block -->
+  <div class="sidebar-brand">
+    <div class="sidebar-brand__icon">
+      <span class="material-symbols-outlined">lock</span>
+    </div>
+    <div>
+      <div class="sidebar-brand__name">HUSH_CORE</div>
+      <div class="sidebar-brand__version">v1.2.4-stable</div>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <nav class="sidebar-nav">
+    {docsNav.map(section => (
+      <div class="sidebar-section">
+        <span class="sidebar-section__label">{section.title}</span>
+        {section.items.map(item => {
+          const href = `/docs/${item.slug}`;
+          const active = currentPath === href;
+          return (
+            <a
+              href={href}
+              class:list={['sidebar-link', { 'sidebar-link--active': active }]}
+            >
+              <span class="material-symbols-outlined">{item.icon}</span>
+              {item.title}
+            </a>
+          );
+        })}
+      </div>
+    ))}
+  </nav>
+
+  <!-- Bottom actions -->
+  <div class="sidebar-footer">
+    <div class="sidebar-footer__divider" />
+    <a href="#" class="sidebar-download">
+      <span class="material-symbols-outlined">download</span>
+      Download SDK
+    </a>
+    <a href="#" class="sidebar-link sidebar-link--muted">
+      <span class="material-symbols-outlined">settings</span>
+      Settings
+    </a>
+    <a href="#" class="sidebar-link sidebar-link--muted">
+      <span class="material-symbols-outlined">contact_support</span>
+      Support
+    </a>
+  </div>
+</aside>
+
+<style>
+  .docs-sidebar {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    border-right: 1px solid var(--color-outline-variant);
+    background: var(--color-surface-container-low);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Brand */
+  .sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-lg) var(--space-lg);
+    border-bottom: 1px solid var(--color-outline-variant);
+    flex-shrink: 0;
+  }
+
+  .sidebar-brand__icon {
+    width: 32px;
+    height: 32px;
+    background: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .sidebar-brand__icon .material-symbols-outlined {
+    font-size: 18px;
+    color: var(--color-on-primary);
+    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+
+  .sidebar-brand__name {
+    font-family: var(--font-mono);
+    font-size: var(--text-mono-code-size);
+    font-weight: 700;
+    color: var(--color-on-surface);
+    letter-spacing: 0.02em;
+  }
+
+  .sidebar-brand__version {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-secondary);
+    margin-top: 2px;
+  }
+
+  /* Nav */
+  .sidebar-nav {
+    flex: 1;
+    padding: var(--space-lg) var(--space-md);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+
+  .sidebar-section {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .sidebar-section__label {
+    font-family: var(--font-mono);
+    font-size: var(--text-mono-label-size);
+    font-weight: var(--text-mono-label-weight);
+    letter-spacing: var(--text-mono-label-tracking);
+    text-transform: uppercase;
+    color: var(--color-outline);
+    padding: var(--space-xs) var(--space-md);
+    margin-bottom: var(--space-xs);
+  }
+
+  .sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-sm) var(--space-md);
+    font-family: var(--font-mono);
+    font-size: var(--text-mono-label-size);
+    font-weight: var(--text-mono-label-weight);
+    letter-spacing: var(--text-mono-label-tracking);
+    color: var(--color-secondary);
+    text-decoration: none;
+    transition: background 0.1s, color 0.1s;
+  }
+
+  .sidebar-link .material-symbols-outlined {
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .sidebar-link:hover {
+    background: var(--color-surface-container-high);
+    color: var(--color-on-surface);
+  }
+
+  .sidebar-link--active {
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+  }
+
+  .sidebar-link--active:hover {
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+  }
+
+  .sidebar-link--muted {
+    font-size: var(--text-mono-label-size);
+  }
+
+  /* Footer */
+  .sidebar-footer {
+    flex-shrink: 0;
+    padding: var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .sidebar-footer__divider {
+    border-top: 1px solid var(--color-outline-variant);
+    margin-bottom: var(--space-sm);
+  }
+
+  .sidebar-download {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    margin-bottom: var(--space-sm);
+    border: 1px solid var(--color-primary);
+    background: var(--color-surface);
+    color: var(--color-primary);
+    font-family: var(--font-mono);
+    font-size: var(--text-mono-label-size);
+    font-weight: var(--text-mono-label-weight);
+    letter-spacing: var(--text-mono-label-tracking);
+    text-decoration: none;
+    transition: background 0.1s, color 0.1s;
+    text-transform: uppercase;
+  }
+
+  .sidebar-download:hover {
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+  }
+
+  .sidebar-download .material-symbols-outlined {
+    font-size: 16px;
+  }
+</style>

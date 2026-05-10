@@ -20,7 +20,6 @@ const links: NavLink[] = [
 ---
 
 <nav class="navbar">
-  <div class="navbar__container">
   <div class="navbar__left">
     <a class="navbar__logo" href="/">hush</a>
     <div class="navbar__links">
@@ -46,7 +45,6 @@ const links: NavLink[] = [
     </button>
     <a class="navbar__cta" href="/docs/introduction">Connect</a>
   </div>
-  </div>
 </nav>
 
 <style>
@@ -57,19 +55,11 @@ const links: NavLink[] = [
     padding: 0 var(--space-xl);
     height: 64px;
     display: flex;
+    justify-content: space-between;
     align-items: center;
     position: sticky;
     top: 0;
     z-index: 50;
-  }
-
-  .navbar__container {
-    max-width: var(--layout-max-width);
-    width: 100%;
-    margin: 0 auto;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
   }
 
   .navbar__left {
