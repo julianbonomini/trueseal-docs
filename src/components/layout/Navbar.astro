@@ -156,4 +156,19 @@ const links: NavLink[] = [
     background: var(--color-surface);
     color: var(--color-primary);
   }
+
+  @media (max-width: 640px) {
+    .navbar {
+      padding: 0 var(--space-md);
+    }
+
+    .navbar__search,
+    .navbar__cta {
+      display: none;
+    }
+
+    .navbar__links {
+      gap: var(--space-md);
+    }
+  }
 </style>

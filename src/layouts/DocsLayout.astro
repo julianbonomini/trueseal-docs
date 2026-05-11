@@ -25,16 +25,27 @@ const hasRightRail = Astro.slots.has('right-rail');
 <BaseLayout title={title} description={description}>
   <Navbar activeItem="docs" />
 
-  <div class="docs-shell">
+  <div class="docs-shell" id="docs-shell">
     <div class="docs-sidebar-wrapper">
       <DocsSidebar />
     </div>
+
+    <!-- Mobile backdrop -->
+    <div class="docs-backdrop" id="docs-backdrop"></div>
 
     <div class="docs-main">
       <div class:list={['docs-inner', { 'docs-inner--with-rail': hasRightRail }]}>
 
         <!-- Centre column -->
         <div class="docs-content">
+
+          <!-- Mobile menu bar -->
+          <div class="docs-mobile-bar">
+            <button class="docs-menu-btn" id="docs-menu-btn" aria-label="Open navigation">
+              <span class="material-symbols-outlined">menu</span>
+              MENU
+            </button>
+          </div>
 
           <!-- Breadcrumb -->
           <nav class="docs-breadcrumb">
@@ -148,4 +159,83 @@ const hasRightRail = Astro.slots.has('right-rail');
     overflow-y: auto;
     background: var(--color-surface-container-lowest);
   }
+
+  /* ─── Mobile ─────────────────────────────────────────── */
+  .docs-mobile-bar {
+    display: none;
+  }
+
+  .docs-backdrop {
+    display: none;
+  }
+
+  @media (max-width: 767px) {
+    .docs-sidebar-wrapper {
+      position: fixed;
+      left: -288px;
+      top: 64px;
+      height: calc(100vh - 64px);
+      transition: left 0.2s ease;
+      z-index: 40;
+      border-right: 1px solid var(--color-primary);
+    }
+
+    .docs-shell--open .docs-sidebar-wrapper {
+      left: 0;
+    }
+
+    .docs-backdrop {
+      display: block;
+      position: fixed;
+      inset: 0;
+      background: transparent;
+      z-index: 39;
+      pointer-events: none;
+    }
+
+    .docs-shell--open .docs-backdrop {
+      background: rgba(0, 0, 0, 0.4);
+      pointer-events: all;
+    }
+
+    .docs-mobile-bar {
+      display: flex;
+      margin-bottom: var(--space-lg);
+    }
+
+    .docs-menu-btn {
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+      font-family: var(--font-mono);
+      font-size: var(--text-mono-label-size);
+      font-weight: var(--text-mono-label-weight);
+      letter-spacing: var(--text-mono-label-tracking);
+      color: var(--color-secondary);
+      background: transparent;
+      border: 1px solid var(--color-outline-variant);
+      padding: var(--space-xs) var(--space-md);
+      cursor: pointer;
+    }
+
+    .docs-menu-btn .material-symbols-outlined {
+      font-size: 16px;
+    }
+
+    .docs-content {
+      padding: var(--space-lg) var(--space-md);
+    }
+  }
 </style>
+
+<script>
+  const shell = document.getElementById('docs-shell');
+  const btn = document.getElementById('docs-menu-btn');
+  const backdrop = document.getElementById('docs-backdrop');
+
+  function open() { shell?.classList.add('docs-shell--open'); }
+  function close() { shell?.classList.remove('docs-shell--open'); }
+
+  btn?.addEventListener('click', open);
+  backdrop?.addEventListener('click', close);
+</script>
