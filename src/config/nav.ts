@@ -36,9 +36,7 @@ export const docsNav: NavSection[] = [
     title: 'Guides',
     icon: 'map',
     items: [
-      { title: 'Getting Started',      slug: 'guides/getting-started',    icon: 'rocket_launch' },
       { title: 'Build on hush-sync',   slug: 'guides/build-on-hush-sync', icon: 'build' },
-      { title: 'Self-host the Relay',  slug: 'guides/self-host-relay',    icon: 'dns' },
     ],
   },
   {
@@ -55,19 +53,17 @@ export const docsNav: NavSection[] = [
     title: 'Reference',
     icon: 'terminal',
     items: [
-      { title: 'API',          slug: 'reference/api',          icon: 'terminal' },
-      { title: 'Threat Model', slug: 'reference/threat-model', icon: 'security' },
-      { title: 'Wire Format',  slug: 'reference/wire-format',  icon: 'cable' },
+      { title: 'Wire Format', slug: 'components/hush-protocol/wire-format', icon: 'cable' },
+      { title: 'Swift SDK',   slug: 'sdks/swift',                           icon: 'phone_iphone' },
     ],
   },
   {
     title: 'More',
     icon: 'more_horiz',
     items: [
-      { title: 'SDKs',             slug: 'sdks',         icon: 'code' },
-      { title: 'Swift SDK',        slug: 'sdks/swift',   icon: 'phone_iphone' },
-      { title: 'Future Directions',slug: 'future',       icon: 'explore' },
-      { title: 'License',          slug: 'license',      icon: 'gavel' },
+      { title: 'SDKs',              slug: 'sdks',    icon: 'code' },
+      { title: 'Future Directions', slug: 'future',  icon: 'explore' },
+      { title: 'License',           slug: 'license', icon: 'gavel' },
     ],
   },
 ];
