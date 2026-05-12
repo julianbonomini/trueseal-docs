@@ -15,9 +15,9 @@ export const docsNav: NavSection[] = [
     title: 'Getting Started',
     icon: 'info',
     items: [
-      { title: 'Introduction',          slug: 'introduction',           icon: 'info' },
-      { title: 'Architecture',          slug: 'architecture',           icon: 'account_tree' },
-      { title: 'Principles & Boundaries', slug: 'principles-and-boundaries', icon: 'balance' },
+      { title: 'Introduction',            slug: 'introduction',               icon: 'info' },
+      { title: 'Principles & Boundaries', slug: 'principles-and-boundaries',   icon: 'balance' },
+      { title: 'Architecture',            slug: 'architecture',               icon: 'account_tree' },
     ],
   },
   {
