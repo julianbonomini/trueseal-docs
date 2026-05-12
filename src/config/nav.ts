@@ -64,9 +64,10 @@ export const docsNav: NavSection[] = [
     title: 'More',
     icon: 'more_horiz',
     items: [
-      { title: 'SDKs',             slug: 'sdks',    icon: 'code' },
-      { title: 'Future Directions',slug: 'future',  icon: 'explore' },
-      { title: 'License',          slug: 'license', icon: 'gavel' },
+      { title: 'SDKs',             slug: 'sdks',         icon: 'code' },
+      { title: 'Swift SDK',        slug: 'sdks/swift',   icon: 'phone_iphone' },
+      { title: 'Future Directions',slug: 'future',       icon: 'explore' },
+      { title: 'License',          slug: 'license',      icon: 'gavel' },
     ],
   },
 ];
