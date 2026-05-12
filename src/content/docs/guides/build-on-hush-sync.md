@@ -5,7 +5,7 @@ description: Platform-agnostic integration guide for client authors building on 
 
 # Build on hush-sync
 
-hush-sync is a group messaging primitive. This guide covers everything a client author needs to integrate it correctly — session lifecycle, pairing, publish/receive, member management, and group exit. Platform-specific SDK notes live in the SDK reference pages.
+hush-sync is a sync primitive. This guide covers everything a client author needs to integrate it correctly — session lifecycle, pairing, publish/receive, member management, and group exit. Platform-specific SDK notes live in the SDK reference pages.
 
 ---
 
@@ -99,6 +99,19 @@ Construct one session per app lifecycle. Initialisation reads or generates the k
 ### The session is a singleton
 
 Instantiate once at app startup and keep it for the app's lifetime. There is no meaningful "restart session" other than `destroyGroup()` + reinit.
+
+### Multiple groups via namespaces
+
+A device can participate in more than one group simultaneously by running multiple sessions with different namespaces. Each session is fully independent — separate keypair, separate storage, separate relay connection, separate member manifest.
+
+```
+sessionA = Session(namespace: "work",     storage: .../work/)
+sessionB = Session(namespace: "personal",  storage: .../personal/)
+```
+
+The SDK does not manage session switching — that is the caller's responsibility. Each session must be initialised, listened to, and torn down independently. If you want the user to switch between groups in the UI, maintain an array of sessions and route publishes and incoming blobs to whichever is active.
+
+Namespace strings are arbitrary. Use something collision-resistant if your app ships to end users who might run multiple copies — e.g. include your app bundle ID as a prefix.
 
 ### Startup sequence
 
