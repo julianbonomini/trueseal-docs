@@ -1,6 +1,6 @@
-# hush-docs
+# trueseal-docs
 
-Documentation and landing site for the [hush](https://github.com/buenomini/hush) E2EE sync ecosystem. Built with Astro 5 + React islands, deployed on Cloudflare Pages.
+Documentation and landing site for the [TrueSeal](https://github.com/buenomini/TrueSeal) E2EE sync ecosystem. Built with Astro 5 + React islands, deployed on Cloudflare Pages.
 
 ---
 

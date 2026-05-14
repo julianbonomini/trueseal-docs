@@ -36,24 +36,24 @@ export const docsNav: NavSection[] = [
     title: 'Guides',
     icon: 'map',
     items: [
-      { title: 'Build on hush-sync',   slug: 'guides/build-on-hush-sync', icon: 'build' },
+      { title: 'Build on trueseal-sync',   slug: 'guides/build-on-trueseal-sync', icon: 'build' },
     ],
   },
   {
     title: 'Components',
     icon: 'extension',
     items: [
-      { title: 'hush-sync',     slug: 'components/hush-sync/overview',     icon: 'sync' },
-      { title: 'hush-relay',    slug: 'components/hush-relay/overview',    icon: 'hub' },
-      { title: 'hush-noise',    slug: 'components/hush-noise/overview',    icon: 'encrypted' },
-      { title: 'hush-protocol', slug: 'components/hush-protocol/overview', icon: 'description' },
+      { title: 'trueseal-sync',     slug: 'components/trueseal-sync/overview',     icon: 'sync' },
+      { title: 'trueseal-relay',    slug: 'components/trueseal-relay/overview',    icon: 'hub' },
+      { title: 'trueseal-noise',    slug: 'components/trueseal-noise/overview',    icon: 'encrypted' },
+      { title: 'trueseal-protocol', slug: 'components/trueseal-protocol/overview', icon: 'description' },
     ],
   },
   {
     title: 'Reference',
     icon: 'terminal',
     items: [
-      { title: 'Wire Format', slug: 'components/hush-protocol/wire-format', icon: 'cable' },
+      { title: 'Wire Format', slug: 'components/trueseal-protocol/wire-format', icon: 'cable' },
       { title: 'Swift SDK',   slug: 'sdks/swift',                           icon: 'phone_iphone' },
     ],
   },

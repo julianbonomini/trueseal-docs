@@ -1,6 +1,6 @@
 # Delivery Guarantees
 
-hush-sync guarantees that every blob sent will reach every current group member — eventually, unconditionally. This is not best-effort. It is the contract.
+trueseal-sync guarantees that every blob sent will reach every current group member — eventually, unconditionally. This is not best-effort. It is the contract.
 
 This page explains exactly how that guarantee is achieved, and where its limits are.
 
@@ -28,11 +28,11 @@ Blobs are delivered to `on_message` in arrival order — the order in which the 
 
 Causal ordering is preserved through parent hashes. Each Envelope references the hash of its predecessor. A recipient can detect whether a received blob is causally dependent on one they haven't seen yet — regardless of arrival order.
 
-hush-sync does not buffer or reorder Envelopes on the recipient side. Arrival order is what the caller receives. If the caller needs strict causal ordering, they use the parent hashes.
+trueseal-sync does not buffer or reorder Envelopes on the recipient side. Arrival order is what the caller receives. If the caller needs strict causal ordering, they use the parent hashes.
 
 ## Fan-Out Delivery
 
-When a device calls `send()`, hush-sync produces one Envelope per current group member and pushes all of them in a single Push Session. Each Envelope is independently addressed and encrypted. The relay routes each to the appropriate Inbox.
+When a device calls `send()`, trueseal-sync produces one Envelope per current group member and pushes all of them in a single Push Session. Each Envelope is independently addressed and encrypted. The relay routes each to the appropriate Inbox.
 
 Delivery to each recipient is tracked independently. A blob is not "delivered" until every current member has confirmed receipt. The Outbox tracks delivery per `(object_id, sequence)` entry — not per recipient. In v0, an entry is marked delivered when the relay confirms the push succeeded, which means all N Envelopes for that send were accepted by the relay.
 

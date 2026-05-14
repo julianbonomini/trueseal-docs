@@ -1,6 +1,6 @@
 # Sessions
 
-hush-relay handles two distinct session types. Each uses a different Noise handshake pattern and serves a different purpose. They run on separate TCP listeners.
+trueseal-relay handles two distinct session types. Each uses a different Noise handshake pattern and serves a different purpose. They run on separate TCP listeners.
 
 ## Push Sessions
 
@@ -38,7 +38,7 @@ Only one Receive Session per device is expected at a time. The relay allows conc
 
 ## Heartbeat
 
-Idle TCP connections are silently killed by NAT tables and firewalls, typically after 30–300 seconds. hush-relay sends `Heartbeat` frames on idle Receive Sessions to keep the connection alive. The client echoes back a Heartbeat. Either side may initiate.
+Idle TCP connections are silently killed by NAT tables and firewalls, typically after 30–300 seconds. trueseal-relay sends `Heartbeat` frames on idle Receive Sessions to keep the connection alive. The client echoes back a Heartbeat. Either side may initiate.
 
 The heartbeat interval is configurable. If a device stops responding to heartbeats, the relay closes the connection and the device reconnects.
 

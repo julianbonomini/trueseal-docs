@@ -15,7 +15,7 @@ From this point on, the group fans out every blob to both devices. The new devic
 Pairing is a three-step ceremony:
 
 **Step 1 — The initiating device generates a Pairing Token.**
-The token encodes the initiator's noise public key and signing public key. It is opaque to the caller — hush-sync produces the raw bytes and the caller is responsible for presenting them out-of-band. In practice, this means a QR code, AirDrop, a link, or any channel the caller chooses. hush never touches the presentation layer.
+The token encodes the initiator's noise public key and signing public key. It is opaque to the caller — trueseal-sync produces the raw bytes and the caller is responsible for presenting them out-of-band. In practice, this means a QR code, AirDrop, a link, or any channel the caller chooses. TrueSeal never touches the presentation layer.
 
 **Step 2 — The joining device reads the token and sends a `Pair` message.**
 The joining device decodes the token, extracts the initiator's public keys, and pushes a `Pair` message to the relay addressed to the initiator's noise public key. The message is encrypted using addressed encryption — only the initiator can decrypt it. It contains the joiner's own noise and signing public keys.
@@ -25,7 +25,7 @@ The relay routes the blob to the initiator's Inbox. It sees only that a blob was
 **Step 3 — The initiating device accepts.**
 The initiator receives the `Pair` message, decrypts it, and fires the `on_member_request` callback. The caller receives a Member Request Token — an opaque handle to the pending join request. The caller passes it to `accept_member()` to admit the device.
 
-On acceptance, hush-sync issues a new Group Manifest that includes both devices. The manifest is signed by the accepting device and pushed to all current members.
+On acceptance, trueseal-sync issues a new Group Manifest that includes both devices. The manifest is signed by the accepting device and pushed to all current members.
 
 ## The Pairing Window
 
@@ -47,10 +47,10 @@ A future version will add a Short Authentication String (SAS) — both devices d
 
 ## What the Caller Handles
 
-hush-sync handles the cryptography, the relay communication, and the manifest update. The caller is responsible for:
+trueseal-sync handles the cryptography, the relay communication, and the manifest update. The caller is responsible for:
 
-- **Presenting the Pairing Token** — encoding it as a QR code, sharing it via AirDrop, copying it to a text field. hush produces bytes, the caller handles UX.
+- **Presenting the Pairing Token** — encoding it as a QR code, sharing it via AirDrop, copying it to a text field. TrueSeal produces bytes, the caller handles UX.
 - **Deciding when to accept** — the `on_member_request` callback fires with a Member Request Token. The caller decides whether to present a confirmation UI or accept automatically.
-- **Bootstrapping history** — once `on_member_joined` fires, the new device is in the group but has no history. If the caller needs the new device to have past blobs, it must send them. hush does not backfill history automatically.
+- **Bootstrapping history** — once `on_member_joined` fires, the new device is in the group but has no history. If the caller needs the new device to have past blobs, it must send them. TrueSeal does not backfill history automatically.
 
 <!-- TODO: diagram — pairing flow, three steps, what relay sees vs what devices exchange -->

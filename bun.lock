@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "hush-docs",
+      "name": "trueseal-docs",
       "dependencies": {
         "@astrojs/mdx": "^4.0.0",
         "@astrojs/react": "^4.0.0",

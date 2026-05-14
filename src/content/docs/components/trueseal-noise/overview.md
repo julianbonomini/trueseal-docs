@@ -1,10 +1,10 @@
-# hush-noise — Overview
+# trueseal-noise — Overview
 
-hush-noise is a Rust wrapper around [snow](https://github.com/mcginty/snow) — a well-tested Noise Protocol implementation — exposing the two handshake patterns used by the hush stack. It is the cryptographic transport layer of hush.
+trueseal-noise is a Rust wrapper around [snow](https://github.com/mcginty/snow) — a well-tested Noise Protocol implementation — exposing the two handshake patterns used by the TrueSeal stack. It is the cryptographic transport layer of TrueSeal.
 
 ## What It Does
 
-hush-noise takes a raw connection — a TCP socket, an in-memory pipe, anything that implements `Read + Write` — and turns it into an encrypted, authenticated channel. After a handshake completes, both sides can send and receive arbitrary byte payloads with the guarantee that:
+trueseal-noise takes a raw connection — a TCP socket, an in-memory pipe, anything that implements `Read + Write` — and turns it into an encrypted, authenticated channel. After a handshake completes, both sides can send and receive arbitrary byte payloads with the guarantee that:
 
 - The content is encrypted and cannot be read by anyone on the wire.
 - The message has not been tampered with — any modification is detected and rejected.
@@ -23,7 +23,7 @@ ChaCha20-Poly1305 was chosen over AES-GCM because it runs in constant time in so
 
 ## Two Handshake Patterns
 
-hush-noise implements two patterns from the Noise specification:
+trueseal-noise implements two patterns from the Noise specification:
 
 **`Noise_XX_25519_ChaChaPoly_BLAKE2s`** — mutual authentication. Neither peer has prior knowledge of the other's static key. After the handshake, both sides have verified each other's identity. Used for Receive Sessions between devices and the relay.
 
@@ -33,13 +33,13 @@ See [XX Pattern](./xx-pattern.md) and [NK Pattern](./nk-pattern.md) for full det
 
 ## Spec Compliance
 
-snow is verified against the official [cacophony test vectors](https://github.com/noiseprotocol/noise_wiki/wiki/Test-vectors). These vectors are published by the Noise Protocol authors and encode the exact byte-level output of a correct implementation for fixed input keys and payloads. hush-noise inherits this compliance by wrapping snow.
+snow is verified against the official [cacophony test vectors](https://github.com/noiseprotocol/noise_wiki/wiki/Test-vectors). These vectors are published by the Noise Protocol authors and encode the exact byte-level output of a correct implementation for fixed input keys and payloads. trueseal-noise inherits this compliance by wrapping snow.
 
 ## Standalone
 
-hush-noise has no dependency on the rest of the hush stack. It knows nothing about sync groups, relays, envelopes, or devices. It produces encrypted channels. What travels over those channels is the caller's concern.
+trueseal-noise has no dependency on the rest of the TrueSeal stack. It knows nothing about sync groups, relays, envelopes, or devices. It produces encrypted channels. What travels over those channels is the caller's concern.
 
-It can be used independently in any application that needs authenticated, forward-secret transport — with no hush-sync or hush-relay in sight.
+It can be used independently in any application that needs authenticated, forward-secret transport — with no trueseal-sync or trueseal-relay in sight.
 
 ## Framing
 
@@ -47,4 +47,4 @@ Every message is prefixed with a 2-byte big-endian length. This is required beca
 
 ## Platforms
 
-hush-noise is implemented in Rust and compiles to every platform the hush stack targets: macOS, Linux, iOS, and Android. Swift and Kotlin bindings are generated automatically via UniFFI — iOS and Android callers import the same implementation without hand-written FFI glue.
+trueseal-noise is implemented in Rust and compiles to every platform the TrueSeal stack targets: macOS, Linux, iOS, and Android. Swift and Kotlin bindings are generated automatically via UniFFI — iOS and Android callers import the same implementation without hand-written FFI glue.

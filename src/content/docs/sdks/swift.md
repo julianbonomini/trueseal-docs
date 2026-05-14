@@ -1,26 +1,26 @@
 ---
 title: Swift SDK
-description: Integration reference for hush-sync-swift — the Swift SDK for iOS and macOS.
+description: Integration reference for trueseal-sync-swift — the Swift SDK for iOS and macOS.
 ---
 
 # Swift SDK
 
-`hush-sync-swift` wraps the hush-sync Rust core via UniFFI. It targets iOS and macOS and is distributed as a Swift package.
+`trueseal-sync-swift` wraps the trueseal-sync Rust core via UniFFI. It targets iOS and macOS and is distributed as a Swift package.
 
 ---
 
 ## Structure
 
-The SDK exposes one public module: `HushSync`. All FFI types are hidden behind the internal `HushSyncBindings` module. **Never import `HushSyncBindings` directly from app code** — use `HushSync` only.
+The SDK exposes one public module: `TrueSealSync`. All FFI types are hidden behind the internal `TrueSealSyncBindings` module. **Never import `TrueSealSyncBindings` directly from app code** — use `TrueSealSync` only.
 
 ---
 
 ## Construction
 
 ```swift
-import HushSync
+import TrueSealSync
 
-let client = try HushSyncClient(
+let client = try TrueSealSyncClient(
     relayURL: URL(string: "tcp://relay-host:7700")!,
     relayPublicKey: Data([/* 32-byte X25519 key — see relay setup */]),
     storageDirectory: appScopedStorageURL,
@@ -168,6 +168,6 @@ This gives a Dock icon only while the window is visible — correct behaviour fo
 
 ## Non-blocking sockets
 
-If building hush-sync from source, ensure the Rust TCP transport factories have non-blocking mode enabled. With blocking sockets the connection mutex is held during `read()`, starving concurrent sends — this manifests as pairing messages that are ack'd by the relay but never received by the host.
+If building trueseal-sync from source, ensure the Rust TCP transport factories have non-blocking mode enabled. With blocking sockets the connection mutex is held during `read()`, starving concurrent sends — this manifests as pairing messages that are ack'd by the relay but never received by the host.
 
 The fix is `set_nonblocking(true)` on both transport factory implementations in `ffi.rs`. The distributed xcframework has this applied.

@@ -37,15 +37,15 @@ Everything in one page. Use this to test components before wiring into real cont
 
 ## Code Block — single language
 
-<CodeBlock client:load lang="rust" code={`let session = HushSession::create("my-app", relay_url, relay_pub_key).await?;
+<CodeBlock client:load lang="rust" code={`let session = TrueSealSession::create("my-app", relay_url, relay_pub_key).await?;
 session.start_pairing(on_member_request).await?;`} />
 
 ## Code Block — multi language tabs
 
 <CodeBlock client:load tabs={[
-  { lang: 'rust', code: `let session = HushSession::create("my-app", relay_url, relay_pub_key).await?;\nsession.start_pairing(on_member_request).await?;` },
-  { lang: 'go', code: `relay := hushrelay.New(hushrelay.Config{\n    ListenAddr: ":8080",\n    StorageDSN: "file:relay.db",\n})\nrelay.Start(ctx)` },
-  { lang: 'bash', code: `cargo add hush-sync\n# or\nbun add @hush/core` },
+  { lang: 'rust', code: `let session = TrueSealSession::create("my-app", relay_url, relay_pub_key).await?;\nsession.start_pairing(on_member_request).await?;` },
+  { lang: 'go', code: `relay := truesealrelay.New(truesealrelay.Config{\n    ListenAddr: ":8080",\n    StorageDSN: "file:relay.db",\n})\nrelay.Start(ctx)` },
+  { lang: 'bash', code: `cargo add trueseal-sync\n# or\nbun add @trueseal/core` },
 ]} />
 
 ---
@@ -74,7 +74,7 @@ session.start_pairing(on_member_request).await?;`} />
   }}
   center={{
     icon: "hub",
-    title: "HUSH RELAY NETWORK",
+    title: "TRUESEAL RELAY NETWORK",
     subtitle: "Blind Forwarding",
     meta: [{ label: "latency", value: "<10ms" }, { label: "drop", value: "0%" }]
   }}
@@ -139,7 +139,7 @@ session.start_pairing(on_member_request).await?;`} />
 
 #### h4 — Label heading
 
-Regular body paragraph. hush provides composable infrastructure for encrypted sync,
+Regular body paragraph. TrueSeal provides composable infrastructure for encrypted sync,
 device identity, and relay delivery without trusting any server or platform.
 
 **Bold text.** _Italic text._ `inline code`. [Link text](#).

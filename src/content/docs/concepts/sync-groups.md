@@ -26,7 +26,7 @@ If two members simultaneously issue conflicting manifest updates — for example
 
 ## Sending to the Group
 
-When a device calls `send()`, hush-sync reads the current Group Manifest to determine who to send to. It produces one encrypted blob per member — each addressed individually to that member's noise public key. The relay receives N independent blobs and routes each to the appropriate recipient's Inbox.
+When a device calls `send()`, trueseal-sync reads the current Group Manifest to determine who to send to. It produces one encrypted blob per member — each addressed individually to that member's noise public key. The relay receives N independent blobs and routes each to the appropriate recipient's Inbox.
 
 The relay has no concept of the group. It sees N blobs addressed to N public keys. It does not know those blobs are related, or that the senders and recipients share a group membership.
 

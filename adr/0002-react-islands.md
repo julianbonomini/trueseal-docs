@@ -1,6 +1,6 @@
 # React islands over a full SPA architecture
 
-hush-docs is primarily static content — the docs and landing copy do not change at runtime. Shipping a full React SPA (via Next.js or Remix) would hydrate every page on load, sending JS the browser doesn't need. Astro's island architecture ships JS only to components that require interactivity (animated hero, theme toggle, search). The rest of the site — all doc pages, layouts, nav structure — is zero-JS HTML. This matches the actual interactivity budget of the site and keeps page weight minimal without sacrificing the ability to add rich interactive sections on the landing page.
+trueseal-docs is primarily static content — the docs and landing copy do not change at runtime. Shipping a full React SPA (via Next.js or Remix) would hydrate every page on load, sending JS the browser doesn't need. Astro's island architecture ships JS only to components that require interactivity (animated hero, theme toggle, search). The rest of the site — all doc pages, layouts, nav structure — is zero-JS HTML. This matches the actual interactivity budget of the site and keeps page weight minimal without sacrificing the ability to add rich interactive sections on the landing page.
 
 ## Considered options
 

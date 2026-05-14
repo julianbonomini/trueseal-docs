@@ -1,6 +1,6 @@
 # Envelopes & Blobs
 
-Every piece of data that moves through hush-sync travels as an **Envelope** — a self-contained unit that the relay can route without reading, and that only the intended recipient can decrypt.
+Every piece of data that moves through trueseal-sync travels as an **Envelope** — a self-contained unit that the relay can route without reading, and that only the intended recipient can decrypt.
 
 ## Anatomy of an Envelope
 
@@ -40,7 +40,7 @@ The wire layout of the encrypted payload is:
 
 1. Generate a fresh ephemeral X25519 keypair for this payload only.
 2. Perform X25519 DH between the ephemeral private key and the recipient's static noise public key — producing a shared secret.
-3. Derive a 32-byte symmetric key from the shared secret via HKDF-SHA256 with the info string `"hush-sync addressed encryption v0"`.
+3. Derive a 32-byte symmetric key from the shared secret via HKDF-SHA256 with the info string `"trueseal-sync addressed encryption v0"`.
 4. Encrypt `author_pub (32 bytes) || message_bytes` with ChaCha20-Poly1305 using the derived key and a zero nonce.
 
 The zero nonce is safe here because the symmetric key is derived from an ephemeral DH — it is unique by construction. Nonce reuse is only dangerous when the same key is reused, which it never is.
@@ -84,8 +84,8 @@ Inside the encrypted payload, after the 32-byte `author_pub`, is a 1-byte type t
 | `0x03` | `Revoke` | empty — triggers Destroy Group on receipt |
 | `0x04` | `GroupManifest` | encoded manifest update |
 
-The relay never sees these type tags. They are a private convention of hush-sync, decoded only by recipients after decryption.
+The relay never sees these type tags. They are a private convention of trueseal-sync, decoded only by recipients after decryption.
 
-`Sync` is the only message type the caller interacts with directly — it is the opaque bytes the caller passes to `send()` and receives in `on_message()`. The other three are managed internally by hush-sync.
+`Sync` is the only message type the caller interacts with directly — it is the opaque bytes the caller passes to `send()` and receives in `on_message()`. The other three are managed internally by trueseal-sync.
 
 <!-- TODO: diagram — Envelope wire layout, addressed encryption flow, payload internals -->

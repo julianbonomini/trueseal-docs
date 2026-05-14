@@ -1,6 +1,6 @@
 # Noise Protocol Primer
 
-The Noise Protocol Framework is a specification for building secure channel protocols. WireGuard is built on it. Signal uses it. hush-noise wraps [snow](https://github.com/mcginty/snow), a Rust implementation of the spec.
+The Noise Protocol Framework is a specification for building secure channel protocols. WireGuard is built on it. Signal uses it. trueseal-noise wraps [snow](https://github.com/mcginty/snow), a Rust implementation of the spec.
 
 This page explains what Noise is and how it works — without assuming prior knowledge of cryptographic protocols.
 
@@ -44,7 +44,7 @@ The Noise spec defines three objects that work together during a handshake:
 
 Every Noise peer uses two kinds of keypairs during a handshake:
 
-**Static keypair** — the peer's long-term identity. Generated once, reused across all sessions. In hush, this is the device's noise keypair — the one stored in local Session State.
+**Static keypair** — the peer's long-term identity. Generated once, reused across all sessions. In TrueSeal, this is the device's noise keypair — the one stored in local Session State.
 
 **Ephemeral keypair** — generated fresh for each handshake, discarded afterwards. The ephemeral key is what gives Noise its forward secrecy property: even if the static private key is later compromised, past session keys cannot be reconstructed because the ephemeral keys are gone.
 
@@ -77,7 +77,7 @@ The Noise spec defines a small grammar of handshake patterns. A pattern specifie
 - The sequence of messages exchanged
 - Which DH operations happen at each step
 
-hush-noise implements two patterns:
+trueseal-noise implements two patterns:
 
 - **XX** — no pre-shared knowledge, mutual authentication, three messages
 - **NK** — Initiator knows Responder's static key, Initiator is anonymous, two messages

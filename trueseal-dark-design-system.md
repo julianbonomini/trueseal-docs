@@ -1,5 +1,5 @@
 ---
-name: hush
+name: TrueSeal
 colors:
   surface: '#141313'
   surface-dim: '#141313'

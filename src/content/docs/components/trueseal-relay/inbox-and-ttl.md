@@ -35,5 +35,5 @@ Every blob has a TTL set at Put time. When the TTL expires, the blob is eligible
 
 The default TTL is 30 days. This is generous — reaping is a last resort for permanently offline or abandoned devices, not routine housekeeping. Operators can configure a shorter TTL for resource-constrained deployments.
 
-A device that reconnects after its blobs have been reaped will miss those blobs permanently. The relay has no way to recover them. This is the one scenario where the delivery guarantee does not hold — documented honestly in [Delivery Guarantees](../../components/hush-sync/delivery-guarantees.md).
+A device that reconnects after its blobs have been reaped will miss those blobs permanently. The relay has no way to recover them. This is the one scenario where the delivery guarantee does not hold — documented honestly in [Delivery Guarantees](../../components/trueseal-sync/delivery-guarantees.md).
 

@@ -1,6 +1,6 @@
 # Wire Format
 
-All hush-protocol messages share a common framing. Every message on the wire is:
+All trueseal-protocol messages share a common framing. Every message on the wire is:
 
 ```
 [type: u8][len: u32 BE][body: bytes]
@@ -37,7 +37,7 @@ Sent by the client to deliver a blob to a recipient device.
 ```
 
 - `recipient_pub` — the recipient device's X25519 noise public key. The relay uses this to route the blob to the correct Inbox. It is the only routing information in the push body.
-- `envelope` — the raw serialized protobuf Envelope bytes, as defined by hush-sync. The relay treats this as opaque — it never inspects, modifies, or decrypts the envelope.
+- `envelope` — the raw serialized protobuf Envelope bytes, as defined by trueseal-sync. The relay treats this as opaque — it never inspects, modifies, or decrypts the envelope.
 
 A Push body shorter than 32 bytes is malformed. The relay must reject it with an Error frame and must not Ack.
 
@@ -112,9 +112,9 @@ The protocol defines a maximum envelope size of **1 MiB (1,048,576 bytes)**. Thi
 
 Enforcement is two-layered:
 
-**Client-side (hush-sync):** checks before opening a Push Session. An oversized envelope is rejected immediately with a non-retryable error. No NK handshake is opened, no bytes are sent to the relay.
+**Client-side (trueseal-sync):** checks before opening a Push Session. An oversized envelope is rejected immediately with a non-retryable error. No NK handshake is opened, no bytes are sent to the relay.
 
-**Relay-side (hush-relay):** checks on receipt as a backstop. Rejects with an Error frame, does not Ack, does not store. This catches bugs in client implementations and future third-party clients that skip the client-side check.
+**Relay-side (trueseal-relay):** checks on receipt as a backstop. Rejects with an Error frame, does not Ack, does not store. This catches bugs in client implementations and future third-party clients that skip the client-side check.
 
 Relay operators may configure a stricter limit. The relay communicates rejection via the Error frame regardless of which limit triggered it.
 
@@ -122,7 +122,7 @@ Relay operators may configure a stricter limit. The relay communicates rejection
 
 ## Session Types
 
-hush-protocol uses two distinct session types, each with a different Noise handshake pattern:
+trueseal-protocol uses two distinct session types, each with a different Noise handshake pattern:
 
 **Push Session** — client opens, sends one or more Push frames, closes. Uses `Noise NK` — the relay authenticates itself to the client, but the client's identity is never revealed. The relay cannot link a Push Session to any device. Short-lived by design.
 

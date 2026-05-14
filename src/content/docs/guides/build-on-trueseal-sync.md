@@ -1,15 +1,15 @@
 ---
-title: Build on hush-sync
-description: Platform-agnostic integration guide for client authors building on the hush-sync SDK.
+title: Build on trueseal-sync
+description: Platform-agnostic integration guide for client authors building on the trueseal-sync SDK.
 ---
 
-# Build on hush-sync
+# Build on trueseal-sync
 
-hush-sync is a sync primitive. This guide covers everything a client author needs to integrate it correctly — session lifecycle, pairing, publish/receive, member management, and group exit. Platform-specific SDK notes live in the SDK reference pages.
+trueseal-sync is a sync primitive. This guide covers everything a client author needs to integrate it correctly — session lifecycle, pairing, publish/receive, member management, and group exit. Platform-specific SDK notes live in the SDK reference pages.
 
 ---
 
-## What hush-sync gives you
+## What trueseal-sync gives you
 
 - A stable device identity (X25519 + Ed25519 keypair, persisted locally)
 - Encrypted delivery of arbitrary binary blobs to all group members via a relay
@@ -68,7 +68,7 @@ The relay listens on two ports for different Noise handshake patterns:
 | Port | Pattern | Used for |
 |---|---|---|
 | `:7700` | XX (mutual auth) | Device ↔ relay sessions |
-| `:7701` | NK (server-only auth) | Internal hush-sync push channel |
+| `:7701` | NK (server-only auth) | Internal trueseal-sync push channel |
 
 **Your relay URL should always point to `:7700`.** The `:7701` port is managed internally by the SDK — never reference it in app code.
 
@@ -287,7 +287,7 @@ There is no "leave quietly" message. To remove yourself without destroying the g
 2. Your old node ID becomes a ghost member in other devices' manifests
 3. Other devices must manually remove the ghost entry
 
-A graceful leave protocol may be added in a future hush-sync version.
+A graceful leave protocol may be added in a future trueseal-sync version.
 
 ---
 
@@ -295,12 +295,12 @@ A graceful leave protocol may be added in a future hush-sync version.
 
 ### Scope to your app
 
-Never use the SDK's default storage path — it may be shared across all hush-sync consumers on the same machine. Two apps sharing a storage path would share a group identity.
+Never use the SDK's default storage path — it may be shared across all trueseal-sync consumers on the same machine. Two apps sharing a storage path would share a group identity.
 
 Recommended pattern:
 
 ```
-<platform app support dir> / <your-app-bundle-id> / HushSync /
+<platform app support dir> / <your-app-bundle-id> / TrueSealSync /
 ```
 
 Create the directory before passing it to the SDK constructor.

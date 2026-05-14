@@ -1,6 +1,6 @@
 # Introduction
 
-hush is a free, composable ecosystem of primitives for building zero-trust, end-to-end encrypted sync between devices — without trusting any server, without accounts, and without lock-in to any platform or operator.
+TrueSeal is a free, composable ecosystem of primitives for building zero-trust, end-to-end encrypted sync between devices — without trusting any server, without accounts, and without lock-in to any platform or operator.
 
 ## The Problem
 
@@ -10,20 +10,20 @@ The privacy-preserving alternatives are either closed systems (Anytype, Signal, 
 
 Every developer who wants private-by-default sync either has to build the entire stack from scratch, or gives up and trusts a platform (or worse, no privacy).
 
-hush exists to close that gap.
+TrueSeal exists to close that gap.
 
-## What hush Is
+## What TrueSeal Is
 
-hush is a stack of three independent components that together give any developer zero-trust sync as a drop-in primitive:
+TrueSeal is a stack of three independent components that together give any developer zero-trust sync as a drop-in primitive:
 
 
 ![intro-diagram](/assets/introduction_diagram.png)
 
-**hush-noise** implements the [Noise Protocol Framework](https://noiseprotocol.org/) in Rust — the same foundation WireGuard and Signal are built on. It provides authenticated, forward-secret encrypted channels between devices. Standalone, spec-verified, no dependencies on the rest of the hush stack.
+**trueseal-noise** implements the [Noise Protocol Framework](https://noiseprotocol.org/) in Rust — the same foundation WireGuard and Signal are built on. It provides authenticated, forward-secret encrypted channels between devices. Standalone, spec-verified, no dependencies on the rest of the TrueSeal stack.
 
-**hush-sync** is the sync engine. It handles device identity, pairing, group membership, encrypted delivery to every group member, and guaranteed outbox replay on reconnect. Drop it into any Go, Swift, or Kotlin app and your data is encrypted before it leaves the device. Always.
+**trueseal-sync** is the sync engine. It handles device identity, pairing, group membership, encrypted delivery to every group member, and guaranteed outbox replay on reconnect. Drop it into any Go, Swift, or Kotlin app and your data is encrypted before it leaves the device. Always.
 
-**hush-relay** is a deployable Go binary — a dumb router for encrypted blobs. It holds ciphertext for offline devices and delivers it when they reconnect. It has no concept of users, groups, or content. It can be self-hosted on any server, or you can use any existing public instance. The security model does not change regardless of who runs it.
+**trueseal-relay** is a deployable Go binary — a dumb router for encrypted blobs. It holds ciphertext for offline devices and delivers it when they reconnect. It has no concept of users, groups, or content. It can be self-hosted on any server, or you can use any existing public instance. The security model does not change regardless of who runs it.
 
 ## The Core Guarantee
 
@@ -31,9 +31,9 @@ Data is encrypted on device before it moves anywhere. The relay is structurally 
 
 This is not a configuration option. It is a constraint baked into the design.
 
-## What hush Is Not
+## What TrueSeal Is Not
 
-hush is a sync primitive, not an application. It does not do conflict resolution, real-time streaming, identity management, or permission hierarchies. Those belong in the layer above.
+TrueSeal is a sync primitive, not an application. It does not do conflict resolution, real-time streaming, identity management, or permission hierarchies. Those belong in the layer above.
 
 See [Principles & Boundaries](./principles-and-boundaries.md) for the full picture.
 

@@ -1,31 +1,31 @@
 # Architecture
 
-hush is three independent components bound together by a shared wire protocol specification. Each component can be understood, deployed, and replaced in isolation. Together they form a zero-trust sync stack where no single component is a point of failure — or a point of trust.
+TrueSeal is three independent components bound together by a shared wire protocol specification. Each component can be understood, deployed, and replaced in isolation. Together they form a zero-trust sync stack where no single component is a point of failure — or a point of trust.
 
 ## Components at a Glance
 
-**hush-noise** is the cryptographic transport layer. It implements the [Noise Protocol Framework](https://noiseprotocol.org/) — the same foundation as WireGuard and Signal. It knows nothing about sync, devices, or groups. It produces encrypted, authenticated, forward-secret channels between two peers. That is its entire job.
+**trueseal-noise** is the cryptographic transport layer. It implements the [Noise Protocol Framework](https://noiseprotocol.org/) — the same foundation as WireGuard and Signal. It knows nothing about sync, devices, or groups. It produces encrypted, authenticated, forward-secret channels between two peers. That is its entire job.
 
-**hush-sync** is the sync engine. It owns device identity, pairing, group membership, envelope construction, addressed encryption, the operation log, and outbox replay. It uses hush-noise for live sessions to the relay. It has no opinion about what the bytes inside a blob mean — that is the caller's domain.
+**trueseal-sync** is the sync engine. It owns device identity, pairing, group membership, envelope construction, addressed encryption, the operation log, and outbox replay. It uses trueseal-noise for live sessions to the relay. It has no opinion about what the bytes inside a blob mean — that is the caller's domain.
 
-**hush-relay** is the infrastructure. It accepts connections from devices, stores ciphertext blobs addressed to offline recipients, and delivers them when those devices reconnect. It never decrypts anything. It has no concept of groups, users, or relationships between devices.
+**trueseal-relay** is the infrastructure. It accepts connections from devices, stores ciphertext blobs addressed to offline recipients, and delivers them when those devices reconnect. It never decrypts anything. It has no concept of groups, users, or relationships between devices.
 
-**hush-protocol** is the wire protocol specification that governs all communication between sync clients and relays. It is pure documentation — no code, no library. It defines wire framing, message types, push body layout, Ack and Error semantics, and the protocol-level envelope size limit. Any client that implements hush-protocol works against any relay that implements hush-protocol.
+**trueseal-protocol** is the wire protocol specification that governs all communication between sync clients and relays. It is pure documentation — no code, no library. It defines wire framing, message types, push body layout, Ack and Error semantics, and the protocol-level envelope size limit. Any client that implements trueseal-protocol works against any relay that implements trueseal-protocol.
 
 ## Responsibilities
 
 | Concern | Owner |
 |---|---|
-| Noise Protocol handshakes | hush-noise |
-| Encrypted transport channels | hush-noise |
-| Device identity (keypair generation, persistence) | hush-sync |
-| Pairing ceremony | hush-sync |
-| Group manifest (membership, versioning) | hush-sync |
-| Envelope construction and addressed encryption | hush-sync |
-| Operation log and outbox replay | hush-sync |
-| Blob routing and deferred delivery | hush-relay |
-| Blob retention and TTL reaping | hush-relay |
-| Wire protocol specification | hush-protocol |
+| Noise Protocol handshakes | trueseal-noise |
+| Encrypted transport channels | trueseal-noise |
+| Device identity (keypair generation, persistence) | trueseal-sync |
+| Pairing ceremony | trueseal-sync |
+| Group manifest (membership, versioning) | trueseal-sync |
+| Envelope construction and addressed encryption | trueseal-sync |
+| Operation log and outbox replay | trueseal-sync |
+| Blob routing and deferred delivery | trueseal-relay |
+| Blob retention and TTL reaping | trueseal-relay |
+| Wire protocol specification | trueseal-protocol |
 
 ## What the Relay Sees
 
@@ -45,22 +45,22 @@ An adversary who fully compromises the relay — captures the binary, reads the 
 
 <!-- TODO: diagram -->
 
-When a device calls `send()` on `HushSession`:
+When a device calls `send()` on `TrueSealSession`:
 
-1. **Read the Group Manifest.** hush-sync resolves the current list of member devices — their noise public keys and signing public keys.
+1. **Read the Group Manifest.** trueseal-sync resolves the current list of member devices — their noise public keys and signing public keys.
 
-2. **Construct one Envelope per recipient.** For each member, hush-sync:
+2. **Construct one Envelope per recipient.** For each member, trueseal-sync:
    - Encrypts the payload using *addressed encryption*: an ephemeral X25519 key agreement with the recipient's static public key, producing a ChaCha20-Poly1305 ciphertext. The sender's `author_pub` (Ed25519 signing key) is prepended inside the plaintext — invisible to the relay.
    - Signs the envelope over `sequence || parent_hashes || recipient_pub || ciphertext` using the sender's Ed25519 signing key.
    - The result: a self-contained blob the relay can route (it knows `recipient_pub`) but cannot read or tamper with undetected.
 
-3. **Open an anonymous Push Session to the relay.** hush-sync opens a Noise NK connection using a *fresh ephemeral X25519 keypair* generated for this push only. Noise NK authenticates the relay to the device — the device verifies the relay's static public key — but transmits no stable client identity. The relay sees an unlinkable ephemeral peer and cannot associate the push with any device or Receive Session.
+3. **Open an anonymous Push Session to the relay.** trueseal-sync opens a Noise NK connection using a *fresh ephemeral X25519 keypair* generated for this push only. Noise NK authenticates the relay to the device — the device verifies the relay's static public key — but transmits no stable client identity. The relay sees an unlinkable ephemeral peer and cannot associate the push with any device or Receive Session.
 
 4. **Send all N envelopes.** All envelopes for this push are sent over the same Push Session, then the session is closed.
 
 5. **Relay stores and delivers.** For each envelope, the relay places it in the recipient's Inbox. If the recipient has an active Receive Session, the blob is delivered immediately. Otherwise it is held until the recipient reconnects.
 
-6. **Outbox tracks delivery.** hush-sync marks each envelope in the local Operation Log as undelivered until the relay confirms receipt. If the sender goes offline before confirmation, undelivered envelopes are replayed on reconnect.
+6. **Outbox tracks delivery.** trueseal-sync marks each envelope in the local Operation Log as undelivered until the relay confirms receipt. If the sender goes offline before confirmation, undelivered envelopes are replayed on reconnect.
 
 ## Data Flow: Receiving a Blob
 
@@ -68,13 +68,13 @@ When a device calls `send()` on `HushSession`:
 
 When a device connects to the relay:
 
-1. **Open a Receive Session.** hush-sync opens a Noise XX connection using the device's stable noise keypair. The relay and device mutually authenticate. The relay registers this device as online and begins delivering blobs immediately on arrival.
+1. **Open a Receive Session.** trueseal-sync opens a Noise XX connection using the device's stable noise keypair. The relay and device mutually authenticate. The relay registers this device as online and begins delivering blobs immediately on arrival.
 
 2. **Relay delivers Inbox blobs.** All blobs held for this device are delivered over the Receive Session. Blobs are not deleted at this point — deletion is gated on DeliverAck.
 
 3. **Client sends DeliverAck.** After durably persisting each blob, the client sends a DeliverAck with the blob's ID. The relay deletes the blob on receipt. If the session drops before a DeliverAck arrives, the blob survives and is re-delivered on the next Receive Session — clients must handle duplicates.
 
-4. **Decrypt and verify.** For each received envelope, hush-sync:
+4. **Decrypt and verify.** For each received envelope, trueseal-sync:
    - Decrypts the payload using the device's private key.
    - Extracts `author_pub` from the first 32 bytes of plaintext.
    - Verifies the envelope signature using the extracted `author_pub`.
@@ -100,9 +100,9 @@ The relay is in the path for step 2 — the joiner addresses the `Pair` message 
 
 ## Component Independence
 
-hush-noise, hush-sync, and hush-relay are independently usable:
+trueseal-noise, trueseal-sync, and trueseal-relay are independently usable:
 
-- **hush-noise** can be used as a standalone Noise Protocol library for any application that needs authenticated encrypted channels — with no dependency on the rest of hush.
-- **hush-relay** is a generic encrypted blob router. Any client that implements hush-protocol can use it — hush-sync is one implementation, not the only one.
-- **hush-sync** can target any relay that implements hush-protocol — a self-hosted instance, a community instance, or any future compatible implementation.
-- **hush-protocol** is the contract that makes this possible. Relay and client implementations are interchangeable as long as both speak the spec.
+- **trueseal-noise** can be used as a standalone Noise Protocol library for any application that needs authenticated encrypted channels — with no dependency on the rest of TrueSeal.
+- **trueseal-relay** is a generic encrypted blob router. Any client that implements trueseal-protocol can use it — trueseal-sync is one implementation, not the only one.
+- **trueseal-sync** can target any relay that implements trueseal-protocol — a self-hosted instance, a community instance, or any future compatible implementation.
+- **trueseal-protocol** is the contract that makes this possible. Relay and client implementations are interchangeable as long as both speak the spec.

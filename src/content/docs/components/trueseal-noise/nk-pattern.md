@@ -2,7 +2,7 @@
 
 `Noise_NK_25519_ChaChaPoly_BLAKE2s` — two-message handshake where the Initiator knows the Responder's static key before connecting. The Responder never learns the Initiator's static key — the Initiator is anonymous.
 
-hush uses NK for **Push Sessions** — short-lived anonymous connections a device opens to send blobs to the relay. A fresh ephemeral keypair is generated per push, making the sender unlinkable across pushes.
+TrueSeal uses NK for **Push Sessions** — short-lived anonymous connections a device opens to send blobs to the relay. A fresh ephemeral keypair is generated per push, making the sender unlinkable across pushes.
 
 For a full specification of the NK pattern, see the [Noise Protocol spec](https://noiseprotocol.org/noise.html) and the [official test vectors](https://github.com/noiseprotocol/noise_wiki/wiki/Test-vectors).
 

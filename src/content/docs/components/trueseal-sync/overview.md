@@ -1,10 +1,10 @@
-# hush-sync — Overview
+# trueseal-sync — Overview
 
-hush-sync is a Rust library for E2EE, local-first sync between devices. It is the protocol authority of the hush stack — it owns the Envelope format, addressed encryption, pairing, group membership, and delivery guarantees. Drop it into any application and your data is encrypted before it leaves the device.
+trueseal-sync is a Rust library for E2EE, local-first sync between devices. It is the protocol authority of the TrueSeal stack — it owns the Envelope format, addressed encryption, pairing, group membership, and delivery guarantees. Drop it into any application and your data is encrypted before it leaves the device.
 
 ## What It Does
 
-hush-sync manages the full lifecycle of syncing encrypted data between a group of devices:
+trueseal-sync manages the full lifecycle of syncing encrypted data between a group of devices:
 
 - **Device identity** — generates and persists an X25519 noise keypair and an Ed25519 signing keypair on first launch. The caller never handles key bytes directly.
 - **Pairing** — key exchange ceremony that establishes mutual trust between two devices. The library handles the cryptography; the caller handles the UX (QR code, AirDrop, etc.).
@@ -15,7 +15,7 @@ hush-sync manages the full lifecycle of syncing encrypted data between a group o
 
 ## What It Does Not Do
 
-hush-sync is a transport primitive. It does not:
+trueseal-sync is a transport primitive. It does not:
 
 - Interpret the bytes inside a blob — that is the caller's data model.
 - Resolve conflicts — delivery and ordering are guaranteed, divergence handling is the caller's concern.
@@ -24,9 +24,9 @@ hush-sync is a transport primitive. It does not:
 
 ## Two API Layers
 
-hush-sync exposes two layers:
+trueseal-sync exposes two layers:
 
-**Session (`HushSession`)** — the opinionated facade. Wires all the primitives together, owns the relay connection, reconnection, group manifest, message dispatch, soft removal, and destroy group. This is what most callers use. UniFFI exposes it to Swift and Kotlin.
+**Session (`TrueSealSession`)** — the opinionated facade. Wires all the primitives together, owns the relay connection, reconnection, group manifest, message dispatch, soft removal, and destroy group. This is what most callers use. UniFFI exposes it to Swift and Kotlin.
 
 **Primitives** — `DeviceKeypair`, `Envelope`, `GroupManifest`, `OperationLog`, `Message`. Pure Rust, no lifecycle. For advanced callers: Go via C FFI, custom transports, testing.
 
@@ -42,4 +42,4 @@ State is scoped by **namespace** — a string passed to `create()`. Most callers
 
 ## Platforms
 
-hush-sync is implemented in Rust. UniFFI generates Swift and Kotlin bindings automatically, enabling native iOS and Android integration without hand-written FFI glue. Go consumers use C FFI against the compiled static library.
+trueseal-sync is implemented in Rust. UniFFI generates Swift and Kotlin bindings automatically, enabling native iOS and Android integration without hand-written FFI glue. Go consumers use C FFI against the compiled static library.

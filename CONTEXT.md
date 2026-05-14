@@ -1,15 +1,15 @@
-# hush-docs
+# trueseal-docs
 
-The website for the hush ecosystem — a static Astro site combining a marketing landing page and developer documentation, built against a Figma-first design system.
+The website for the TrueSeal ecosystem — a static Astro site combining a marketing landing page and developer documentation, built against a Figma-first design system.
 
 ## Language
 
 **Landing**
-The marketing surface at `/`. Converts skeptical developers — explains what hush is, why it exists, and drives them to the docs.
+The marketing surface at `/`. Converts skeptical developers — explains what TrueSeal is, why it exists, and drives them to the docs.
 _Avoid_: homepage, marketing page, index
 
 **Docs**
-The developer reference surface at `/docs/...`. Serves developers already using or evaluating hush.
+The developer reference surface at `/docs/...`. Serves developers already using or evaluating TrueSeal.
 _Avoid_: documentation site, wiki, reference
 
 **Design token**

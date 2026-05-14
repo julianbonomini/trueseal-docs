@@ -1,13 +1,13 @@
 # Deploying
 
-hush-relay ships as a single binary. Deployment requires three things: a keypair, a config, and a storage backend.
+trueseal-relay ships as a single binary. Deployment requires three things: a keypair, a config, and a storage backend.
 
 ## Keypair Generation
 
 The relay identity is a long-term X25519 keypair. Generate it once at setup:
 
 ```bash
-hush-relay -genkey -keyout keypair.hex
+trueseal-relay -genkey -keyout keypair.hex
 ```
 
 This writes the hex-encoded private key to `keypair.hex` (mode `0600`) and prints the public key to stdout:
@@ -23,44 +23,44 @@ relay public key (share with clients): a1b2c3d4...
 
 ## Configuration
 
-hush-relay reads config from a TOML file (default `relay.toml`) with optional environment variable overrides. All `HUSH_RELAY_*` env vars take precedence over the file.
+trueseal-relay reads config from a TOML file (default `relay.toml`) with optional environment variable overrides. All `TRUESEAL_RELAY_*` env vars take precedence over the file.
 
 **Minimal `relay.toml`:**
 
 ```toml
 [relay]
-keypair_path = "/etc/hush-relay/keypair.hex"
+keypair_path = "/etc/trueseal-relay/keypair.hex"
 
 [store]
 type = "sqlite"
-sqlite_path = "/var/lib/hush-relay/inbox.db"
+sqlite_path = "/var/lib/trueseal-relay/inbox.db"
 ```
 
 **Full reference:**
 
 | Field | Env var | Default | Description |
 |---|---|---|---|
-| `relay.keypair_path` | `HUSH_RELAY_KEYPAIR_PATH` | — | Path to hex-encoded private key. Required. |
-| `relay.listen_push` | `HUSH_RELAY_LISTEN_PUSH` | `:7701` | Push Session listener address |
-| `relay.listen_receive` | `HUSH_RELAY_LISTEN_RECEIVE` | `:7700` | Receive Session listener address |
-| `relay.ttl` | `HUSH_RELAY_TTL` | `720h` (30 days) | Blob TTL before reaping |
-| `relay.reap_interval` | `HUSH_RELAY_REAP_INTERVAL` | `1h` | How often the reaper runs |
-| `relay.max_envelope_bytes` | `HUSH_RELAY_MAX_ENVELOPE_BYTES` | `1048576` (1 MiB) | Max envelope size. Blobs exceeding this are rejected with Error. |
-| `store.type` | `HUSH_RELAY_STORE_TYPE` | `sqlite` | Storage backend: `sqlite` or `postgres` |
-| `store.sqlite_path` | `HUSH_RELAY_STORE_SQLITE_PATH` | — | SQLite database file path. Required when `store.type = sqlite`. |
+| `relay.keypair_path` | `TRUESEAL_RELAY_KEYPAIR_PATH` | — | Path to hex-encoded private key. Required. |
+| `relay.listen_push` | `TRUESEAL_RELAY_LISTEN_PUSH` | `:7701` | Push Session listener address |
+| `relay.listen_receive` | `TRUESEAL_RELAY_LISTEN_RECEIVE` | `:7700` | Receive Session listener address |
+| `relay.ttl` | `TRUESEAL_RELAY_TTL` | `720h` (30 days) | Blob TTL before reaping |
+| `relay.reap_interval` | `TRUESEAL_RELAY_REAP_INTERVAL` | `1h` | How often the reaper runs |
+| `relay.max_envelope_bytes` | `TRUESEAL_RELAY_MAX_ENVELOPE_BYTES` | `1048576` (1 MiB) | Max envelope size. Blobs exceeding this are rejected with Error. |
+| `store.type` | `TRUESEAL_RELAY_STORE_TYPE` | `sqlite` | Storage backend: `sqlite` or `postgres` |
+| `store.sqlite_path` | `TRUESEAL_RELAY_STORE_SQLITE_PATH` | — | SQLite database file path. Required when `store.type = sqlite`. |
 
 ## Single-Node Deployment
 
 The default and recommended setup for self-hosted instances. Uses SQLite — no external dependencies.
 
 ```bash
-hush-relay -config relay.toml
+trueseal-relay -config relay.toml
 ```
 
 Or Docker-friendly with no config file:
 
 ```bash
-hush-relay -no-config
+trueseal-relay -no-config
 ```
 
 With `-no-config`, all settings must be provided via environment variables.
@@ -69,12 +69,12 @@ With `-no-config`, all settings must be provided via environment variables.
 
 ```yaml
 services:
-  hush-relay:
-    image: hush-relay:latest
+  trueseal-relay:
+    image: trueseal-relay:latest
     command: ["-no-config"]
     environment:
-      HUSH_RELAY_KEYPAIR_PATH: /secrets/keypair.hex
-      HUSH_RELAY_STORE_SQLITE_PATH: /data/inbox.db
+      TRUESEAL_RELAY_KEYPAIR_PATH: /secrets/keypair.hex
+      TRUESEAL_RELAY_STORE_SQLITE_PATH: /data/inbox.db
     volumes:
       - ./keypair.hex:/secrets/keypair.hex:ro
       - relay-data:/data
@@ -88,10 +88,10 @@ volumes:
 
 ## Graceful Shutdown
 
-hush-relay handles `SIGINT` and `SIGTERM`. On signal, it stops accepting new connections and waits up to 30 seconds for active sessions to drain cleanly before exiting.
+trueseal-relay handles `SIGINT` and `SIGTERM`. On signal, it stops accepting new connections and waits up to 30 seconds for active sessions to drain cleanly before exiting.
 
 ## Operational Notes
 
 - **Firewall:** open TCP ports 7700 (receive) and 7701 (push) to the internet. Devices connect outbound — no inbound connections from the relay.
 - **Disk:** size SQLite storage based on your expected group size, blob size, and TTL. A conservative estimate: `(devices × blobs_per_day × avg_blob_bytes × ttl_days)`.
-- **Logs:** hush-relay logs connection events and public keys only. It never logs envelope content. Do not add content logging — it would break the zero-knowledge property.
+- **Logs:** trueseal-relay logs connection events and public keys only. It never logs envelope content. Do not add content logging — it would break the zero-knowledge property.
