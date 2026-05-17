@@ -55,7 +55,7 @@ Do not re-derive the name or ID in your app — use what the SDK exposes so all 
 
 ## Pointing at a Relay
 
-The SDK takes two values at construction time: a **relay URL** and the **relay's public key** (32 bytes). Get both from whoever runs the relay — yourself, a friend, a public instance.
+The SDK takes two values at construction time: a **relay URL** and the **relay's public key** (32 bytes). Get both from whoever runs the relay — yourself, a friend, or the [public hosted relay](/relay).
 
 The public key is a build-time constant. Bake it into your client; do not make it user-configurable. The Noise XX handshake verifies you are talking to the correct relay before any data is exchanged.
 

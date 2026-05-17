@@ -20,6 +20,7 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "pagefind": "^1.0.0",
+    "qrcode": "^1.5.4",
     "typescript": "^5.0.0"
   }
 }
