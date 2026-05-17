@@ -1,0 +1,53 @@
+---
+title: Introduction
+description: trueseal is a free, composable ecosystem of primitives for zero-trust, end-to-end encrypted sync between devices.
+---
+import NextPage from '../../components/mdx/NextPage.astro';
+
+# Introduction
+
+trueseal makes zero-trust sync a drop-in primitive. End-to-end encrypted, no accounts, no server you have to trust, no lock-in.
+
+## The Gap
+
+Sync infrastructure exists. iCloud, Firebase, Dropbox — they all work. But they own your users' data. The server is in the middle, and it can read everything.
+
+The privacy-preserving alternatives are closed systems. Anytype and Signal have built impressive sync engines, but as internal infrastructure tightly coupled to their own data model. You cannot drop them into a project. The sync engine is the product, and using it means accepting their ecosystem.
+
+Nostr is composable, but solves a different problem. It is a *public* identity protocol — every event is signed by a stable public key, every relay sees who said what. trueseal is the inverse: no human identity, no stable sender on the wire, no communication graph the server can compose. They live next to each other, not on top of each other.
+
+Every developer who wants private-by-default sync ends up in the same place: build the entire stack from scratch, or trust a platform that owns the data.
+
+trueseal exists to remove that excuse.
+
+## The Core Guarantee
+
+The server is structurally incapable of reading your data. Not by promise — by design. Compromise the relay completely and an adversary still gets only encrypted blobs.
+
+This is structural, not aspirational.
+
+## What's in the Box
+
+trueseal is three independent components that together give any developer zero-trust sync as a drop-in primitive.
+
+**trueseal-noise** implements the [Noise Protocol Framework](https://noiseprotocol.org/) in Rust — the same foundation WireGuard and Signal are built on. It provides authenticated, forward-secret encrypted channels between devices. Standalone, spec-verified, no dependencies on the rest of the trueseal stack.
+
+**trueseal-sync** is the sync engine. It handles device identity, pairing, group membership, encrypted delivery to every group member, and guaranteed outbox replay on reconnect. Drop it into any Swift, Kotlin, or TypeScript app and your data is encrypted before it leaves the device.
+
+**trueseal-relay** is a deployable Go binary — a dumb router for encrypted blobs. It holds ciphertext for offline devices and delivers it when they reconnect. It has no concept of users, groups, or content. It can be self-hosted on any server, or you can point at any other compatible instance — the security model does not change regardless of who runs it.
+
+A fourth piece sits above the three: [trueseal-protocol](/docs/protocol/overview), an open wire-protocol spec the components speak. Any client implementing the spec works against any relay implementing it. Replace any component, keep the rest.
+
+## What's Not in the Box
+
+trueseal is a transport primitive, not a framework. It does not have an opinion about:
+
+- **What data you sync** — payloads are opaque bytes. Bring your own format.
+- **How you resolve conflicts** — delivery and ordering are guaranteed; divergence is yours to handle.
+- **How a new device catches up** — pairing adds a member to the group, not its history. If a joiner needs the past, the application sends it.
+- **How users are modelled** — a device is a keypair. Linking devices to humans is the layer above.
+- **Who can do what** — there is no admin, no permission hierarchy. Authority is membership.
+
+These are deliberate. Each one keeps the primitive small and general.
+
+<NextPage href="/docs/principles-and-boundaries" label="Principles & Boundaries" />
