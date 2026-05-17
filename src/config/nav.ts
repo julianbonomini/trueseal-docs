@@ -2,6 +2,7 @@ export interface NavItem {
   title: string;
   slug: string;
   icon: string;
+  children?: NavItem[];
 }
 
 export interface NavSection {
@@ -51,9 +52,37 @@ export const docsNav: NavSection[] = [
     title: 'Components',
     icon: 'extension',
     items: [
-      { title: 'trueseal-sync',     slug: 'components/trueseal-sync/overview',     icon: 'sync' },
-      { title: 'trueseal-relay',    slug: 'components/trueseal-relay/overview',    icon: 'hub' },
-      { title: 'trueseal-noise',    slug: 'components/trueseal-noise/overview',    icon: 'encrypted' },
+      {
+        title: 'trueseal-sync',
+        slug: 'components/trueseal-sync/overview',
+        icon: 'sync',
+        children: [
+          { title: 'Envelopes & Blobs',      slug: 'components/trueseal-sync/envelopes-and-blobs',      icon: 'mail' },
+          { title: 'Group Manifest',         slug: 'components/trueseal-sync/group-manifest',           icon: 'groups' },
+          { title: 'Operation Log & Outbox', slug: 'components/trueseal-sync/operation-log-and-outbox', icon: 'history' },
+          { title: 'Delivery Guarantees',    slug: 'components/trueseal-sync/delivery-guarantees',      icon: 'verified' },
+        ],
+      },
+      {
+        title: 'trueseal-relay',
+        slug: 'components/trueseal-relay/overview',
+        icon: 'hub',
+        children: [
+          { title: 'Sessions',     slug: 'components/trueseal-relay/sessions',     icon: 'cable' },
+          { title: 'Inbox & TTL',  slug: 'components/trueseal-relay/inbox-and-ttl', icon: 'inbox' },
+          { title: 'Deploying',    slug: 'components/trueseal-relay/deploying',     icon: 'rocket_launch' },
+        ],
+      },
+      {
+        title: 'trueseal-noise',
+        slug: 'components/trueseal-noise/overview',
+        icon: 'encrypted',
+        children: [
+          { title: 'Noise Protocol Primer', slug: 'components/trueseal-noise/noise-protocol-primer', icon: 'school' },
+          { title: 'XX Pattern',            slug: 'components/trueseal-noise/xx-pattern',            icon: 'swap_horiz' },
+          { title: 'NK Pattern',            slug: 'components/trueseal-noise/nk-pattern',            icon: 'visibility_off' },
+        ],
+      },
     ],
   },
   {
