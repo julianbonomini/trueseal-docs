@@ -1,0 +1,48 @@
+---
+title: Pairing
+description: The three-step ceremony that establishes trust between two devices — with the relay blind to what is happening.
+---
+import NextPage from '../../../components/mdx/NextPage.astro';
+
+# Pairing
+
+Before two devices can sync, they must trust each other. Pairing is the ceremony where they exchange public keys directly — no central authority, no server vouching, with the relay blind to what is happening.
+
+## TL;DR
+
+- **Three steps.** Initiator shares a token out-of-band → joiner sends a `Pair` message → initiator accepts.
+- **The token** encodes the initiator's two public keys. Transmit it however you like — QR code, AirDrop, a link.
+- **The relay routes blindly.** It sees an encrypted blob addressed to the initiator. It does not know it is a pairing request.
+- **Acceptance is explicit.** The initiator must be in an active pairing window and call `accept_member()` to admit the joiner.
+
+## What Pairing Establishes
+
+After pairing, each device holds the other's public keys — noise (for addressing blobs) and signing (for verifying envelopes). These are recorded in the Group Manifest, making the new device an official member of the [Sync Group](/docs/concepts/sync-groups). From this point on, the group fans out every blob to both devices.
+
+## How It Works
+
+The full flow is illustrated in [Architecture → Pairing Flow](/docs/architecture#pairing-flow). The three steps:
+
+**Step 1 — Initiator generates a Pairing Token.** The token encodes the initiator's noise public key and signing public key. It is opaque to the caller — trueseal-sync produces raw bytes; the caller presents them out-of-band (QR code, AirDrop, link, anything).
+
+**Step 2 — Joiner sends a `Pair` message.** The joiner decodes the token, extracts the initiator's public keys, and pushes a `Pair` message to the relay addressed to the initiator's noise public key. The message is encrypted with addressed encryption — only the initiator can decrypt it — and contains the joiner's own public keys.
+
+The relay sees only that a blob was addressed to the initiator's public key. It does not know this is a pairing request.
+
+**Step 3 — Initiator accepts.** The initiator receives the `Pair` message, decrypts it, and fires `on_member_request` with a Member Request Token. The caller passes that token to `accept_member()` to admit the device. On acceptance, trueseal-sync issues a new Group Manifest including both devices, signed by the accepting device, and pushes it to all current members.
+
+## The Pairing Window
+
+The initiator opens a pairing window with `start_pairing()`. While the window is open, a `Pair` message will be accepted. The window closes on a successful `accept_member()`, an explicit `cancel_pairing()`, or a timeout.
+
+A `Pair` message received outside an open window is silently discarded. This closes a residual attack surface: an attacker who intercepts the Pairing Token can push a `Pair` message, but the initiator must be in an active window and explicitly accept it. Open the window only when the user has deliberately initiated a pairing flow.
+
+## Out-of-Band Key Exchange
+
+The security of pairing rests on the token being transmitted through a channel the relay cannot intercept. The token encodes a 256-bit public key — brute-forcing is not the concern. The threat is **interception**: an attacker who captures the QR code can attempt to pair as the joiner before the legitimate device does.
+
+The pairing window plus explicit acceptance mitigate this. The initiator sees an incoming pairing request and must accept it — if they are physically present with the joiner, they can confirm legitimacy before accepting.
+
+A future version will add a Short Authentication String (SAS) — both devices display a short code after the key exchange, and the user confirms they match. This closes the interception window entirely.
+
+<NextPage href="/docs/concepts/revocation" label="Revocation" />
