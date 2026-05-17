@@ -2,6 +2,7 @@
 title: trueseal-protocol
 description: The wire protocol specification that governs all communication between sync clients and relays. Pure documentation, no library.
 ---
+import NextPage from '../../../components/mdx/NextPage.astro';
 
 # trueseal-protocol — Overview
 
@@ -12,9 +13,9 @@ Any relay that implements trueseal-protocol accepts any client that implements t
 ## What trueseal-protocol Defines
 
 - **Wire framing** — the byte layout of every message on the wire
-- **Message types** — Push, Deliver, Heartbeat, Ack, Error — their byte tags and semantics
+- **Message types** — Push, Deliver, Heartbeat, Ack, Error, DeliverAck — their byte tags and semantics
 - **Push body layout** — how a sender addresses a blob to a recipient
-- **Ack semantics** — what Ack means and what it guarantees
+- **Ack and DeliverAck semantics** — what each acknowledgement guarantees
 - **Error semantics** — permanent rejection, non-retryable
 - **Protocol-level envelope size maximum** — enforced by both client and relay
 
@@ -27,8 +28,8 @@ Any relay that implements trueseal-protocol accepts any client that implements t
 
 ## Current Implementors
 
-**trueseal-sync** — client-side implementation. Opens Push Sessions to send blobs, Receive Sessions to receive them.
+**trueseal-sync** — client-side. Opens Push Sessions to send blobs, Receive Sessions to receive them.
 
-**trueseal-relay** — server-side implementation. Accepts Push and Receive Sessions, routes blobs between devices.
+**trueseal-relay** — server-side. Accepts Push and Receive Sessions, routes blobs between devices.
 
-See [Wire Format](./wire-format.md) for the full specification.
+<NextPage href="/docs/protocol/wire-format" label="Wire Format" />
