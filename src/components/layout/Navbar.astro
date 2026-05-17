@@ -15,13 +15,13 @@ const { activeItem = 'ecosystem' } = Astro.props;
 const links: NavLink[] = [
   { label: 'Ecosystem', href: '/' },
   { label: 'Docs',      href: '/docs/introduction' },
-  { label: 'Spec',      href: '/docs/components/trueseal-protocol/overview' },
+  { label: 'Spec',      href: '/docs/protocol/overview' },
 ];
 ---
 
 <nav class="navbar">
   <div class="navbar__left">
-    <a class="navbar__logo" href="/">TrueSeal</a>
+    <a class="navbar__logo" href="/">trueseal</a>
     <div class="navbar__links">
       {links.map(link => (
         <a
@@ -39,11 +39,7 @@ const links: NavLink[] = [
 
   <div class="navbar__right">
     <ThemeToggle client:load />
-    <button class="navbar__search">
-      <span class="material-symbols-outlined">search</span>
-      SEARCH DOCS...
-    </button>
-    <a class="navbar__cta" href="/docs/introduction">Connect</a>
+    <a class="navbar__cta" href="/relay">PUBLIC_RELAY</a>
   </div>
 </nav>
 
@@ -162,7 +158,6 @@ const links: NavLink[] = [
       padding: 0 var(--space-md);
     }
 
-    .navbar__search,
     .navbar__cta {
       display: none;
     }

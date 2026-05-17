@@ -33,6 +33,14 @@ export const docsNav: NavSection[] = [
     ],
   },
   {
+    title: 'Protocol',
+    icon: 'description',
+    items: [
+      { title: 'Overview',    slug: 'protocol/overview',    icon: 'description' },
+      { title: 'Wire Format', slug: 'protocol/wire-format', icon: 'cable' },
+    ],
+  },
+  {
     title: 'Guides',
     icon: 'map',
     items: [
@@ -46,22 +54,19 @@ export const docsNav: NavSection[] = [
       { title: 'trueseal-sync',     slug: 'components/trueseal-sync/overview',     icon: 'sync' },
       { title: 'trueseal-relay',    slug: 'components/trueseal-relay/overview',    icon: 'hub' },
       { title: 'trueseal-noise',    slug: 'components/trueseal-noise/overview',    icon: 'encrypted' },
-      { title: 'trueseal-protocol', slug: 'components/trueseal-protocol/overview', icon: 'description' },
     ],
   },
   {
-    title: 'Reference',
-    icon: 'terminal',
+    title: 'SDKs',
+    icon: 'code',
     items: [
-      { title: 'Wire Format', slug: 'components/trueseal-protocol/wire-format', icon: 'cable' },
-      { title: 'Swift SDK',   slug: 'sdks/swift',                           icon: 'phone_iphone' },
+      { title: 'Overview', slug: 'sdks', icon: 'code' },
     ],
   },
   {
-    title: 'More',
+    title: 'Project',
     icon: 'more_horiz',
     items: [
-      { title: 'SDKs',              slug: 'sdks',    icon: 'code' },
       { title: 'Future Directions', slug: 'future',  icon: 'explore' },
       { title: 'License',           slug: 'license', icon: 'gavel' },
     ],

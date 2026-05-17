@@ -71,8 +71,9 @@ import HeroVisual from './HeroVisual.astro';
 
   .hero__sub {
     font-family: var(--font-sans);
-    font-size: var(--text-body-lg-size);
-    line-height: var(--text-body-lg-leading);
+    /* ~1/3 of hero (perfect-third scale): hero clamps 5vw → sub clamps 1.67vw */
+    font-size: clamp(18px, 2vw, 26px);
+    line-height: 1.5;
     color: var(--color-on-surface-variant);
     border-left: 2px solid var(--color-primary);
     padding-left: var(--space-md);

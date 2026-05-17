@@ -15,28 +15,28 @@ const guarantees = [
     title: 'Anonymity',
     icon: 'visibility_off',
     description:
-      'No accounts, no registration, no human identity. A device is a keypair. Push sessions use fresh ephemeral keys. The relay server cannot compose a communication graph.',
+      'No accounts, no registration, no human identity. A device is a keypair. Push sessions use fresh ephemeral keys. The relay cannot compose a communication graph.',
   },
   {
     number: '03',
     title: 'Guaranteed Delivery',
     icon: 'all_inbox',
     description:
-    'A blob sent will reach every group member eventually, unconditionally. Undelivered blobs are held by the relay and stored in the sender’s outbox until confirmed.',
+      'A blob sent will reach every group member eventually, unconditionally. Undelivered blobs are held by the relay and stored in the sender’s outbox until confirmed.',
   },
   {
     number: '04',
     title: 'No Lock-In',
     icon: 'lock_open',
     description:
-    'Any relay instance works, self-hosted or public. The TrueSeal wire protocol is the only dependency, and it’s an open spec anyone can implement. Wit TrueSeal protocol relay is structurally incapable of reading it.',
+      'Any relay instance works — self-hosted, public, or someone else’s. The wire protocol is the only dependency, and it’s an open spec anyone can implement.',
   },
 ];
 ---
 
 <section class="core-guarantees">
   <div class="core-guarantees__inner">
-    <SectionHeader title="DESIGN_PRINCIPLES" subtitle="CORE GUARANTEES THAT THE DESIGN IS BASED ON" />
+    <SectionHeader title="design_principles" subtitle="THE NON-NEGOTIABLES" />
 
     <div class="core-guarantees__grid">
       {guarantees.map(g => <GuaranteeCard {...g} />)}

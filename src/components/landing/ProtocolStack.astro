@@ -8,7 +8,7 @@ const layers = [
     name: 'trueseal-protocol',
     description:
     'The wire protocol specification governing all communication between sync clients and relays. Pure documentation, no code, no library. Any client that speaks the spec works against any relay that speaks it.',
-    href: '/docs/components/trueseal-protocol/overview',
+    href: '/docs/protocol/overview',
     active: false,
   },
   {
@@ -40,7 +40,7 @@ const layers = [
 
 <section class="protocol-stack">
   <div class="protocol-stack__inner">
-    <SectionHeader title="TrueSeal_Stack" subtitle="MADE OF COMPOSABLE PRIMITIVES IMPLEMENTING TRUESEAL PROTOCOL" />
+    <SectionHeader title="trueseal_stack" subtitle="COMPOSABLE PRIMITIVES, ONE OPEN PROTOCOL" />
 
     <div class="protocol-stack__grid">
       {layers.map(layer => <StackLayer {...layer} />)}

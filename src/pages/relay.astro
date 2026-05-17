@@ -1,0 +1,77 @@
+---
+import LandingLayout from '../layouts/LandingLayout.astro';
+import Navbar from '../components/layout/Navbar.astro';
+import Footer from '../components/layout/Footer.astro';
+---
+
+<LandingLayout title="Public Relay" description="The trueseal public relay — URL, public key, and how to point clients at it.">
+  <Navbar />
+  <main class="placeholder">
+    <div class="placeholder__inner">
+      <p class="placeholder__label">// PUBLIC RELAY</p>
+      <h1 class="placeholder__headline">Coming&nbsp;soon.</h1>
+      <p class="placeholder__body">
+        The hosted public relay is not yet deployed. Until it is, run your own —
+        it is a single Go binary, no external dependencies.
+      </p>
+      <a class="placeholder__link" href="/docs/components/trueseal-relay/deploying">
+        Deploy a relay →
+      </a>
+    </div>
+  </main>
+  <Footer />
+</LandingLayout>
+
+<style>
+  .placeholder {
+    width: 100%;
+    max-width: var(--layout-max-width);
+    margin: 0 auto;
+    padding: calc(var(--space-xl) * 3) var(--space-xl);
+  }
+  .placeholder__inner {
+    max-width: 640px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+  .placeholder__label {
+    font-family: var(--font-mono);
+    font-size: var(--text-mono-label-size);
+    font-weight: var(--text-mono-label-weight);
+    letter-spacing: var(--text-mono-label-tracking);
+    color: var(--color-secondary);
+    margin: 0;
+  }
+  .placeholder__headline {
+    font-family: var(--font-sans);
+    font-size: clamp(var(--text-display-size), 5vw, 64px);
+    font-weight: var(--text-display-weight);
+    line-height: var(--text-display-leading);
+    letter-spacing: var(--text-display-tracking);
+    text-transform: uppercase;
+    color: var(--color-on-surface);
+    margin: 0;
+  }
+  .placeholder__body {
+    font-family: var(--font-sans);
+    font-size: var(--text-body-lg-size);
+    line-height: var(--text-body-lg-leading);
+    color: var(--color-on-surface-variant);
+    border-left: 2px solid var(--color-primary);
+    padding-left: var(--space-md);
+    margin: 0;
+  }
+  .placeholder__link {
+    font-family: var(--font-mono);
+    font-size: var(--text-mono-label-size);
+    font-weight: var(--text-mono-label-weight);
+    letter-spacing: var(--text-mono-label-tracking);
+    text-transform: uppercase;
+    color: var(--color-primary);
+    text-decoration: none;
+    align-self: flex-start;
+    border-bottom: 1px solid var(--color-primary);
+    padding-bottom: 2px;
+  }
+</style>
