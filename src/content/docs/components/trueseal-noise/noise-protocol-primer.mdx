@@ -2,6 +2,7 @@
 title: Noise Protocol Primer
 description: A from-scratch primer on the Noise Protocol Framework — DH chains, static and ephemeral keys, forward secrecy, and the handshake hash.
 ---
+import NextPage from '../../../../components/mdx/NextPage.astro';
 
 # Noise Protocol Primer
 
@@ -41,9 +42,9 @@ The Noise spec defines three objects that work together during a handshake:
 
 **CipherState** — wraps a symmetric encryption key and a nonce counter. Encrypts and decrypts messages using ChaCha20-Poly1305. The nonce increments on every operation, ensuring that encrypting the same plaintext twice produces different ciphertext. If the nonce overflows, the implementation panics — silently continuing with a broken nonce would be catastrophic.
 
-**SymmetricState** — maintains two values: a chaining key (`ck`) and a handshake hash (`h`). Every DH output is mixed into `ck` via HKDF, producing a new `ck` and a fresh `CipherState`. Every message sent or received is mixed into `h` via BLAKE2s. By the end of the handshake, `h` is a hash of every byte exchanged — a transcript that both sides must agree on. This is what binds the handshake messages together and prevents any message from being substituted or reordered.
+**SymmetricState** — maintains two values: a chaining key (`ck`) and a handshake hash (`h`). Every DH output is mixed into `ck` via HKDF, producing a new `ck` and a fresh `CipherState`. Every message sent or received is mixed into `h` via BLAKE2s. By the end of the handshake, `h` is a hash of every byte exchanged — a transcript both sides must agree on. This is what binds the handshake messages together and prevents any message from being substituted or reordered.
 
-**HandshakeState** — orchestrates the handshake. Holds the local static keypair, the local ephemeral keypair, and the remote peers' public keys as they are revealed during the exchange. Drives `SymmetricState` through the correct sequence of DH operations and message reads/writes for the chosen pattern.
+**HandshakeState** — orchestrates the handshake. Holds the local static keypair, the local ephemeral keypair, and the remote peer's public keys as they are revealed during the exchange. Drives `SymmetricState` through the correct sequence of DH operations and message reads/writes for the chosen pattern.
 
 ## Static and Ephemeral Keys
 
@@ -78,15 +79,13 @@ Two separate cipher states means the nonce counters are independent — the Init
 
 The Noise spec defines a small grammar of handshake patterns. A pattern specifies:
 
-- Which keys each side has before the handshake begins (pre-shared knowledge)
-- The sequence of messages exchanged
-- Which DH operations happen at each step
+- Which keys each side has before the handshake begins (pre-shared knowledge).
+- The sequence of messages exchanged.
+- Which DH operations happen at each step.
 
 trueseal-noise implements two patterns:
 
-- **XX** — no pre-shared knowledge, mutual authentication, three messages
-- **NK** — Initiator knows Responder's static key, Initiator is anonymous, two messages
+- **XX** — no pre-shared knowledge, mutual authentication, three messages.
+- **NK** — Initiator knows Responder's static key, Initiator is anonymous, two messages.
 
-See [XX Pattern](./xx-pattern.md) and [NK Pattern](./nk-pattern.md) for a step-by-step walkthrough of each.
-
-<!-- TODO: diagram — DH key mixing chain, SymmetricState → CipherState → split -->
+<NextPage href="/docs/components/trueseal-noise/xx-pattern" label="XX Pattern" />

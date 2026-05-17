@@ -2,6 +2,7 @@
 title: XX Pattern
 description: The Noise XX three-message mutual-authentication handshake — used by trueseal for long-lived Receive Sessions to the relay.
 ---
+import NextPage from '../../../../components/mdx/NextPage.astro';
 
 # XX Pattern
 
@@ -29,3 +30,5 @@ session.close()?;
 ```
 
 `remote_public_key()` is available unconditionally — mutual authentication is a guarantee of the XX pattern. Trust policy is the caller's responsibility.
+
+<NextPage href="/docs/components/trueseal-noise/nk-pattern" label="NK Pattern" />

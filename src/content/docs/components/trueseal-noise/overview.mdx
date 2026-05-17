@@ -2,6 +2,7 @@
 title: trueseal-noise
 description: Rust wrapper around snow exposing the two Noise handshake patterns the trueseal stack uses — XX for mutual auth, NK for anonymous push.
 ---
+import NextPage from '../../../../components/mdx/NextPage.astro';
 
 # trueseal-noise — Overview
 
@@ -34,8 +35,6 @@ trueseal-noise implements two patterns from the Noise specification:
 
 **`Noise_NK_25519_ChaChaPoly_BLAKE2s`** — one-way authentication. The Initiator knows the Responder's static key before the handshake begins. The Responder never learns the Initiator's static key — the Initiator is anonymous. Used for Push Sessions, where a device sends blobs to the relay without revealing its identity.
 
-See [XX Pattern](./xx-pattern.md) and [NK Pattern](./nk-pattern.md) for full details on each.
-
 ## Spec Compliance
 
 snow is verified against the official [cacophony test vectors](https://github.com/noiseprotocol/noise_wiki/wiki/Test-vectors). These vectors are published by the Noise Protocol authors and encode the exact byte-level output of a correct implementation for fixed input keys and payloads. trueseal-noise inherits this compliance by wrapping snow.
@@ -53,3 +52,13 @@ Every message is prefixed with a 2-byte big-endian length. This is required beca
 ## Platforms
 
 trueseal-noise is implemented in Rust and compiles to every platform the trueseal stack targets: macOS, Linux, iOS, and Android. Swift and Kotlin bindings are generated automatically via UniFFI — iOS and Android callers import the same implementation without hand-written FFI glue.
+
+## Going Deeper
+
+This component has three sub-pages — a primer for readers new to Noise, plus details on each handshake pattern:
+
+- [Noise Protocol Primer](./noise-protocol-primer) — from-scratch walk-through of how Noise works.
+- [XX Pattern](./xx-pattern) — three-message mutual auth handshake (Receive Sessions).
+- [NK Pattern](./nk-pattern) — two-message anonymous-initiator handshake (Push Sessions).
+
+<NextPage href="/docs/sdks" label="SDKs" />

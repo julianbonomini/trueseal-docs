@@ -2,6 +2,7 @@
 title: NK Pattern
 description: The Noise NK two-message anonymous-initiator handshake — used by trueseal for short-lived Push Sessions where the sender stays unlinkable.
 ---
+import NextPage from '../../../../components/mdx/NextPage.astro';
 
 # NK Pattern
 
@@ -27,3 +28,5 @@ session.close()?;
 ```
 
 `remote_public_key()` is intentionally absent from `session_nk::Session` — the Initiator already knew the Responder's key going in, and the Responder has no Initiator static key by design.
+
+<NextPage href="/docs/sdks" label="SDKs" />
