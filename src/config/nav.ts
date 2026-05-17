@@ -45,7 +45,7 @@ export const docsNav: NavSection[] = [
     title: 'Guides',
     icon: 'map',
     items: [
-      { title: 'Build on trueseal-sync',   slug: 'guides/build-on-trueseal-sync', icon: 'build' },
+      { title: 'Integrating trueseal-sync',   slug: 'guides/integrating-trueseal-sync', icon: 'build' },
     ],
   },
   {
