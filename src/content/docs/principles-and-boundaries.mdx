@@ -2,10 +2,31 @@
 title: Principles & Boundaries
 description: The non-negotiable principles that drive every design decision in trueseal — and the deliberate boundaries that keep the primitive sharp.
 ---
+import NextPage from '../../components/mdx/NextPage.astro';
 
 # Principles & Boundaries
 
 trueseal is opinionated by design. Every decision in the stack traces back to a small set of non-negotiable principles. Understanding them is the fastest way to know whether trueseal is the right primitive for what you are building — and exactly what you are getting when you use it.
+
+## TL;DR
+
+| Principle | What it means |
+|---|---|
+| **Zero Trust** | The relay cannot read your data — by design, not by promise. |
+| **Anonymity** | No accounts, no human identity, no communication graph the server can compose. |
+| **Fault Tolerance** | Devices go offline, networks drop. Any device can be absent indefinitely and return current. |
+| **Guaranteed Delivery** | Every blob reaches every group member. Eventually, unconditionally. |
+| **Revocability** | No device has permanent access. The mechanism matches the threat. |
+| **No Lock-In** | Any relay instance works. Self-host, public, switch — the security model does not change. |
+
+| Boundary | What we don't do |
+|---|---|
+| **Not a P2P System** | Devices never connect directly. The relay is always in the path. |
+| **Not a Real-Time Channel** | Background sync with strong delivery, not streaming. |
+| **Not a Conflict Resolver** | Delivery and ordering are guaranteed; divergence is yours to handle. |
+| **Not an Identity System** | A device is a keypair. Linking it to a human is the layer above. |
+| **Not a Durable Log** | The relay is a delivery buffer. Blobs are deleted on delivery. |
+| **Not a Platform** | No admins, no hierarchies. Authority is membership. |
 
 ## Principles
 
@@ -55,21 +76,23 @@ The security model does not change based on who operates the relay — because t
 
 ## Boundaries
 
-### Not Peer-to-Peer
+These are the things trueseal explicitly does not do — not because they are hard, but because including them would compromise the principles above.
+
+### Not a P2P System
 
 Devices never connect directly to each other — not for remote sync, not for LAN sync. The relay is always in the path.
 
-This is a deliberate decision, not a limitation. P2P remote sync requires NAT traversal (STUN, TURN) to punch through home routers, corporate firewalls, and mobile carrier networks — and when NAT traversal fails, TURN is a relay anyway. And it requires a signalling server for discovery, which is a relay with less honesty about what it is.
+P2P remote sync requires NAT traversal (STUN, TURN) to punch through home routers, corporate firewalls, and mobile carrier networks — and when NAT traversal fails, TURN is a relay anyway. And it requires a signalling server for discovery, which is a relay with less honesty about what it is.
 
 The trueseal relay solves those problems cleanly. Always-in-path eliminates NAT complexity. And because the relay is zero-knowledge, the privacy tradeoff is minimal — the operator learns which public keys are online, nothing else. LAN sync may bypass the relay in a future version. Remote sync will not.
 
-### Not Real-Time
+### Not a Real-Time Channel
 
 trueseal is not a streaming primitive. There are no WebSockets, no sub-second delivery guarantees, no presence signals, no typing indicators.
 
 This is background sync with strong delivery guarantees. The design optimises for correctness and privacy, not latency. If you need a live channel, trueseal is the wrong layer.
 
-### Not Conflict Resolution
+### Not a Conflict Resolver
 
 trueseal guarantees that every device receives every blob, in order, eventually. What you do when two devices send conflicting data while offline is your responsibility.
 
@@ -92,3 +115,5 @@ If your application needs a full history of all blobs ever sent, that is the cal
 There are no permission hierarchies, no admin roles, no moderation primitives, and no hosted-only features. Any current group member can do anything any other member can do. No device has elevated authority.
 
 If you need an admin who can remove members but cannot themselves be removed, build that above this primitive. trueseal is the floor, not the ceiling.
+
+<NextPage href="/docs/architecture" label="Architecture" />
