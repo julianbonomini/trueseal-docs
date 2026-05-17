@@ -2,6 +2,7 @@
 title: Wire Format
 description: Byte-level specification for every message exchanged over a trueseal-protocol connection — framing, types, push body layout, ack semantics.
 ---
+import NextPage from '../../../components/mdx/NextPage.astro';
 
 # Wire Format
 
@@ -136,3 +137,5 @@ trueseal-protocol uses two distinct session types, each with a different Noise h
 The two session types run on separate TCP listeners. This separation keeps the routing logic clean: Push Sessions are anonymous and stateless; Receive Sessions are identified and stateful.
 
 <!-- TODO: diagram — Push Session flow (NK), Receive Session flow (XX), message exchange for each -->
+
+<NextPage href="/docs/guides/build-on-trueseal-sync" label="Build on trueseal-sync" />
