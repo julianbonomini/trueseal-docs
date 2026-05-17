@@ -1,16 +1,21 @@
+---
+title: License
+description: All trueseal components are licensed under Apache 2.0. Why that license, and what it lets you do.
+---
+
 # License
 
-All TrueSeal components — **trueseal-noise**, **trueseal-sync**, **trueseal-relay** — are licensed under the [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0).
+All trueseal components — **trueseal-noise**, **trueseal-sync**, **trueseal-relay** — are licensed under the [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0).
 
 Copyright 2026 Julian Bonomini.
 
 ## Why Apache 2.0
 
-**Goal: maximum adoption.** TrueSeal's purpose is to make privacy the path of least resistance. A license that creates friction — legal, commercial, or practical — works against that goal. Apache 2.0 removes all friction.
+**Goal: maximum adoption.** trueseal's purpose is to make privacy the path of least resistance. A license that creates friction — legal, commercial, or practical — works against that goal. Apache 2.0 removes all friction.
 
-**Anyone can use it, for anything.** Individuals, startups, and large corporations can use, modify, and ship TrueSeal in proprietary products without obligation to contribute back. This is intentional. More products built on TrueSeal means more encrypted data in the world. That is the win.
+**Anyone can use it, for anything.** Individuals, startups, and large corporations can use, modify, and ship trueseal in proprietary products without obligation to contribute back. This is intentional. More products built on trueseal means more encrypted data in the world. That is the win.
 
-**The relay is already zero-trust.** A stricter copyleft license on trueseal-relay might seem like it protects users — forcing relay operators to publish their code. But it doesn't. TrueSeal's security model doesn't rely on the relay being trustworthy or open. Data is encrypted on-device before it moves anywhere. An adversary can run the relay, modify it, and hide those changes. It doesn't matter. The encryption is the guarantee, not the relay's source code. Copyleft on the relay would only add friction without adding security.
+**The relay is already zero-trust.** A stricter copyleft license on trueseal-relay might seem like it protects users — forcing relay operators to publish their code. But it doesn't. trueseal's security model doesn't rely on the relay being trustworthy or open. Data is encrypted on-device before it moves anywhere. An adversary can run the relay, modify it, and hide those changes. It doesn't matter. The encryption is the guarantee, not the relay's source code. Copyleft on the relay would only add friction without adding security.
 
 **Patent protection baked in.** Apache 2.0 includes an explicit patent grant: contributors cannot later sue users for patents embodied in their contributions. This matters for cryptographic code (trueseal-noise implements the Noise Protocol Framework). It also signals safety to corporate legal teams — removing a common adoption blocker.
 
@@ -20,8 +25,8 @@ Copyright 2026 Julian Bonomini.
 
 | Question | Answer |
 |---|---|
-| Can I use TrueSeal in a commercial product? | Yes |
-| Can I modify TrueSeal and not publish my changes? | Yes |
-| Can I run a hosted service on TrueSeal? | Yes |
+| Can I use trueseal in a commercial product? | Yes |
+| Can I modify trueseal and not publish my changes? | Yes |
+| Can I run a hosted service on trueseal? | Yes |
 | Do I need to contribute back? | No |
 | Are patent rights covered? | Yes — Apache 2.0 grants them explicitly |

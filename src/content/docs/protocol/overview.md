@@ -1,6 +1,11 @@
+---
+title: trueseal-protocol
+description: The wire protocol specification that governs all communication between sync clients and relays. Pure documentation, no library.
+---
+
 # trueseal-protocol — Overview
 
-trueseal-protocol is the wire protocol specification for the TrueSeal ecosystem. It defines how any sync client communicates with any relay. It is pure documentation — no code, no library, no repository dependency.
+trueseal-protocol is the wire protocol specification for the trueseal ecosystem. It defines how any sync client communicates with any relay. It is pure documentation — no code, no library, no repository dependency.
 
 Any relay that implements trueseal-protocol accepts any client that implements trueseal-protocol. Any client that implements trueseal-protocol works against any relay. The spec is the contract. The implementations are interchangeable.
 

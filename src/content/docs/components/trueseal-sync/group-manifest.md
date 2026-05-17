@@ -1,3 +1,8 @@
+---
+title: Group Manifest
+description: The signed, versioned membership record that defines a Sync Group — structure, validity rules, and last-version-wins convergence.
+---
+
 # Group Manifest
 
 The Group Manifest is the authoritative membership record for a Sync Group. It defines who belongs, who can send, and whose messages are accepted. Every device holds a copy. Any member can update it.

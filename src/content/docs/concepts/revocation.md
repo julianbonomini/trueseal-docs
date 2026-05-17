@@ -1,8 +1,13 @@
+---
+title: Revocation
+description: Two distinct removal operations in trueseal — cooperative soft removal for routine maintenance, cryptographic Destroy Group for security incidents.
+---
+
 # Revocation
 
 Membership in a Sync Group is never permanent. Any current member can remove another member. Any current member can destroy the group entirely.
 
-TrueSeal provides two distinct removal operations with different semantics, different costs, and different threat models. Choosing the right one depends on why you are removing a device.
+trueseal provides two distinct removal operations with different semantics, different costs, and different threat models. Choosing the right one depends on why you are removing a device.
 
 ## Soft Removal
 
@@ -33,7 +38,7 @@ Any current member calls `destroyGroup()`. trueseal-sync pushes a `Revoke` messa
 - Every device auto-generates a new keypair on next launch.
 - No legitimate device ever addresses a blob to any old keypair again. The compromised device's old address becomes a dead end.
 
-**The cryptographic guarantee:** Exclusion in TrueSeal works by key rotation, not key blocking. The relay never blocks any key — it remains zero-knowledge. A compromised device stops receiving blobs because no legitimate device encrypts to its old public key anymore. The relay is irrelevant to this guarantee.
+**The cryptographic guarantee:** Exclusion in trueseal works by key rotation, not key blocking. The relay never blocks any key — it remains zero-knowledge. A compromised device stops receiving blobs because no legitimate device encrypts to its old public key anymore. The relay is irrelevant to this guarantee.
 
 **The cost:** Every member must re-pair. The group is torn down completely. This is intentional — it is the price of a cryptographic guarantee.
 
@@ -49,6 +54,6 @@ A future version may implement targeted key rotation: rotate everyone except the
 
 Any current member can remove any other member. Any current member can destroy the group. There is no admin, no owner, no device with elevated authority.
 
-If your application requires a permission hierarchy — only admins can remove members, or only the group creator can destroy the group — implement that policy above this primitive. TrueSeal enforces only that the issuer of a manifest update was a member at the time of issuance.
+If your application requires a permission hierarchy — only admins can remove members, or only the group creator can destroy the group — implement that policy above this primitive. trueseal enforces only that the issuer of a manifest update was a member at the time of issuance.
 
 <!-- TODO: diagram — soft removal flow vs destroy group flow, what each operation touches -->

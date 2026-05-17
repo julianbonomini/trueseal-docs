@@ -1,3 +1,8 @@
+---
+title: Envelopes & Blobs
+description: The Envelope format — anatomy, addressed encryption, the hidden sender, signature verification, and message types.
+---
+
 # Envelopes & Blobs
 
 Every piece of data that moves through trueseal-sync travels as an **Envelope** — a self-contained unit that the relay can route without reading, and that only the intended recipient can decrypt.

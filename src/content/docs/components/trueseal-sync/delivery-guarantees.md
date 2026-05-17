@@ -1,3 +1,8 @@
+---
+title: Delivery Guarantees
+description: How trueseal-sync guarantees every blob reaches every member — outbox replay on the sender side, deferred delivery on the relay side, and where the limits are.
+---
+
 # Delivery Guarantees
 
 trueseal-sync guarantees that every blob sent will reach every current group member — eventually, unconditionally. This is not best-effort. It is the contract.

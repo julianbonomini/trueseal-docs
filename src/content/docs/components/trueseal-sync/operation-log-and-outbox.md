@@ -1,3 +1,8 @@
+---
+title: Operation Log & Outbox
+description: The durable record of everything a device has sent, and the outbox view that drives guaranteed delivery via reconnect replay.
+---
+
 # Operation Log & Outbox
 
 The Operation Log is the durable record of everything a device has sent. The Outbox is a view over that log — the subset of entries not yet confirmed delivered to the relay. Together they are what makes guaranteed delivery possible.

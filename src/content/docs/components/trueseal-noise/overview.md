@@ -1,6 +1,11 @@
+---
+title: trueseal-noise
+description: Rust wrapper around snow exposing the two Noise handshake patterns the trueseal stack uses — XX for mutual auth, NK for anonymous push.
+---
+
 # trueseal-noise — Overview
 
-trueseal-noise is a Rust wrapper around [snow](https://github.com/mcginty/snow) — a well-tested Noise Protocol implementation — exposing the two handshake patterns used by the TrueSeal stack. It is the cryptographic transport layer of TrueSeal.
+trueseal-noise is a Rust wrapper around [snow](https://github.com/mcginty/snow) — a well-tested Noise Protocol implementation — exposing the two handshake patterns used by the trueseal stack. It is the cryptographic transport layer of trueseal.
 
 ## What It Does
 
@@ -37,7 +42,7 @@ snow is verified against the official [cacophony test vectors](https://github.co
 
 ## Standalone
 
-trueseal-noise has no dependency on the rest of the TrueSeal stack. It knows nothing about sync groups, relays, envelopes, or devices. It produces encrypted channels. What travels over those channels is the caller's concern.
+trueseal-noise has no dependency on the rest of the trueseal stack. It knows nothing about sync groups, relays, envelopes, or devices. It produces encrypted channels. What travels over those channels is the caller's concern.
 
 It can be used independently in any application that needs authenticated, forward-secret transport — with no trueseal-sync or trueseal-relay in sight.
 
@@ -47,4 +52,4 @@ Every message is prefixed with a 2-byte big-endian length. This is required beca
 
 ## Platforms
 
-trueseal-noise is implemented in Rust and compiles to every platform the TrueSeal stack targets: macOS, Linux, iOS, and Android. Swift and Kotlin bindings are generated automatically via UniFFI — iOS and Android callers import the same implementation without hand-written FFI glue.
+trueseal-noise is implemented in Rust and compiles to every platform the trueseal stack targets: macOS, Linux, iOS, and Android. Swift and Kotlin bindings are generated automatically via UniFFI — iOS and Android callers import the same implementation without hand-written FFI glue.

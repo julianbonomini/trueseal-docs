@@ -1,6 +1,11 @@
+---
+title: SDKs
+description: Available SDKs for trueseal-sync — Swift, Kotlin, TypeScript — and how to install them.
+---
+
 # SDKs
 
-trueseal-sync is the reference implementation of trueseal-protocol, written in Rust. For TrueSeal to be usable by any developer — not just Rust developers — the sync primitive needs to be importable in the languages developers actually build with.
+trueseal-sync is the reference implementation of trueseal-protocol, written in Rust. For trueseal to be usable by any developer — not just Rust developers — the sync primitive needs to be importable in the languages developers actually build with.
 
 ## Planned SDKs
 

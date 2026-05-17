@@ -1,6 +1,11 @@
+---
+title: Device Identity
+description: In trueseal, identity is a keypair — generated locally, never registered, never linked to a human.
+---
+
 # Device Identity
 
-In TrueSeal, identity is a keypair. Nothing more.
+In trueseal, identity is a keypair. Nothing more.
 
 There are no accounts, no registration, no server that issued your credentials. A device generates its own identity locally, on first launch, without communicating with anyone. That identity is two keypairs — and those keypairs are the device, as far as the protocol is concerned.
 
@@ -12,7 +17,7 @@ Every device holds two long-term keypairs:
 
 **Signing keypair (Ed25519)** — used to sign every envelope the device sends. Recipients use the signing public key to verify that a blob genuinely came from a known device and has not been tampered with. The signing public key is what the Group Manifest tracks as the authoritative identity of a member.
 
-Both keypairs are generated locally on first launch and never leave the device. The private keys are never transmitted, never stored on the relay, and never known to TrueSeal infrastructure.
+Both keypairs are generated locally on first launch and never leave the device. The private keys are never transmitted, never stored on the relay, and never known to trueseal infrastructure.
 
 ## No Registration
 
@@ -30,7 +35,7 @@ If the Session State is wiped — intentionally or due to data loss — the devi
 
 ## What Identity Is Not
 
-**Identity is not a human.** One person may have multiple devices, each with its own keypair. The protocol treats them as independent participants. Linking multiple devices to a single person is the caller's responsibility — TrueSeal has no concept of it.
+**Identity is not a human.** One person may have multiple devices, each with its own keypair. The protocol treats them as independent participants. Linking multiple devices to a single person is the caller's responsibility — trueseal has no concept of it.
 
 **Identity is not portable.** Private keys never leave the device. You cannot "log in" to a device from another. If you get a new phone, you pair it as a new device. Your old device's identity stays on your old phone.
 

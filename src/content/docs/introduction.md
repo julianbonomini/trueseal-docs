@@ -1,6 +1,11 @@
+---
+title: Introduction
+description: trueseal is a free, composable ecosystem of primitives for zero-trust, end-to-end encrypted sync between devices.
+---
+
 # Introduction
 
-TrueSeal is a free, composable ecosystem of primitives for building zero-trust, end-to-end encrypted sync between devices — without trusting any server, without accounts, and without lock-in to any platform or operator.
+trueseal is a free, composable ecosystem of primitives for building zero-trust, end-to-end encrypted sync between devices — without trusting any server, without accounts, and without lock-in to any platform or operator.
 
 ## The Problem
 
@@ -10,16 +15,16 @@ The privacy-preserving alternatives are either closed systems (Anytype, Signal, 
 
 Every developer who wants private-by-default sync either has to build the entire stack from scratch, or gives up and trusts a platform (or worse, no privacy).
 
-TrueSeal exists to close that gap.
+trueseal exists to close that gap.
 
-## What TrueSeal Is
+## What trueseal Is
 
-TrueSeal is a stack of three independent components that together give any developer zero-trust sync as a drop-in primitive:
+trueseal is a stack of three independent components that together give any developer zero-trust sync as a drop-in primitive:
 
 
 ![intro-diagram](/assets/introduction_diagram.png)
 
-**trueseal-noise** implements the [Noise Protocol Framework](https://noiseprotocol.org/) in Rust — the same foundation WireGuard and Signal are built on. It provides authenticated, forward-secret encrypted channels between devices. Standalone, spec-verified, no dependencies on the rest of the TrueSeal stack.
+**trueseal-noise** implements the [Noise Protocol Framework](https://noiseprotocol.org/) in Rust — the same foundation WireGuard and Signal are built on. It provides authenticated, forward-secret encrypted channels between devices. Standalone, spec-verified, no dependencies on the rest of the trueseal stack.
 
 **trueseal-sync** is the sync engine. It handles device identity, pairing, group membership, encrypted delivery to every group member, and guaranteed outbox replay on reconnect. Drop it into any Go, Swift, or Kotlin app and your data is encrypted before it leaves the device. Always.
 
@@ -31,9 +36,9 @@ Data is encrypted on device before it moves anywhere. The relay is structurally 
 
 This is not a configuration option. It is a constraint baked into the design.
 
-## What TrueSeal Is Not
+## What trueseal Is Not
 
-TrueSeal is a sync primitive, not an application. It does not do conflict resolution, real-time streaming, identity management, or permission hierarchies. Those belong in the layer above.
+trueseal is a sync primitive, not an application. It does not do conflict resolution, real-time streaming, identity management, or permission hierarchies. Those belong in the layer above.
 
 See [Principles & Boundaries](./principles-and-boundaries.md) for the full picture.
 
@@ -42,4 +47,4 @@ See [Principles & Boundaries](./principles-and-boundaries.md) for the full pictu
 - Understand the design decisions → [Principles & Boundaries](./principles-and-boundaries.md)
 - Understand how the components fit together → [Architecture](./architecture.md)
 - Understand the mental models before you build → [Concepts](./concepts/)
-- Jump straight to building → [Getting Started](./guides/getting-started.md)
+- Jump straight to building → [Build on trueseal-sync](./guides/build-on-trueseal-sync.md)

@@ -1,3 +1,8 @@
+---
+title: Sync Groups
+description: A Sync Group is the set of devices that share data, defined by a signed Group Manifest that any member can update.
+---
+
 # Sync Groups
 
 A Sync Group is the set of devices that share data. Every blob sent by any member is delivered to every other member. Membership is not implicit — it is defined by a signed document called the Group Manifest, which every member holds and every member can update.

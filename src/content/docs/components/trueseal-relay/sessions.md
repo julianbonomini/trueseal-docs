@@ -1,3 +1,8 @@
+---
+title: Sessions
+description: The two session types trueseal-relay handles — anonymous Push Sessions (Noise NK) and authenticated Receive Sessions (Noise XX).
+---
+
 # Sessions
 
 trueseal-relay handles two distinct session types. Each uses a different Noise handshake pattern and serves a different purpose. They run on separate TCP listeners.

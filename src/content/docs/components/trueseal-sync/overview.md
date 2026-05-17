@@ -1,6 +1,11 @@
+---
+title: trueseal-sync
+description: The Rust sync engine — device identity, pairing, group membership, addressed encryption, and guaranteed outbox replay.
+---
+
 # trueseal-sync — Overview
 
-trueseal-sync is a Rust library for E2EE, local-first sync between devices. It is the protocol authority of the TrueSeal stack — it owns the Envelope format, addressed encryption, pairing, group membership, and delivery guarantees. Drop it into any application and your data is encrypted before it leaves the device.
+trueseal-sync is a Rust library for E2EE, local-first sync between devices. It is the protocol authority of the trueseal stack — it owns the Envelope format, addressed encryption, pairing, group membership, and delivery guarantees. Drop it into any application and your data is encrypted before it leaves the device.
 
 ## What It Does
 

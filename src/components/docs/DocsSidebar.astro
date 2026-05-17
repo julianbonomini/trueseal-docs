@@ -11,8 +11,8 @@ const currentPath = Astro.url.pathname;
       <span class="material-symbols-outlined">lock</span>
     </div>
     <div>
-      <div class="sidebar-brand__name">TRUESEAL_CORE</div>
-      <div class="sidebar-brand__version">v1.2.4-stable</div>
+      <div class="sidebar-brand__name">trueseal</div>
+      <div class="sidebar-brand__version">DOCS</div>
     </div>
   </div>
 
@@ -41,17 +41,9 @@ const currentPath = Astro.url.pathname;
   <!-- Bottom actions -->
   <div class="sidebar-footer">
     <div class="sidebar-footer__divider" />
-    <a href="#" class="sidebar-download">
-      <span class="material-symbols-outlined">download</span>
-      Download SDK
-    </a>
-    <a href="#" class="sidebar-link sidebar-link--muted">
-      <span class="material-symbols-outlined">settings</span>
-      Settings
-    </a>
-    <a href="#" class="sidebar-link sidebar-link--muted">
-      <span class="material-symbols-outlined">contact_support</span>
-      Support
+    <a href="https://github.com/julianbonomini" class="sidebar-link sidebar-link--muted" target="_blank" rel="noopener">
+      <span class="material-symbols-outlined">code</span>
+      GitHub
     </a>
   </div>
 </aside>
@@ -99,6 +91,7 @@ const currentPath = Astro.url.pathname;
     font-weight: 700;
     color: var(--color-on-surface);
     letter-spacing: 0.02em;
+    text-transform: lowercase;
   }
 
   .sidebar-brand__version {

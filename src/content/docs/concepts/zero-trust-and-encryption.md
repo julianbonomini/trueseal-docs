@@ -1,14 +1,19 @@
+---
+title: Zero Trust & Encryption
+description: How trueseal achieves zero trust as a structural property — two layers of encryption, signed envelopes, and a relay that never holds a key.
+---
+
 # Zero Trust & Encryption
 
 Zero trust is not a policy. It is a structural property.
 
-In most sync systems, the server is trusted implicitly — it receives your data, stores it, and forwards it. The promise is that it won't look. TrueSeal is designed so that promise is never needed. The relay receives ciphertext. It has no keys. It cannot read the data it routes, regardless of the intentions of whoever operates it.
+In most sync systems, the server is trusted implicitly — it receives your data, stores it, and forwards it. The promise is that it won't look. trueseal is designed so that promise is never needed. The relay receives ciphertext. It has no keys. It cannot read the data it routes, regardless of the intentions of whoever operates it.
 
 This page explains how that property is achieved and maintained throughout the stack.
 
 ## Two Layers of Encryption
 
-TrueSeal encrypts data at two distinct layers, for two distinct purposes.
+trueseal encrypts data at two distinct layers, for two distinct purposes.
 
 ### Layer 1 — Addressed Encryption (at rest)
 
@@ -63,8 +68,8 @@ An adversary who compromises the relay entirely — binary, database, network �
 
 Zero trust protects against a compromised or malicious relay. It does not protect against:
 
-- **A compromised device.** If an attacker has access to a device's private key, they can decrypt any blob addressed to that device and impersonate it as a sender. Device security is out of scope for TrueSeal — it is the caller's and the platform's responsibility.
-- **Traffic analysis at the network level.** The relay knows which IPs connect and when. An adversary with network-level access can observe connection patterns even without reading content. TrueSeal does not route through a mix network or provide timing anonymity.
+- **A compromised device.** If an attacker has access to a device's private key, they can decrypt any blob addressed to that device and impersonate it as a sender. Device security is out of scope for trueseal — it is the caller's and the platform's responsibility.
+- **Traffic analysis at the network level.** The relay knows which IPs connect and when. An adversary with network-level access can observe connection patterns even without reading content. trueseal does not route through a mix network or provide timing anonymity.
 - **Blobs sent before a compromised device is removed.** If a device is removed from a group, it cannot decrypt future blobs. It retains the private key to decrypt any blobs it received before removal. See [Revocation](./revocation.md).
 
 <!-- TODO: diagram — two encryption layers, blob lifecycle from plaintext to relay to recipient -->

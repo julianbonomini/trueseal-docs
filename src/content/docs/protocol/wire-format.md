@@ -1,3 +1,8 @@
+---
+title: Wire Format
+description: Byte-level specification for every message exchanged over a trueseal-protocol connection — framing, types, push body layout, ack semantics.
+---
+
 # Wire Format
 
 All trueseal-protocol messages share a common framing. Every message on the wire is:

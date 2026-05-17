@@ -1,3 +1,8 @@
+---
+title: trueseal-relay
+description: A zero-knowledge delivery buffer for encrypted blobs. Self-hostable Go binary that stores ciphertext for offline recipients and forwards on reconnect.
+---
+
 # trueseal-relay — Overview
 
 trueseal-relay is the infrastructure layer of the trueseal stack — a zero-knowledge delivery buffer that stores and forwards encrypted blobs between devices. It implements [trueseal-protocol](../../protocol/overview.md) on the server side.

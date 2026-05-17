@@ -1,3 +1,8 @@
+---
+title: Pairing
+description: The three-step ceremony that establishes trust between two devices — with the relay blind to what is happening.
+---
+
 # Pairing
 
 Before two devices can sync, they must trust each other. Pairing is the ceremony that establishes that trust — the moment where two devices exchange public keys and agree to communicate.
@@ -15,7 +20,7 @@ From this point on, the group fans out every blob to both devices. The new devic
 Pairing is a three-step ceremony:
 
 **Step 1 — The initiating device generates a Pairing Token.**
-The token encodes the initiator's noise public key and signing public key. It is opaque to the caller — trueseal-sync produces the raw bytes and the caller is responsible for presenting them out-of-band. In practice, this means a QR code, AirDrop, a link, or any channel the caller chooses. TrueSeal never touches the presentation layer.
+The token encodes the initiator's noise public key and signing public key. It is opaque to the caller — trueseal-sync produces the raw bytes and the caller is responsible for presenting them out-of-band. In practice, this means a QR code, AirDrop, a link, or any channel the caller chooses. trueseal never touches the presentation layer.
 
 **Step 2 — The joining device reads the token and sends a `Pair` message.**
 The joining device decodes the token, extracts the initiator's public keys, and pushes a `Pair` message to the relay addressed to the initiator's noise public key. The message is encrypted using addressed encryption — only the initiator can decrypt it. It contains the joiner's own noise and signing public keys.
@@ -49,8 +54,8 @@ A future version will add a Short Authentication String (SAS) — both devices d
 
 trueseal-sync handles the cryptography, the relay communication, and the manifest update. The caller is responsible for:
 
-- **Presenting the Pairing Token** — encoding it as a QR code, sharing it via AirDrop, copying it to a text field. TrueSeal produces bytes, the caller handles UX.
+- **Presenting the Pairing Token** — encoding it as a QR code, sharing it via AirDrop, copying it to a text field. trueseal produces bytes, the caller handles UX.
 - **Deciding when to accept** — the `on_member_request` callback fires with a Member Request Token. The caller decides whether to present a confirmation UI or accept automatically.
-- **Bootstrapping history** — once `on_member_joined` fires, the new device is in the group but has no history. If the caller needs the new device to have past blobs, it must send them. TrueSeal does not backfill history automatically.
+- **Bootstrapping history** — once `on_member_joined` fires, the new device is in the group but has no history. If the caller needs the new device to have past blobs, it must send them. trueseal does not backfill history automatically.
 
 <!-- TODO: diagram — pairing flow, three steps, what relay sees vs what devices exchange -->

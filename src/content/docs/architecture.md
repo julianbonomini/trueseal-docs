@@ -1,6 +1,11 @@
+---
+title: Architecture
+description: How the trueseal stack fits together — trueseal-noise, trueseal-sync, trueseal-relay, and the trueseal-protocol spec that binds them.
+---
+
 # Architecture
 
-TrueSeal is three independent components bound together by a shared wire protocol specification. Each component can be understood, deployed, and replaced in isolation. Together they form a zero-trust sync stack where no single component is a point of failure — or a point of trust.
+trueseal is three independent components bound together by a shared wire protocol specification. Each component can be understood, deployed, and replaced in isolation. Together they form a zero-trust sync stack where no single component is a point of failure — or a point of trust.
 
 ## Components at a Glance
 
@@ -102,7 +107,7 @@ The relay is in the path for step 2 — the joiner addresses the `Pair` message 
 
 trueseal-noise, trueseal-sync, and trueseal-relay are independently usable:
 
-- **trueseal-noise** can be used as a standalone Noise Protocol library for any application that needs authenticated encrypted channels — with no dependency on the rest of TrueSeal.
+- **trueseal-noise** can be used as a standalone Noise Protocol library for any application that needs authenticated encrypted channels — with no dependency on the rest of trueseal.
 - **trueseal-relay** is a generic encrypted blob router. Any client that implements trueseal-protocol can use it — trueseal-sync is one implementation, not the only one.
 - **trueseal-sync** can target any relay that implements trueseal-protocol — a self-hosted instance, a community instance, or any future compatible implementation.
 - **trueseal-protocol** is the contract that makes this possible. Relay and client implementations are interchangeable as long as both speak the spec.

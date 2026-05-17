@@ -1,22 +1,27 @@
+---
+title: Future Directions
+description: The long-term vision for trueseal — selective replication, broadcast encryption with selective decryption, and the encrypted replication layer beneath applications.
+---
+
 # Future Directions
 
-This document captures the long-term vision for TrueSeal — where it could go if the primitive proves itself and the hard problems get solved. Not a roadmap. Not promises. A north star.
+This document captures the long-term vision for trueseal — where it could go if the primitive proves itself and the hard problems get solved. Not a roadmap. Not promises. A north star.
 
 ---
 
 ## The End Goal: The Encrypted Replication Layer Beneath Applications
 
-TrueSeal starts as a sync primitive. The end goal is something more fundamental.
+trueseal starts as a sync primitive. The end goal is something more fundamental.
 
 Every application that needs to share state across devices or users faces the same problem: how do you replicate data to the right places, with the right access, without a central authority that can be compromised, coerced, or captured? Today the answer is always a server with an ACL system and an identity layer. That server is a liability — it knows who you are, what you're doing, and who you're talking to.
 
-The vision for TrueSeal is to make that server unnecessary. Not by removing replication — you still need data to move — but by making the replication layer structurally incapable of knowing what it's replicating or who it's replicating to.
+The vision for trueseal is to make that server unnecessary. Not by removing replication — you still need data to move — but by making the replication layer structurally incapable of knowing what it's replicating or who it's replicating to.
 
 **The target:** selective replication without identity, without ACL systems, without a central authority. A device receives exactly the data it holds a capability for. Capabilities are cryptographic — hold the key, decrypt the blob; don't hold it, the blob is noise. No accounts. No permissions database. No server that can be subpoenaed.
 
 This is an unsolved problem. Everyone who has tried has either introduced a central issuer (UCAN, Macaroons), used group keys that break anonymity (Signal Sender Keys), or punted the problem to the application layer. The combination of fine-grained capability distribution, zero-trust relay, and anonymity — all three together — does not exist as a working primitive today.
 
-If TrueSeal solves it, it stops being a library. It becomes infrastructure. The encrypted replication layer beneath applications — sitting below databases, event systems, collaborative tools, agent coordination layers. Anything that moves state between parties who should not have to trust each other.
+If trueseal solves it, it stops being a library. It becomes infrastructure. The encrypted replication layer beneath applications — sitting below databases, event systems, collaborative tools, agent coordination layers. Anything that moves state between parties who should not have to trust each other.
 
 That is the end goal. Build the primitive. Prove it with real applications. Then go after the unsolved problem.
 
@@ -59,7 +64,7 @@ A topic has its own X25519 keypair. Blobs are encrypted with the topic public ke
 
 **Forward secrecy** — a shared topic key does not provide per-device forward secrecy. Anyone who ever held the key could decrypt everything encrypted to it, including past blobs.
 
-These are known tradeoffs, not blockers. The right time to tackle this is after TrueSeal-clip stress-tests the primitive and reveals whether groups-as-capabilities is sufficient for real use cases, or whether topic-level granularity is genuinely needed.
+These are known tradeoffs, not blockers. The right time to tackle this is after trueseal-clip stress-tests the primitive and reveals whether groups-as-capabilities is sufficient for real use cases, or whether topic-level granularity is genuinely needed.
 
 ---
 

@@ -1,3 +1,8 @@
+---
+title: The Dumb Relay
+description: The relay is infrastructure, not a service — deliberately stripped of any concept of users, groups, or content.
+---
+
 # The Dumb Relay
 
 The relay is infrastructure, not a service. It moves encrypted blobs from senders to recipients. It does not understand what it moves, who sent it, or why. This is not a limitation — it is the design.
@@ -6,7 +11,7 @@ The relay is infrastructure, not a service. It moves encrypted blobs from sender
 
 A traditional sync server is smart: it knows your account, your devices, your data model. It can enforce permissions, resolve conflicts, and answer queries. It can also read your data, hand it to a third party, or be compelled to produce it under legal pressure.
 
-The TrueSeal relay is deliberately stripped of all of that. It has no concept of users, groups, or relationships between devices. It receives blobs addressed to a public key, stores them if the recipient is offline, and delivers them when the recipient connects. That is the entirety of its function.
+The trueseal relay is deliberately stripped of all of that. It has no concept of users, groups, or relationships between devices. It receives blobs addressed to a public key, stores them if the recipient is offline, and delivers them when the recipient connects. That is the entirety of its function.
 
 This is the zero-trust property made concrete. The relay is not trusted because it is not capable of betraying that trust. There is nothing to betray.
 
@@ -42,6 +47,6 @@ For remote sync, the relay is always in the path. There is no peer-to-peer mode,
 
 This is a deliberate design decision. P2P remote sync requires NAT traversal to reach devices behind home routers, corporate firewalls, and mobile carrier networks — and when hole-punching fails, a TURN fallback relay is required anyway. P2P also requires both devices to be online simultaneously, which eliminates store-and-forward delivery. And device discovery requires a signalling server — which is a relay by another name.
 
-The TrueSeal relay solves all three problems in one component. Because it is zero-knowledge, the privacy cost is minimal: the operator learns which public keys are active, nothing else. The security model is identical whether the relay is run by a trusted friend or an active adversary.
+The trueseal relay solves all three problems in one component. Because it is zero-knowledge, the privacy cost is minimal: the operator learns which public keys are active, nothing else. The security model is identical whether the relay is run by a trusted friend or an active adversary.
 
 <!-- TODO: diagram — relay inbox model, what operator sees vs what is hidden, self-host deployment -->

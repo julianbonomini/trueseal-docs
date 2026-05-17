@@ -1,3 +1,8 @@
+---
+title: Inbox & TTL
+description: The relay's storage model — per-recipient inboxes, the InboxStore contract, SQLite backend, and TTL reaping.
+---
+
 # Inbox & TTL
 
 The Inbox is the relay's storage unit. Every device has one — a set of blobs addressed to its public key that have not yet been delivered. The relay's entire storage model is built around this simple structure.

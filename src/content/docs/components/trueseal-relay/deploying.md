@@ -1,3 +1,8 @@
+---
+title: Deploying
+description: Self-host a trueseal-relay instance — keypair generation, configuration, single-node setup, Docker, and operational notes.
+---
+
 # Deploying
 
 trueseal-relay ships as a single binary. Deployment requires three things: a keypair, a config, and a storage backend.
