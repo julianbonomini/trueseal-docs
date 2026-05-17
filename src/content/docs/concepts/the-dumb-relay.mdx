@@ -1,0 +1,53 @@
+---
+title: The Dumb Relay
+description: The relay is infrastructure, not a service — deliberately stripped of any concept of users, groups, or content.
+---
+import NextPage from '../../../components/mdx/NextPage.astro';
+
+# The Dumb Relay
+
+The relay is infrastructure, not a service. It moves encrypted blobs from senders to recipients. It does not understand what it moves, who sent it, or why. This is not a limitation — it is the design.
+
+## TL;DR
+
+- **The relay is a delivery buffer, not a database.** Blobs are deleted on delivery.
+- **It holds one thing per device:** an Inbox of undelivered blobs addressed to that device's public key.
+- **It knows almost nothing.** Recipient public keys, active connections. Not senders, not groups, not content.
+- **Who runs it doesn't matter.** Self-host, public, someone else's — the security model is identical.
+
+## What "Dumb" Means
+
+A traditional sync server is smart: it knows your account, your devices, your data model. It can enforce permissions, resolve conflicts, answer queries. It can also read your data, hand it to a third party, or be compelled to produce it under legal pressure.
+
+The trueseal relay is deliberately stripped of all of that. It has no concept of users, groups, or relationships between devices. It receives blobs addressed to a public key, stores them if the recipient is offline, and delivers them when the recipient connects. That is the entirety of its function.
+
+This is the zero-trust property made concrete. The relay is not trusted because it is not capable of betraying that trust. There is nothing to betray.
+
+## What the Relay Holds
+
+Each device has an **Inbox** — a set of undelivered blobs addressed to its public key. The inbox exists only as long as there are undelivered blobs. When a blob is delivered, it is deleted immediately. When a device reconnects, its inbox is flushed and cleared.
+
+Blobs never delivered — because the recipient is permanently offline, lost, or abandoned — are reaped after a TTL. The relay is a delivery buffer, not a durable log.
+
+## What the Relay Knows
+
+Relay knowledge is minimal by design:
+
+- **Which noise keys have active connections** — required to deliver blobs immediately to online devices without polling.
+- **The recipient public key per blob** — required to know which inbox to place a blob into.
+
+That is all. The relay does not know who sent any blob (push sessions use anonymous ephemeral keypairs), which devices belong to the same group (it has no concept of groups), or what any blob contains (everything is encrypted before it reaches the relay).
+
+An operator can observe which public keys are receiving blobs and when. They cannot observe what is in those blobs, who is sending them, or which keys are communicating with each other.
+
+## Self-Hosting and Operator Trust
+
+Because the relay is zero-knowledge, the question of who operates it is irrelevant to the security model. You can use a public instance, run your own on a $5 VPS, or point trueseal-sync at any compatible relay — the security guarantees are identical.
+
+The relay has a long-term keypair of its own. Connecting devices verify the relay's identity via the Noise XX handshake before sending anything. The relay's public key is distributed out-of-band by the operator — baked into a client binary, published on a landing page, or shared as a QR code. The relay does not manage its own discovery.
+
+## Always in the Path
+
+For remote sync, the relay is always in the path. There is no peer-to-peer mode, no NAT traversal, no STUN or TURN. Devices connect outbound to the relay, and the relay bridges them. This is a deliberate decision — see [Not a P2P System](/docs/principles-and-boundaries#not-a-p2p-system) for the full reasoning.
+
+<NextPage href="/docs/protocol/overview" label="Protocol Overview" />
