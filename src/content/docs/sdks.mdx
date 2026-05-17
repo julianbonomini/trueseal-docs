@@ -1,0 +1,42 @@
+---
+title: SDKs
+description: Available SDKs for trueseal-sync — Swift, Kotlin, and TypeScript. Per-SDK API reference lives in each repo.
+---
+import NextPage from '../../components/mdx/NextPage.astro';
+
+# SDKs
+
+trueseal-sync is implemented in Rust. The SDKs below wrap the Rust core through native bindings so each language gets idiomatic, statically-typed access — without re-implementing the protocol in three places.
+
+Per-SDK API reference, install instructions, and integration examples live in each repo's README. This page is the entry point — pick your platform and follow the link.
+
+## Available
+
+| SDK | Status | Repo |
+|---|---|---|
+| **Swift** | Production-ready | [github.com/julianbonomini/trueseal-sync-swift](https://github.com/julianbonomini/trueseal-sync-swift) |
+| **Kotlin** | Available | [github.com/julianbonomini/trueseal-sync-kotlin](https://github.com/julianbonomini/trueseal-sync-kotlin) |
+| **TypeScript** | Available | [github.com/julianbonomini/trueseal-sync-ts](https://github.com/julianbonomini/trueseal-sync-ts) |
+
+### Swift
+
+iOS and macOS. Distributed via Swift Package Manager. Wraps the Rust xcframework via UniFFI. The most mature SDK — used by [trueseal-clip](/showcase) on both platforms.
+
+### Kotlin
+
+Android (and JVM). Distributed via Gradle. Wraps the Rust core via UniFFI bindings.
+
+### TypeScript
+
+Node.js and Electron. Native bindings to the Rust core — not WASM. Browser is **not** a supported target: the protocol speaks raw TCP to the relay, which browsers cannot do.
+
+## Rust
+
+The core itself is Rust. If you are building on Rust, use [`trueseal-sync`](https://github.com/julianbonomini/trueseal-sync) directly — there is no SDK wrapper because there is nothing to wrap.
+
+## Other Languages
+
+- **Go** — planned, post-launch. The relay is Go; a sync SDK is on the roadmap.
+- **Anything else** — implement [trueseal-protocol](/docs/protocol/overview). The wire spec is the contract; any conforming client interoperates with any conforming relay.
+
+<NextPage href="/docs/future" label="Future Directions" />
