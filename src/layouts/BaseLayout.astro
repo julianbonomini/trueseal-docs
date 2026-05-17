@@ -8,6 +8,9 @@ const {
   title,
   description = 'trueseal — zero-trust sync primitive for developers',
 } = Astro.props;
+
+const fullTitle = title === 'trueseal' ? 'trueseal' : `${title} — trueseal`;
+const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? 'https://trueseal.dev');
 ---
 
 <!doctype html>
@@ -16,7 +19,21 @@ const {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
-    <title>{title === 'trueseal' ? 'trueseal' : `${title} — trueseal`}</title>
+    <link rel="canonical" href={canonicalURL} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="trueseal" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalURL} />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+
+    <title>{fullTitle}</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <!-- Theme init: runs before paint to prevent flash -->

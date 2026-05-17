@@ -8,7 +8,6 @@ import Button from '../components/ui/Button.astro';
 // Pre-launch placeholder values. Swap these two strings when the relay deploys.
 const RELAY_URL = 'tcp://relay.trueseal.dev';
 const RELAY_PUBKEY_HEX = '3f783127c25c91ac8ea02ab97edca78e5708e0c686fa0cc2e714c135c7cd095e';
-const PENDING = true;
 
 // Group the hex into 4-char blocks for readability (8 + 8 = 16 groups of 4).
 const hexGroups: string[] = [];
@@ -38,9 +37,6 @@ const hexLine2 = hexGroups.slice(8).join(' ');
         <!-- QR side -->
         <div class="relay__qr-side">
           <div class="relay__qr-wrap">
-            {PENDING && (
-              <div class="relay__pending">// PENDING DEPLOYMENT</div>
-            )}
             <div class="relay__qr-frame">
               <img class="relay__qr-img" src="/assets/relay-qr.svg" alt="QR code encoding the trueseal public relay endpoint and identity key" />
             </div>
