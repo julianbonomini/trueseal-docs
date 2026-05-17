@@ -96,7 +96,7 @@ export const docsNav: NavSection[] = [
     title: 'Project',
     icon: 'more_horiz',
     items: [
-      { title: 'Future Directions', slug: 'future',  icon: 'explore' },
+      { title: 'Roadmap & Research', slug: 'future',  icon: 'explore' },
       { title: 'License',           slug: 'license', icon: 'gavel' },
     ],
   },

@@ -1,0 +1,49 @@
+---
+title: Roadmap & Research
+description: Where trueseal is going — near-term roadmap and the research direction toward fine-grained selective replication as a primitive.
+---
+import NextPage from '../../components/mdx/NextPage.astro';
+
+# Roadmap & Research
+
+trueseal today is a sync primitive: zero-trust, end-to-end encrypted blob delivery between a group of devices. The direction is bigger — a composable foundation for **encrypted, capability-based replication** that any application can drop in, without trusting a server, without modelling identity, and without inventing infrastructure.
+
+This page is two things: a near-term roadmap (concrete, scoped) and a research direction (the unsolved problem we are working toward). They are kept separate on purpose. One is commitment, the other is intent.
+
+---
+
+## Near-Term
+
+The work that brings trueseal from v0 to a primitive that broader ecosystems can adopt:
+
+- **SDK expansion.** A first-class Go SDK, then whatever the demand pulls next. The Rust core makes this cheap — UniFFI does the heavy lifting.
+- **Reference apps.** More example integrations beyond [trueseal-clip](/showcase) — apps that exercise real conflict-resolution patterns (CRDTs, append-only logs, custom merge), real bootstrapping flows, and real failure modes. These are the documentation that prose cannot replace.
+- **Public hosted relay.** A free, anonymous instance for development, prototyping, and low-stakes apps. Self-hosting remains the production default; the hosted relay is the on-ramp.
+
+---
+
+## Research Direction: Selective Replication
+
+The architectural step beyond v0. Today every group member receives every blob — full fan-out. The next primitive: a device receives only the blobs it holds a capability for.
+
+The mechanism maps naturally onto the existing addressed encryption scheme: **the recipient key IS the capability**. Hold the key, decrypt the blob. Don't hold it, the blob is noise. No identity system, no ACL, no central authority.
+
+What needs to be solved:
+
+- **Object capabilities** — a blob addressed to a sub-key rather than a device key. Composes trivially with existing encryption.
+- **Topic capabilities** — a key that unlocks a class of blobs. A namespace, a data type, an event stream.
+- **Sub-key distribution** — how does a device receive a new capability without a full pairing ceremony, and without a central issuer? This is the hard one.
+
+The last point is the research question. Pairing solves key distribution coarsely. Fine-grained capability distribution without identity, without a central authority, and without breaking anonymity is an open problem. Existing approaches each fail one of those constraints:
+
+- **UCAN, Macaroons** — introduce a central issuer.
+- **Signal Sender Keys** — break anonymity at the group layer.
+- **Application-layer ACL** — punts the problem to the caller, where it gets re-implemented inconsistently.
+
+The combination of fine-grained capability distribution, zero-trust relay, and anonymity — all three together — does not exist as a working primitive today.
+
+If trueseal solves this, it stops being a library. It becomes the encrypted replication layer beneath applications: sitting below databases, event systems, collaborative tools, agent coordination layers. Anything that moves state between parties who should not have to trust each other.
+
+That is the direction. Build the primitive. Prove it with real applications. Then go after the unsolved problem.
+
+<NextPage href="/docs/license" label="License" />
