@@ -2,6 +2,7 @@
 title: Inbox & TTL
 description: The relay's storage model — per-recipient inboxes, the InboxStore contract, SQLite backend, and TTL reaping.
 ---
+import NextPage from '../../../../components/mdx/NextPage.astro';
 
 # Inbox & TTL
 
@@ -9,7 +10,7 @@ The Inbox is the relay's storage unit. Every device has one — a set of blobs a
 
 ## The InboxStore Contract
 
-The InboxStore has three operations:
+The InboxStore has four operations:
 
 **Put** — store a blob for a recipient. The blob is persisted durably before the relay sends an Ack. A relay that crashes between Put and Ack loses the blob — the client's outbox will replay it on reconnect. A relay that sends an Ack before Put succeeds is lying: the blob is lost with no retry. Put never deduplicates — if the same blob arrives twice (e.g. outbox replay after a crash), both copies are stored. Deduplication is the recipient client's responsibility.
 
@@ -40,5 +41,6 @@ Every blob has a TTL set at Put time. When the TTL expires, the blob is eligible
 
 The default TTL is 30 days. This is generous — reaping is a last resort for permanently offline or abandoned devices, not routine housekeeping. Operators can configure a shorter TTL for resource-constrained deployments.
 
-A device that reconnects after its blobs have been reaped will miss those blobs permanently. The relay has no way to recover them. This is the one scenario where the delivery guarantee does not hold — documented honestly in [Delivery Guarantees](../../components/trueseal-sync/delivery-guarantees.md).
+A device that reconnects after its blobs have been reaped will miss those blobs permanently. The relay has no way to recover them. This is the one scenario where the delivery guarantee does not hold — documented honestly in [Delivery Guarantees](/docs/components/trueseal-sync/delivery-guarantees).
 
+<NextPage href="/docs/components/trueseal-relay/deploying" label="Deploying" />

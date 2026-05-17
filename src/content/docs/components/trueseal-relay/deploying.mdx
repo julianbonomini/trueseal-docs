@@ -2,6 +2,7 @@
 title: Deploying
 description: Self-host a trueseal-relay instance — keypair generation, configuration, single-node setup, Docker, and operational notes.
 ---
+import NextPage from '../../../../components/mdx/NextPage.astro';
 
 # Deploying
 
@@ -46,12 +47,12 @@ sqlite_path = "/var/lib/trueseal-relay/inbox.db"
 | Field | Env var | Default | Description |
 |---|---|---|---|
 | `relay.keypair_path` | `TRUESEAL_RELAY_KEYPAIR_PATH` | — | Path to hex-encoded private key. Required. |
-| `relay.listen_push` | `TRUESEAL_RELAY_LISTEN_PUSH` | `:7701` | Push Session listener address |
-| `relay.listen_receive` | `TRUESEAL_RELAY_LISTEN_RECEIVE` | `:7700` | Receive Session listener address |
-| `relay.ttl` | `TRUESEAL_RELAY_TTL` | `720h` (30 days) | Blob TTL before reaping |
-| `relay.reap_interval` | `TRUESEAL_RELAY_REAP_INTERVAL` | `1h` | How often the reaper runs |
+| `relay.listen_push` | `TRUESEAL_RELAY_LISTEN_PUSH` | `:7701` | Push Session listener address. |
+| `relay.listen_receive` | `TRUESEAL_RELAY_LISTEN_RECEIVE` | `:7700` | Receive Session listener address. |
+| `relay.ttl` | `TRUESEAL_RELAY_TTL` | `720h` (30 days) | Blob TTL before reaping. |
+| `relay.reap_interval` | `TRUESEAL_RELAY_REAP_INTERVAL` | `1h` | How often the reaper runs. |
 | `relay.max_envelope_bytes` | `TRUESEAL_RELAY_MAX_ENVELOPE_BYTES` | `1048576` (1 MiB) | Max envelope size. Blobs exceeding this are rejected with Error. |
-| `store.type` | `TRUESEAL_RELAY_STORE_TYPE` | `sqlite` | Storage backend: `sqlite` or `postgres` |
+| `store.type` | `TRUESEAL_RELAY_STORE_TYPE` | `sqlite` | Storage backend: `sqlite` or `postgres`. |
 | `store.sqlite_path` | `TRUESEAL_RELAY_STORE_SQLITE_PATH` | — | SQLite database file path. Required when `store.type = sqlite`. |
 
 ## Single-Node Deployment
@@ -97,6 +98,8 @@ trueseal-relay handles `SIGINT` and `SIGTERM`. On signal, it stops accepting new
 
 ## Operational Notes
 
-- **Firewall:** open TCP ports 7700 (receive) and 7701 (push) to the internet. Devices connect outbound — no inbound connections from the relay.
-- **Disk:** size SQLite storage based on your expected group size, blob size, and TTL. A conservative estimate: `(devices × blobs_per_day × avg_blob_bytes × ttl_days)`.
-- **Logs:** trueseal-relay logs connection events and public keys only. It never logs envelope content. Do not add content logging — it would break the zero-knowledge property.
+- **Firewall.** Open TCP ports 7700 (receive) and 7701 (push) to the internet. Devices connect outbound — no inbound connections from the relay.
+- **Disk.** Size SQLite storage based on your expected group size, blob size, and TTL. A conservative estimate: `(devices × blobs_per_day × avg_blob_bytes × ttl_days)`.
+- **Logs.** trueseal-relay logs connection events and public keys only. It never logs envelope content. Do not add content logging — it would break the zero-knowledge property.
+
+<NextPage href="/docs/components/trueseal-noise/overview" label="trueseal-noise" />
