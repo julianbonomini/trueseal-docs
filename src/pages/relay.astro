@@ -6,7 +6,7 @@ import StatusBadge from '../components/ui/StatusBadge.astro';
 import Button from '../components/ui/Button.astro';
 
 // Pre-launch placeholder values. Swap these two strings when the relay deploys.
-const RELAY_URL = 'tcp://relay.trueseal.dev:7700';
+const RELAY_URL = 'tcp://relay.trueseal.dev';
 const RELAY_PUBKEY_HEX = '3f783127c25c91ac8ea02ab97edca78e5708e0c686fa0cc2e714c135c7cd095e';
 const PENDING = true;
 
@@ -37,11 +37,13 @@ const hexLine2 = hexGroups.slice(8).join(' ');
       <section class="relay__identity">
         <!-- QR side -->
         <div class="relay__qr-side">
-          {PENDING && (
-            <div class="relay__pending">// PENDING DEPLOYMENT</div>
-          )}
-          <div class="relay__qr-frame">
-            <img class="relay__qr-img" src="/assets/relay-qr.svg" alt="QR code encoding the trueseal public relay endpoint and identity key" />
+          <div class="relay__qr-wrap">
+            {PENDING && (
+              <div class="relay__pending">// PENDING DEPLOYMENT</div>
+            )}
+            <div class="relay__qr-frame">
+              <img class="relay__qr-img" src="/assets/relay-qr.svg" alt="QR code encoding the trueseal public relay endpoint and identity key" />
+            </div>
           </div>
           <div class="relay__qr-label">RELAY_IDENTITY_QR</div>
         </div>
@@ -133,6 +135,9 @@ const hexLine2 = hexGroups.slice(8).join(' ');
 <style>
   .relay {
     width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
   }
 
   .relay__inner {
@@ -142,6 +147,7 @@ const hexLine2 = hexGroups.slice(8).join(' ');
     display: flex;
     flex-direction: column;
     gap: var(--space-xl);
+    width: 100%;
   }
 
   /* Header */
@@ -211,8 +217,15 @@ const hexLine2 = hexGroups.slice(8).join(' ');
     }
   }
 
+  .relay__qr-wrap {
+    position: relative;
+  }
+
   .relay__pending {
-    align-self: flex-start;
+    position: absolute;
+    top: -10px;
+    left: 8px;
+    z-index: 1;
     background: var(--color-on-surface);
     color: var(--color-surface);
     padding: var(--space-xs) var(--space-sm);
@@ -223,7 +236,7 @@ const hexLine2 = hexGroups.slice(8).join(' ');
   }
 
   .relay__qr-frame {
-    background: var(--color-on-surface); /* QR is white-on-transparent → invert backdrop */
+    background: #fff;
     padding: var(--space-md);
     border: 1px solid var(--color-outline-variant);
     width: 220px;
