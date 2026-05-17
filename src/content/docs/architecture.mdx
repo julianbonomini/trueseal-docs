@@ -2,20 +2,19 @@
 title: Architecture
 description: How the trueseal stack fits together — trueseal-noise, trueseal-sync, trueseal-relay, and the trueseal-protocol spec that binds them.
 ---
+import FlowDiagram from '../../components/mdx/FlowDiagram.astro';
+import NextPage from '../../components/mdx/NextPage.astro';
 
 # Architecture
 
 trueseal is three independent components bound together by a shared wire protocol specification. Each component can be understood, deployed, and replaced in isolation. Together they form a zero-trust sync stack where no single component is a point of failure — or a point of trust.
 
-## Components at a Glance
+## The Components
 
-**trueseal-noise** is the cryptographic transport layer. It implements the [Noise Protocol Framework](https://noiseprotocol.org/) — the same foundation as WireGuard and Signal. It knows nothing about sync, devices, or groups. It produces encrypted, authenticated, forward-secret channels between two peers. That is its entire job.
-
-**trueseal-sync** is the sync engine. It owns device identity, pairing, group membership, envelope construction, addressed encryption, the operation log, and outbox replay. It uses trueseal-noise for live sessions to the relay. It has no opinion about what the bytes inside a blob mean — that is the caller's domain.
-
-**trueseal-relay** is the infrastructure. It accepts connections from devices, stores ciphertext blobs addressed to offline recipients, and delivers them when those devices reconnect. It never decrypts anything. It has no concept of groups, users, or relationships between devices.
-
-**trueseal-protocol** is the wire protocol specification that governs all communication between sync clients and relays. It is pure documentation — no code, no library. It defines wire framing, message types, push body layout, Ack and Error semantics, and the protocol-level envelope size limit. Any client that implements trueseal-protocol works against any relay that implements trueseal-protocol.
+- **trueseal-noise** — Noise Protocol channels (XX + NK). No concept of sync.
+- **trueseal-sync** — sync engine: identity, pairing, group manifest, addressed encryption, outbox.
+- **trueseal-relay** — zero-knowledge blob router. Stores ciphertext for offline recipients, delivers on reconnect. Self-hostable.
+- **trueseal-protocol** — the wire spec the components speak. Pure documentation, no library.
 
 ## Responsibilities
 
@@ -48,9 +47,36 @@ An adversary who fully compromises the relay — captures the binary, reads the 
 
 ## Data Flow: Sending a Blob
 
-<!-- TODO: diagram -->
+<FlowDiagram
+  left={{
+    id: "SENDER",
+    role: "DEVICE",
+    steps: [
+      { icon: "groups", label: "Read Manifest" },
+      { icon: "lock", label: "Encrypt per recipient" },
+      { icon: "draw", label: "Sign envelope" },
+    ]
+  }}
+  center={{
+    icon: "send",
+    title: "RELAY",
+    subtitle: "PUSH SESSION (NOISE NK)",
+    meta: [
+      { label: "sender", value: "anonymous" },
+      { label: "fan-out", value: "N envelopes" },
+    ]
+  }}
+  right={{
+    id: "RECIPIENT",
+    role: "DEVICE",
+    steps: [
+      { icon: "inbox", label: "Inbox if offline" },
+      { icon: "bolt", label: "Deliver if online" },
+    ]
+  }}
+/>
 
-When a device calls `send()` on `TrueSealSession`:
+When a device calls `send()` on a sync session:
 
 1. **Read the Group Manifest.** trueseal-sync resolves the current list of member devices — their noise public keys and signing public keys.
 
@@ -69,7 +95,34 @@ When a device calls `send()` on `TrueSealSession`:
 
 ## Data Flow: Receiving a Blob
 
-<!-- TODO: diagram -->
+<FlowDiagram
+  left={{
+    id: "RELAY",
+    role: "INBOX",
+    steps: [
+      { icon: "all_inbox", label: "Held blobs" },
+      { icon: "outbox", label: "Stream new blobs" },
+    ]
+  }}
+  center={{
+    icon: "swap_horiz",
+    title: "RECEIVE SESSION",
+    subtitle: "NOISE XX (MUTUAL AUTH)",
+    meta: [
+      { label: "session", value: "long-lived" },
+      { label: "delete", value: "on DeliverAck" },
+    ]
+  }}
+  right={{
+    id: "RECEIVER",
+    role: "DEVICE",
+    steps: [
+      { icon: "lock_open", label: "Decrypt + verify" },
+      { icon: "fact_check", label: "Check manifest" },
+      { icon: "check_circle", label: "DeliverAck" },
+    ]
+  }}
+/>
 
 When a device connects to the relay:
 
@@ -89,7 +142,34 @@ When a device connects to the relay:
 
 ## Pairing Flow
 
-<!-- TODO: diagram -->
+<FlowDiagram
+  left={{
+    id: "HOST",
+    role: "INITIATOR",
+    steps: [
+      { icon: "qr_code_2", label: "Generate Token" },
+      { icon: "share", label: "Share out-of-band" },
+      { icon: "task_alt", label: "Accept request" },
+    ]
+  }}
+  center={{
+    icon: "hub",
+    title: "RELAY",
+    subtitle: "OPAQUE BLOB ROUTING",
+    meta: [
+      { label: "visibility", value: "recipient_pub only" },
+      { label: "knows", value: "nothing about pairing" },
+    ]
+  }}
+  right={{
+    id: "JOINER",
+    role: "DEVICE",
+    steps: [
+      { icon: "qr_code_scanner", label: "Read Token" },
+      { icon: "send", label: "Send Pair message" },
+    ]
+  }}
+/>
 
 Before any sync can happen, two devices must exchange public keys. This is the Pairing ceremony:
 
@@ -103,11 +183,4 @@ Before any sync can happen, two devices must exchange public keys. This is the P
 
 The relay is in the path for step 2 — the joiner addresses the `Pair` message to the initiator's public key, which the relay routes to the initiator's Inbox. The relay learns only that one blob was addressed to the initiator. It does not know the blob is a pairing request.
 
-## Component Independence
-
-trueseal-noise, trueseal-sync, and trueseal-relay are independently usable:
-
-- **trueseal-noise** can be used as a standalone Noise Protocol library for any application that needs authenticated encrypted channels — with no dependency on the rest of trueseal.
-- **trueseal-relay** is a generic encrypted blob router. Any client that implements trueseal-protocol can use it — trueseal-sync is one implementation, not the only one.
-- **trueseal-sync** can target any relay that implements trueseal-protocol — a self-hosted instance, a community instance, or any future compatible implementation.
-- **trueseal-protocol** is the contract that makes this possible. Relay and client implementations are interchangeable as long as both speak the spec.
+<NextPage href="/docs/concepts/device-identity" label="Device Identity" />
