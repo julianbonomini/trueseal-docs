@@ -2,6 +2,7 @@
 title: Delivery Guarantees
 description: How trueseal-sync guarantees every blob reaches every member — outbox replay on the sender side, deferred delivery on the relay side, and where the limits are.
 ---
+import NextPage from '../../../../components/mdx/NextPage.astro';
 
 # Delivery Guarantees
 
@@ -49,4 +50,4 @@ Delivery to each recipient is tracked independently. A blob is not "delivered" u
 
 **Relay TTL expiry.** As noted above, blobs held past the relay TTL are reaped. This is the only scenario where a blob can be permanently lost without the sender knowing.
 
-<!-- TODO: diagram — sender outbox → relay inbox → recipient, TTL boundary, fan-out per member -->
+<NextPage href="/docs/components/trueseal-relay/overview" label="trueseal-relay" />

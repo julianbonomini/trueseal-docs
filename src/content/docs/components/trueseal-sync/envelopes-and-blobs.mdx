@@ -2,6 +2,7 @@
 title: Envelopes & Blobs
 description: The Envelope format — anatomy, addressed encryption, the hidden sender, signature verification, and message types.
 ---
+import NextPage from '../../../../components/mdx/NextPage.astro';
 
 # Envelopes & Blobs
 
@@ -19,7 +20,7 @@ An Envelope has five fields:
 | `signature` | `[u8; 64]` | ✓ |
 | `payload` | `Vec<u8>` | ✗ (encrypted) |
 
-**`sequence`** — the sender's global per-device counter. Increments once per Envelope sent, across all objects. Not scoped per object. See [Operation Log & Outbox](./operation-log-and-outbox.md) for why.
+**`sequence`** — the sender's global per-device counter. Increments once per Envelope sent, across all objects. Not scoped per object. See [Operation Log & Outbox](/docs/components/trueseal-sync/operation-log-and-outbox) for why.
 
 **`parents`** — SHA-256 hashes of preceding Envelopes. In v0, every Envelope has exactly one parent (or zero for the root). The parent hash field exists in v0 to allow the wire format to remain unchanged when v1 introduces DAG merges with multiple parents.
 
@@ -47,10 +48,9 @@ The wire layout of the encrypted payload is:
 2. Perform X25519 DH between the ephemeral private key and the recipient's static noise public key — producing a shared secret.
 3. Derive a 32-byte symmetric key from the shared secret via HKDF-SHA256 with the info string `"trueseal-sync addressed encryption v0"`.
 4. Encrypt `author_pub (32 bytes) || message_bytes` with ChaCha20-Poly1305 using the derived key and a zero nonce.
+5. Output: `ephemeral_pub || nonce || ciphertext+tag`.
 
 The zero nonce is safe here because the symmetric key is derived from an ephemeral DH — it is unique by construction. Nonce reuse is only dangerous when the same key is reused, which it never is.
-
-5. Output: `ephemeral_pub || nonce || ciphertext+tag`.
 
 **Decryption (recipient side):**
 
@@ -93,4 +93,4 @@ The relay never sees these type tags. They are a private convention of trueseal-
 
 `Sync` is the only message type the caller interacts with directly — it is the opaque bytes the caller passes to `send()` and receives in `on_message()`. The other three are managed internally by trueseal-sync.
 
-<!-- TODO: diagram — Envelope wire layout, addressed encryption flow, payload internals -->
+<NextPage href="/docs/components/trueseal-sync/group-manifest" label="Group Manifest" />

@@ -2,6 +2,7 @@
 title: Operation Log & Outbox
 description: The durable record of everything a device has sent, and the outbox view that drives guaranteed delivery via reconnect replay.
 ---
+import NextPage from '../../../../components/mdx/NextPage.astro';
 
 # Operation Log & Outbox
 
@@ -20,7 +21,7 @@ Appending is idempotent: a second write with the same `(object_id, sequence)` pa
 
 ## Global Sequence, Not Per-Object
 
-The `sequence` field is a global counter — it increments once per Envelope sent, regardless of which object the payload belongs to. If a device sends a clipboard entry (sequence 5), then a group manifest update (sequence 6), then another clipboard entry (sequence 7), the log records sequences 5, 6, and 7 — across different object IDs.
+The `sequence` field is a global counter — it increments once per Envelope sent, regardless of which object the payload belongs to. If a device sends a clipboard entry (sequence 5), then a manifest update (sequence 6), then another clipboard entry (sequence 7), the log records 5, 6, 7 — across different object IDs.
 
 This is intentional. Object IDs are caller-defined data that must stay inside the encrypted payload — the relay must never see them. A per-object counter would require object context in the Envelope header, leaking structure to the relay. A global counter keeps the header minimal.
 
@@ -43,9 +44,9 @@ There is a clear separation of responsibility:
 **The device** holds undelivered entries in the Outbox for itself as the *sender* — blobs it has not yet confirmed pushed to the relay. The relay is not the sender's outbox.
 
 These are two independent problems. A blob may be:
-- In the sender's Outbox (not yet pushed to relay) — relay doesn't have it yet
-- In the relay's Inbox for the recipient (pushed but recipient offline) — relay has it, recipient hasn't received it
-- Delivered — recipient has it, relay deleted it
+- In the sender's Outbox (not yet pushed to relay) — relay doesn't have it yet.
+- In the relay's Inbox for the recipient (pushed but recipient offline) — relay has it, recipient hasn't received it.
+- Delivered — recipient has it, relay deleted it.
 
 ## Sequence Counter Persistence
 
@@ -55,6 +56,6 @@ This is why Session State persistence matters: if the local database is wiped, t
 
 ## Object History
 
-The Operation Log is queryable by `object_id`: `entries_from(object_id, sequence)` returns all entries for that object with sequence >= the given value, in ascending order. This is how a caller can reconstruct the history of a specific object — for example, all clipboard entries sent in this session.
+The Operation Log is queryable by `object_id`: `entries_from(object_id, sequence)` returns all entries for that object with sequence ≥ the given value, in ascending order. This is how a caller can reconstruct the history of a specific object — for example, all clipboard entries sent in this session.
 
-<!-- TODO: diagram — operation log structure, outbox as a view, sender/relay/recipient state transitions -->
+<NextPage href="/docs/components/trueseal-sync/delivery-guarantees" label="Delivery Guarantees" />
