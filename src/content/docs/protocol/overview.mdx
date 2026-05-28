@@ -6,30 +6,30 @@ import NextPage from '../../../components/mdx/NextPage.astro';
 
 # trueseal-protocol — Overview
 
-trueseal-protocol is the wire protocol specification for the trueseal ecosystem. It defines how any sync client communicates with any relay. It is pure documentation — no code, no library, no repository dependency.
+trueseal-protocol is the wire spec for the ecosystem. It says how a sync client talks to a relay, byte for byte. There's no code, no library, no repo to depend on — just the spec.
 
-Any relay that implements trueseal-protocol accepts any client that implements trueseal-protocol. Any client that implements trueseal-protocol works against any relay. The spec is the contract. The implementations are interchangeable.
+Any relay that implements it accepts any client that implements it, and vice versa. The spec is the contract; everything plugged into it is interchangeable.
 
-## What trueseal-protocol Defines
+## What the protocol covers
 
-- **Wire framing** — the byte layout of every message on the wire
-- **Message types** — Push, Deliver, Heartbeat, Ack, Error, DeliverAck — their byte tags and semantics
-- **Push body layout** — how a sender addresses a blob to a recipient
-- **Ack and DeliverAck semantics** — what each acknowledgement guarantees
-- **Error semantics** — permanent rejection, non-retryable
-- **Protocol-level envelope size maximum** — enforced by both client and relay
+- **Wire framing** — the byte layout of every message.
+- **Message types** — Push, Deliver, Heartbeat, Ack, Error, DeliverAck, their tags, their meanings.
+- **Push body layout** — how a sender addresses a blob to a recipient.
+- **Ack and DeliverAck semantics** — what each acknowledgement actually guarantees.
+- **Error semantics** — permanent rejection, do not retry.
+- **Envelope size cap** — enforced on both sides.
 
-## What trueseal-protocol Does Not Define
+## What it doesn't cover
 
-- Relay storage policy — TTL, reap interval, infrastructure choices
-- Noise handshake patterns — defined by the [Noise Protocol spec](https://noiseprotocol.org/), used by implementors
-- Envelope format and sync semantics — defined by trueseal-sync
-- Client-side delivery guarantees — outbox, replay, ordering
+- Relay storage policy (TTL, reap intervals, infra choices).
+- The Noise handshake patterns themselves — those belong to the [Noise Protocol spec](https://noiseprotocol.org/). The wire spec just says which patterns to use where.
+- Envelope format and the sync semantics on top of it — that's trueseal-sync's territory.
+- Client-side delivery guarantees — outbox, replay, ordering, all client concerns.
 
-## Current Implementors
+## Who implements it today
 
-**trueseal-sync** — client-side. Opens Push Sessions to send blobs, Receive Sessions to receive them.
+**trueseal-sync** on the client side. Opens Push Sessions to send blobs, Receive Sessions to receive them.
 
-**trueseal-relay** — server-side. Accepts Push and Receive Sessions, routes blobs between devices.
+**trueseal-relay** on the server side. Accepts both, routes blobs between devices.
 
 <NextPage href="/docs/protocol/wire-format" label="Wire Format" />

@@ -6,63 +6,63 @@ import NextPage from '../../../../components/mdx/NextPage.astro';
 
 # trueseal-noise — Overview
 
-trueseal-noise is a Rust wrapper around [snow](https://github.com/mcginty/snow) — a well-tested Noise Protocol implementation — exposing the two handshake patterns used by the trueseal stack. It is the cryptographic transport layer of trueseal.
+trueseal-noise is a thin Rust wrapper around [snow](https://github.com/mcginty/snow), a well-tested Noise Protocol implementation. It exposes the two handshake patterns the trueseal stack actually uses, and nothing else. It's the cryptographic transport layer everything else sits on top of.
 
-## What It Does
+## What it does
 
-trueseal-noise takes a raw connection — a TCP socket, an in-memory pipe, anything that implements `Read + Write` — and turns it into an encrypted, authenticated channel. After a handshake completes, both sides can send and receive arbitrary byte payloads with the guarantee that:
+Hand it a raw connection — a TCP socket, an in-memory pipe, anything that implements `Read + Write` — and it gives you back an encrypted, authenticated channel. After the handshake completes, both sides can send and receive arbitrary byte payloads, with these guarantees:
 
-- The content is encrypted and cannot be read by anyone on the wire.
-- The message has not been tampered with — any modification is detected and rejected.
-- The remote peer is who they claim to be (depending on the handshake pattern).
-- Past traffic cannot be decrypted if session keys are later compromised — forward secrecy.
+- Contents are encrypted; nobody on the wire can read them.
+- Messages can't be tampered with — any modification is detected and the message is rejected.
+- The peer on the other end is who they say they are (depending on which handshake pattern you use).
+- Past traffic stays unreadable even if a long-term session key leaks later (forward secrecy).
 
-## Cipher Suite
+## Cipher suite
 
-All sessions use a fixed cipher suite: `X25519_ChaChaPoly_BLAKE2s`.
+Every session uses the same fixed suite: `X25519_ChaChaPoly_BLAKE2s`.
 
-- **X25519** — Diffie-Hellman key agreement. Produces a shared secret from two keypairs without either side transmitting their private key.
-- **ChaCha20-Poly1305** — Authenticated encryption. Encrypts the payload and produces a 16-byte authentication tag. Any modification to the ciphertext or associated data causes decryption to fail.
-- **BLAKE2s** — Hashing. Used for key derivation (HKDF) and the running handshake hash that binds all handshake messages together.
+- **X25519** — Diffie-Hellman key agreement. Produces a shared secret from two keypairs without either side ever sending its private key.
+- **ChaCha20-Poly1305** — authenticated encryption. Encrypts the payload and tacks on a 16-byte authentication tag. Modify either the ciphertext or the associated data and decryption fails.
+- **BLAKE2s** — hashing, used both for key derivation (HKDF) and for the running handshake hash that binds all handshake messages together.
 
-ChaCha20-Poly1305 was chosen over AES-GCM because it runs in constant time in software — no timing side-channels without hardware AES acceleration. This matters for devices that may not have AES-NI.
+ChaCha20-Poly1305 over AES-GCM, for one specific reason: it runs in constant time in software. No timing side-channel without hardware AES support. That matters for devices that don't have AES-NI.
 
-## Two Handshake Patterns
+## Two handshake patterns
 
-trueseal-noise implements two patterns from the Noise specification:
+trueseal-noise implements exactly two patterns from the Noise spec:
 
-**`Noise_XX_25519_ChaChaPoly_BLAKE2s`** — mutual authentication. Neither peer has prior knowledge of the other's static key. After the handshake, both sides have verified each other's identity. Used for Receive Sessions between devices and the relay.
+**`Noise_XX_25519_ChaChaPoly_BLAKE2s`** — mutual authentication. Neither peer knows the other's static key beforehand. After the handshake, both sides have verified each other. This is what Receive Sessions use.
 
-**`Noise_NK_25519_ChaChaPoly_BLAKE2s`** — one-way authentication. The Initiator knows the Responder's static key before the handshake begins. The Responder never learns the Initiator's static key — the Initiator is anonymous. Used for Push Sessions, where a device sends blobs to the relay without revealing its identity.
+**`Noise_NK_25519_ChaChaPoly_BLAKE2s`** — one-way authentication. The Initiator knows the Responder's static key going in. The Responder never learns the Initiator's static key — the Initiator stays anonymous. This is what Push Sessions use, so devices can send blobs to the relay without revealing who they are.
 
-## Spec Compliance
+## Spec compliance
 
-snow is verified against the official [cacophony test vectors](https://github.com/noiseprotocol/noise_wiki/wiki/Test-vectors). These vectors are published by the Noise Protocol authors and encode the exact byte-level output of a correct implementation for fixed input keys and payloads. trueseal-noise inherits this compliance by wrapping snow.
+snow is verified against the official [cacophony test vectors](https://github.com/noiseprotocol/noise_wiki/wiki/Test-vectors). Those are published by the Noise authors and pin down the exact byte-level output of a correct implementation given fixed input keys and payloads. trueseal-noise rides on that compliance by wrapping snow.
 
 ## Standalone
 
-trueseal-noise has no dependency on the rest of the trueseal stack. It knows nothing about sync groups, relays, envelopes, or devices. It produces encrypted channels. What travels over those channels is the caller's concern.
+trueseal-noise doesn't depend on anything else in the trueseal stack. It knows nothing about sync groups, relays, envelopes, or devices. It produces encrypted channels. What you push through them is your problem.
 
-It can be used independently in any application that needs authenticated, forward-secret transport — with no trueseal-sync or trueseal-relay in sight.
+If you just need authenticated, forward-secret transport for something else entirely, you can use it on its own with no trueseal-sync or trueseal-relay anywhere in sight.
 
 ## Framing
 
-Every message is prefixed with a 2-byte big-endian length. This is required because Noise encrypts per-message — without framing, a stream receiver cannot determine where one message ends and the next begins. The maximum message size is 65535 bytes, imposed by the 2-byte length prefix and the Noise spec hard cap. Payloads larger than this must be chunked by the caller.
+Every message is prefixed with a 2-byte big-endian length. This is necessary because Noise encrypts one message at a time — without a length prefix, a stream receiver has no way to tell where one message ends and the next begins. Max message size is 65535 bytes, set both by the 2-byte length prefix and by Noise's own hard cap. Anything bigger has to be chunked by the caller.
 
 ## Platforms
 
-trueseal-noise is implemented in Rust and compiles to every platform the trueseal stack targets: macOS, Linux, iOS, and Android. Swift and Kotlin bindings are generated automatically via UniFFI — iOS and Android callers import the same implementation without hand-written FFI glue.
+Rust, compiled for every platform the stack targets: macOS, Linux, iOS, Android. Swift and Kotlin bindings come from UniFFI, so iOS and Android callers get the same implementation without hand-written FFI glue.
 
 ## Source
 
-Source code: [github.com/julianbonomini/trueseal-noise](https://github.com/julianbonomini/trueseal-noise).
+[github.com/julianbonomini/trueseal-noise](https://github.com/julianbonomini/trueseal-noise).
 
-## Going Deeper
+## Going deeper
 
-This component has three sub-pages — a primer for readers new to Noise, plus details on each handshake pattern:
+Three sub-pages: a primer if you're new to Noise, then a page on each handshake pattern.
 
-- [Noise Protocol Primer](./noise-protocol-primer) — from-scratch walk-through of how Noise works.
-- [XX Pattern](./xx-pattern) — three-message mutual auth handshake (Receive Sessions).
+- [Noise Protocol Primer](./noise-protocol-primer) — how Noise works, from scratch.
+- [XX Pattern](./xx-pattern) — three-message mutual-auth handshake (Receive Sessions).
 - [NK Pattern](./nk-pattern) — two-message anonymous-initiator handshake (Push Sessions).
 
 <NextPage href="/docs/sdks" label="SDKs" />

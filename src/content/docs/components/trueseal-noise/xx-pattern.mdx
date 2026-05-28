@@ -6,11 +6,11 @@ import NextPage from '../../../../components/mdx/NextPage.astro';
 
 # XX Pattern
 
-`Noise_XX_25519_ChaChaPoly_BLAKE2s` — three-message mutual authentication handshake. Neither peer has prior knowledge of the other's static key. Both end up authenticated and share a pair of forward-secret session keys.
+`Noise_XX_25519_ChaChaPoly_BLAKE2s` — a three-message mutual-authentication handshake. Neither peer knows the other's static key going in. Both end up authenticated and share a pair of forward-secret session keys.
 
 trueseal uses XX for **Receive Sessions** — the long-lived authenticated connections between devices and the relay.
 
-For a full specification of the XX pattern, see the [Noise Protocol spec](https://noiseprotocol.org/noise.html) and the [official test vectors](https://github.com/noiseprotocol/noise_wiki/wiki/Test-vectors).
+For the full pattern spec, see the [Noise Protocol spec](https://noiseprotocol.org/noise.html) and the [official test vectors](https://github.com/noiseprotocol/noise_wiki/wiki/Test-vectors).
 
 ## API
 
@@ -29,6 +29,6 @@ let msg = session.receive()?;
 session.close()?;
 ```
 
-`remote_public_key()` is available unconditionally — mutual authentication is a guarantee of the XX pattern. Trust policy is the caller's responsibility.
+`remote_public_key()` is always available — mutual authentication is a property of XX itself. What you do with that key (trust it, reject it, look it up in a manifest) is your call.
 
 <NextPage href="/docs/components/trueseal-noise/nk-pattern" label="NK Pattern" />

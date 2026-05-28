@@ -6,47 +6,47 @@ import NextPage from '../../../components/mdx/NextPage.astro';
 
 # Device Identity
 
-In trueseal, identity is a keypair. Nothing more.
+In trueseal, identity is a keypair. That's it.
 
-A device generates its own identity locally on first launch, without communicating with anyone. That identity is two keypairs — and those keypairs are the device, as far as the protocol is concerned.
+A device generates its own identity locally on first launch without talking to anyone. The identity is two keypairs, and as far as the protocol is concerned, those keypairs *are* the device.
 
 ## TL;DR
 
 | | |
 |---|---|
 | **What identity is** | Two keypairs (X25519 + Ed25519), generated locally on first launch. |
-| **What identity is not** | A human, an account, portable across devices, or recoverable if lost. |
+| **What it isn't** | A human, an account, portable across devices, recoverable if lost. |
 | **Who knows about it** | Only the devices in your group. The relay never holds your keys. |
 
-## Two Keypairs, Two Roles
+## Two keypairs, two roles
 
 | Keypair | Algorithm | Role |
 |---|---|---|
-| **Noise** | X25519 | Encrypted sessions with the relay + addressed encryption of blobs. The public key is the device's routing address. |
+| **Noise** | X25519 | Encrypted sessions with the relay, and addressed encryption of blobs. The public key is the device's routing address. |
 | **Signing** | Ed25519 | Signs every envelope. The signing public key is what the Group Manifest tracks as the authoritative identity of a member. |
 
-Both keypairs are generated locally on first launch and never leave the device. The private keys are never transmitted, never stored on the relay, and never known to trueseal infrastructure.
+Both keypairs are generated locally on first launch and never leave the device. Private keys are never transmitted, never stored on the relay, and never seen by any trueseal infrastructure.
 
-The noise public key is freely shareable — it is published in the Group Manifest to every member, and the relay sees it as the routing target for blobs. Knowing it does not grant access to anything. It allows a sender to address an encrypted blob to that device. Only the holder of the corresponding private key can decrypt it.
+The noise public key is fine to share. It's published in the Group Manifest to every member, and the relay sees it as the routing target. Knowing it doesn't grant access to anything — it just lets a sender address an encrypted blob to that device. Only the matching private key can open the blob.
 
-## No Registration
+## No registration
 
-There is no step where a device announces itself to a central authority. No server assigns an ID. No account links multiple devices to a person. A device simply generates its keypairs. Until it pairs with another device, it exists only locally — the relay has no record of it, the protocol has no concept of it.
+There's no step where a device tells a central authority "I exist." No server hands out IDs. No account links multiple devices to a person. A device just generates its keypairs. Until it pairs with another device, it exists only locally — the relay has no record, the protocol has no concept of it.
 
-Any registration system would require a server to know about your device, which reintroduces the trust problem the entire stack is built to eliminate.
+Any registration system would force a server to know about your device, which puts the trust problem right back in the middle of the stack we built to avoid it.
 
-## Identity Persistence
+## Identity persistence
 
-A device's keypairs are its persistent identity. They are stored in the local Session State managed by trueseal-sync — an embedded SQLite database on the device. They survive process restarts, crashes, and OS kills.
+The keypairs are the device's persistent identity. They live in the local Session State managed by trueseal-sync — an embedded SQLite database on the device — and they survive process restarts, crashes, and OS kills.
 
-If the Session State is wiped — intentionally or due to data loss — the device loses its identity. From the group's perspective, it is a new, unknown device. It must pair again to rejoin any group it was a member of.
+If that Session State gets wiped, on purpose or by accident, the device loses its identity. From the group's point of view, it's a new, unknown device. To rejoin any group it used to be in, it has to pair again.
 
-## What Identity Is Not
+## What identity is not
 
-**Not a human.** One person may have multiple devices, each with its own keypair. The protocol treats them as independent participants. Linking multiple devices to a single person is the caller's responsibility.
+**Not a human.** One person can have many devices, each with its own keypair. The protocol treats them as separate participants. Mapping devices to humans is the caller's job.
 
-**Not portable.** Private keys never leave the device. You cannot "log in" to a device from another. New phone — new device, fresh pairing.
+**Not portable.** Private keys don't leave the device. You can't "log in" from another device. New phone, new device, fresh pairing.
 
-**Not recoverable.** No password reset, no backup seed phrase, no recovery mechanism. If a device's private key is lost, that identity is gone. The device can be re-added to a group as a new member, but it cannot reclaim its previous identity.
+**Not recoverable.** No password reset. No seed phrase. No recovery flow. If a private key is gone, that identity is gone with it. The device can come back as a new member of a group, but it can't get its old identity back.
 
 <NextPage href="/docs/concepts/zero-trust-and-encryption" label="Zero Trust & Encryption" />

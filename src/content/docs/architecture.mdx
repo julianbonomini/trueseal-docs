@@ -7,16 +7,16 @@ import NextPage from '../../components/mdx/NextPage.astro';
 
 # Architecture
 
-trueseal is three independent components bound together by a shared wire protocol specification. Each component can be understood, deployed, and replaced in isolation. Together they form a zero-trust sync stack where no single component is a point of failure — or a point of trust.
+Three components and one spec. Each piece does one job, can be swapped out, and doesn't know more than it has to about the others.
 
-## The Components
+## The components
 
-- **trueseal-noise** — Noise Protocol channels (XX + NK). No concept of sync.
-- **trueseal-sync** — sync engine: identity, pairing, group manifest, addressed encryption, outbox.
-- **trueseal-relay** — zero-knowledge blob router. Stores ciphertext for offline recipients, delivers on reconnect. Self-hostable.
-- **trueseal-protocol** — the wire spec the components speak. Pure documentation, no library.
+- **trueseal-noise** — Noise Protocol channels (XX + NK). Knows nothing about sync.
+- **trueseal-sync** — the sync engine. Identity, pairing, group manifest, addressed encryption, outbox.
+- **trueseal-relay** — a zero-knowledge blob router. Holds ciphertext for offline recipients and delivers it when they come back. Self-hostable.
+- **trueseal-protocol** — the wire spec everyone speaks. Just docs, no library.
 
-## Responsibilities
+## Who owns what
 
 | Concern | Owner |
 |---|---|
@@ -31,21 +31,18 @@ trueseal is three independent components bound together by a shared wire protoco
 | Blob retention and TTL reaping | trueseal-relay |
 | Wire protocol specification | trueseal-protocol |
 
-## What the Relay Sees
+## What the relay actually sees
 
-The relay operates with minimal information by design. It learns exactly two things:
+Two things, and that's it:
 
-- **Which noise keys have an active Receive Session** — unavoidable, required to deliver blobs to online devices immediately on arrival.
-- **The recipient public key per envelope** — required for routing. The relay must know where to deliver a blob.
+- **Which noise keys have an active Receive Session.** Unavoidable. If you want online devices to get their messages immediately, the relay has to know who's online.
+- **The recipient public key on each envelope.** It needs that to route the blob to the right inbox.
 
-The relay does **not** learn:
-- Who sent any blob — push sessions use a fresh ephemeral keypair per send, making the sender unlinkable.
-- Which devices belong to the same group — the relay has no concept of groups.
-- Anything about blob content — all payloads are encrypted with the recipient's public key before they leave the sender's device.
+It doesn't see who sent a blob (push sessions use a throwaway keypair, so the sender is unlinkable), it has no concept of groups, and it can't read payloads because everything is encrypted to the recipient before it ever hits the wire.
 
-An adversary who fully compromises the relay — captures the binary, reads the database, intercepts every packet — learns which public keys received blobs, and nothing else.
+Compromise the relay completely — grab the binary, dump the database, sniff every packet — and you walk away with a list of public keys that received blobs. Nothing else.
 
-## Data Flow: Sending a Blob
+## Sending a blob
 
 <FlowDiagram
   left={{
@@ -76,24 +73,23 @@ An adversary who fully compromises the relay — captures the binary, reads the 
   }}
 />
 
-When a device calls `send()` on a sync session:
+When a device calls `send()`:
 
-1. **Read the Group Manifest.** trueseal-sync resolves the current list of member devices — their noise public keys and signing public keys.
+1. **Read the Group Manifest.** trueseal-sync pulls the current list of members and their noise + signing public keys.
 
-2. **Construct one Envelope per recipient.** For each member, trueseal-sync:
-   - Encrypts the payload using *addressed encryption*: an ephemeral X25519 key agreement with the recipient's static public key, producing a ChaCha20-Poly1305 ciphertext. The sender's `author_pub` (Ed25519 signing key) is prepended inside the plaintext — invisible to the relay.
-   - Signs the envelope over `sequence || parent_hashes || recipient_pub || ciphertext` using the sender's Ed25519 signing key.
-   - The result: a self-contained blob the relay can route (it knows `recipient_pub`) but cannot read or tamper with undetected.
+2. **Build one Envelope per recipient.** For each member, trueseal-sync does an ephemeral X25519 key agreement against the recipient's static public key, then encrypts the payload with ChaCha20-Poly1305. The sender's `author_pub` (Ed25519 signing key) gets prepended *inside* the plaintext, so it's invisible to the relay. Then the envelope is signed over `sequence || parent_hashes || recipient_pub || ciphertext` with the sender's Ed25519 key.
 
-3. **Open an anonymous Push Session to the relay.** trueseal-sync opens a Noise NK connection using a *fresh ephemeral X25519 keypair* generated for this push only. Noise NK authenticates the relay to the device — the device verifies the relay's static public key — but transmits no stable client identity. The relay sees an unlinkable ephemeral peer and cannot associate the push with any device or Receive Session.
+   The result: a blob the relay can route (it sees `recipient_pub`) but can't read or tamper with undetected.
 
-4. **Send all N envelopes.** All envelopes for this push are sent over the same Push Session, then the session is closed.
+3. **Open an anonymous Push Session.** A fresh ephemeral X25519 keypair is generated just for this push, and Noise NK is used to connect to the relay. NK authenticates the relay (the device verifies the relay's static public key) but transmits no stable client identity. From the relay's point of view it's an unlinkable peer, with no way to connect this push to any device or Receive Session.
 
-5. **Relay stores and delivers.** For each envelope, the relay places it in the recipient's Inbox. If the recipient has an active Receive Session, the blob is delivered immediately. Otherwise it is held until the recipient reconnects.
+4. **Send all N envelopes** over the same Push Session, then close it.
 
-6. **Outbox tracks delivery.** trueseal-sync marks each envelope in the local Operation Log as undelivered until the relay confirms receipt. If the sender goes offline before confirmation, undelivered envelopes are replayed on reconnect.
+5. **Relay stores or forwards.** Each envelope goes into the recipient's Inbox. If that recipient has an active Receive Session, it's handed over immediately. Otherwise it sits there until they reconnect.
 
-## Data Flow: Receiving a Blob
+6. **Outbox tracks delivery.** Every envelope is marked undelivered in the local Operation Log until the relay confirms receipt. If the sender drops offline before that confirmation, the envelope rides along on the next reconnect.
+
+## Receiving a blob
 
 <FlowDiagram
   left={{
@@ -126,21 +122,17 @@ When a device calls `send()` on a sync session:
 
 When a device connects to the relay:
 
-1. **Open a Receive Session.** trueseal-sync opens a Noise XX connection using the device's stable noise keypair. The relay and device mutually authenticate. The relay registers this device as online and begins delivering blobs immediately on arrival.
+1. **Open a Receive Session.** A Noise XX handshake using the device's stable noise keypair. Both sides authenticate each other. The relay marks the device online and starts forwarding blobs as they come in.
 
-2. **Relay delivers Inbox blobs.** All blobs held for this device are delivered over the Receive Session. Blobs are not deleted at this point — deletion is gated on DeliverAck.
+2. **Drain the inbox.** Any blobs being held for the device get delivered over the session. They're *not* deleted yet — deletion waits for the ack.
 
-3. **Client sends DeliverAck.** After durably persisting each blob, the client sends a DeliverAck with the blob's ID. The relay deletes the blob on receipt. If the session drops before a DeliverAck arrives, the blob survives and is re-delivered on the next Receive Session — clients must handle duplicates.
+3. **Send DeliverAck.** Once the client has durably written each blob, it sends a DeliverAck with the blob's ID and the relay deletes it. If the session drops before the ack lands, the blob survives and gets re-delivered next time. Clients have to be ready for duplicates.
 
-4. **Decrypt and verify.** For each received envelope, trueseal-sync:
-   - Decrypts the payload using the device's private key.
-   - Extracts `author_pub` from the first 32 bytes of plaintext.
-   - Verifies the envelope signature using the extracted `author_pub`.
-   - Checks `author_pub` against the current Group Manifest — blobs from devices not in the manifest are discarded.
+4. **Decrypt and verify.** For each envelope, trueseal-sync decrypts with the device's private key, peels `author_pub` off the first 32 bytes of plaintext, verifies the signature against it, and finally checks `author_pub` against the current Group Manifest. Anything from a device not in the manifest gets dropped on the floor.
 
-5. **Fire the callback.** The decrypted, verified payload is delivered to the caller's `on_message` handler. The caller never handles keys, sessions, or verification.
+5. **Fire the callback.** The plaintext lands in the caller's `on_message` handler. The caller doesn't touch keys, sessions, or signatures at any point.
 
-## Pairing Flow
+## Pairing
 
 <FlowDiagram
   left={{
@@ -171,16 +163,16 @@ When a device connects to the relay:
   }}
 />
 
-Before any sync can happen, two devices must exchange public keys. This is the Pairing ceremony:
+Before two devices can sync anything, they need each other's public keys. That's pairing:
 
-1. The initiating device generates a **Pairing Token** — its noise public key and Ed25519 signing public key, encoded opaquely. It is passed out-of-band to the joining device (QR code, AirDrop, link, etc.).
+1. The initiating device generates a **Pairing Token** — its noise public key and its Ed25519 signing public key, encoded opaquely. It gets passed out-of-band (QR code, AirDrop, link, whatever fits).
 
-2. The joining device reads the token and sends a `Pair` message — an envelope addressed to the initiator, encrypted with the initiator's public key, containing the joiner's own keys.
+2. The joining device reads the token and sends a `Pair` message: an envelope addressed to the initiator, encrypted with the initiator's public key, containing the joiner's own keys.
 
-3. The initiating device receives the `Pair` message, fires `on_member_request`, and the caller calls `accept_member()` to admit the device.
+3. The initiator gets the `Pair` message, fires `on_member_request`, and the caller calls `accept_member()` to admit the new device.
 
-4. A new **Group Manifest** is issued, signed by the accepting device, listing both members. It is pushed to all current members.
+4. A fresh **Group Manifest** listing both members is signed by the accepting device and pushed to everyone in the group.
 
-The relay is in the path for step 2 — the joiner addresses the `Pair` message to the initiator's public key, which the relay routes to the initiator's Inbox. The relay learns only that one blob was addressed to the initiator. It does not know the blob is a pairing request.
+The relay's role here is just step 2: it sees one blob addressed to the initiator and routes it. It has no idea that blob happens to be a pairing request.
 
 <NextPage href="/docs/concepts/device-identity" label="Device Identity" />

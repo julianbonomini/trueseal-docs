@@ -6,86 +6,86 @@ import NextPage from '../../../../components/mdx/NextPage.astro';
 
 # Noise Protocol Primer
 
-The Noise Protocol Framework is a specification for building secure channel protocols. WireGuard is built on it. Signal uses it. trueseal-noise wraps [snow](https://github.com/mcginty/snow), a Rust implementation of the spec.
+The Noise Protocol Framework is a spec for building secure channel protocols. WireGuard is built on it. Signal uses it. trueseal-noise wraps [snow](https://github.com/mcginty/snow), a Rust implementation.
 
-This page explains what Noise is and how it works — without assuming prior knowledge of cryptographic protocols.
+This page is a from-scratch walkthrough. No prior crypto-protocol knowledge assumed.
 
-## Why Not TLS?
+## Why not TLS?
 
-TLS is the standard answer for encrypted transport. It works. But it comes with significant baggage:
+TLS is the default answer for encrypted transport, and it works. The problem is the baggage that comes with it:
 
-- A certificate authority hierarchy — trust is rooted in a set of organisations that sign certificates on behalf of domain names. This works for the web but is meaningless for two devices communicating directly.
-- A complex negotiation phase — TLS 1.3 is simpler than its predecessors, but still supports dozens of cipher suite combinations and extension mechanisms.
-- Identity tied to domain names — not public keys.
+- A certificate authority hierarchy. Trust roots in a set of organisations that sign certificates on behalf of domain names. Great for the web. Meaningless for two devices talking to each other.
+- A complex negotiation phase. TLS 1.3 is much cleaner than what came before, but it still supports dozens of cipher-suite combinations and extension mechanisms.
+- Identity is tied to domain names, not keys.
 
-Noise takes a different approach. There are no certificate authorities. Identity is a keypair — you generate it, you own it. The cipher suite is fixed — no negotiation, no downgrade attacks. The protocol is defined in 50 pages and is entirely readable.
+Noise goes the other way. No certificate authorities. Identity is a keypair you generate yourself. The cipher suite is fixed — no negotiation, no downgrade attacks. The whole spec is about 50 pages and you can sit down and read it.
 
-For a system where identity is a keypair and trust is established out-of-band (pairing), Noise is a significantly better fit than TLS.
+For a system where identity is a keypair and trust is established out-of-band (pairing), Noise is a much better fit than TLS.
 
-## The Core Idea: Layered DH Operations
+## The core idea: chained DH
 
-A Noise handshake is a sequence of Diffie-Hellman (DH) operations interleaved with message exchanges. Each DH operation mixes new key material into a running shared secret. By the end of the handshake, both peers have derived the same shared secret — without ever transmitting it — and that secret is used to key the encrypted channel.
+A Noise handshake is a sequence of Diffie-Hellman operations interleaved with message exchanges. Each DH mixes new key material into a running shared secret. By the end of the handshake, both peers have derived the same shared secret — without ever sending it — and that secret keys the encrypted channel.
 
-**Diffie-Hellman** works like this: if Alice has keypair `(a_priv, a_pub)` and Bob has keypair `(b_priv, b_pub)`, then:
+A quick recap of Diffie-Hellman: if Alice has keypair `(a_priv, a_pub)` and Bob has `(b_priv, b_pub)`, then:
 
 ```
 DH(a_priv, b_pub) == DH(b_priv, a_pub)
 ```
 
-Both sides compute the same value from their own private key and the other side's public key. An observer who sees both public keys cannot compute this value — the private keys are required.
+Both sides compute the same value using their own private key and the other side's public key. An observer who sees both public keys can't compute it. The private keys are required.
 
-In Noise, multiple DH operations are chained together using HKDF (a key derivation function). Each operation mixes the DH output into the current chaining key, producing a new chaining key. By the end, the chaining key is a function of every DH operation that happened — meaning both peers must have contributed the correct keys at every step, or the derived keys won't match.
+In Noise, several DH operations are chained together using HKDF (a key derivation function). Each DH output gets mixed into the current chaining key, producing a new one. By the end, the chaining key is a function of *every* DH operation that took place — so both peers must have contributed the right keys at every step, or the derived keys don't match and nothing decrypts.
 
-## Three Internal Objects
+## Three internal objects
 
-The Noise spec defines three objects that work together during a handshake:
+The Noise spec defines three pieces that cooperate during a handshake:
 
-**CipherState** — wraps a symmetric encryption key and a nonce counter. Encrypts and decrypts messages using ChaCha20-Poly1305. The nonce increments on every operation, ensuring that encrypting the same plaintext twice produces different ciphertext. If the nonce overflows, the implementation panics — silently continuing with a broken nonce would be catastrophic.
+**CipherState** — wraps a symmetric encryption key and a nonce counter. Encrypts and decrypts using ChaCha20-Poly1305. The nonce increments on every operation, so encrypting the same plaintext twice still produces different ciphertext. If the nonce ever overflows, the implementation panics. Quietly continuing with a broken nonce would be a disaster, so the correct behaviour is to crash loudly.
 
-**SymmetricState** — maintains two values: a chaining key (`ck`) and a handshake hash (`h`). Every DH output is mixed into `ck` via HKDF, producing a new `ck` and a fresh `CipherState`. Every message sent or received is mixed into `h` via BLAKE2s. By the end of the handshake, `h` is a hash of every byte exchanged — a transcript both sides must agree on. This is what binds the handshake messages together and prevents any message from being substituted or reordered.
+**SymmetricState** — keeps two values around: a chaining key (`ck`) and a handshake hash (`h`). Every DH output is mixed into `ck` via HKDF, producing a new `ck` and a fresh `CipherState`. Every message sent or received is mixed into `h` via BLAKE2s. By the end of the handshake, `h` is a hash of every byte exchanged — a transcript both sides must agree on. That's what binds the handshake messages together and stops anyone from substituting or reordering them.
 
-**HandshakeState** — orchestrates the handshake. Holds the local static keypair, the local ephemeral keypair, and the remote peer's public keys as they are revealed during the exchange. Drives `SymmetricState` through the correct sequence of DH operations and message reads/writes for the chosen pattern.
+**HandshakeState** — orchestrates the whole thing. Holds the local static keypair, the local ephemeral keypair, and any remote public keys as they're revealed. Drives `SymmetricState` through the correct sequence of DH operations and message reads/writes for the chosen pattern.
 
-## Static and Ephemeral Keys
+## Static and ephemeral keys
 
-Every Noise peer uses two kinds of keypairs during a handshake:
+Each peer uses two kinds of keypairs during a handshake:
 
-**Static keypair** — the peer's long-term identity. Generated once, reused across all sessions. In trueseal, this is the device's noise keypair — the one stored in local Session State.
+**Static keypair** — long-term identity. Generated once and reused across every session. For trueseal, this is the device's noise keypair, kept in local Session State.
 
-**Ephemeral keypair** — generated fresh for each handshake, discarded afterwards. The ephemeral key is what gives Noise its forward secrecy property: even if the static private key is later compromised, past session keys cannot be reconstructed because the ephemeral keys are gone.
+**Ephemeral keypair** — generated fresh for each handshake and thrown away afterwards. The ephemeral keys are where forward secrecy comes from: even if the static private key gets compromised later, past session keys can't be reconstructed because the ephemerals are gone.
 
-## Forward Secrecy
+## Forward secrecy
 
-Forward secrecy means that compromising a long-term key today does not decrypt traffic from the past.
+Forward secrecy means compromising a long-term key today doesn't decrypt traffic from the past.
 
-In Noise, the session keys are derived from a combination of static and ephemeral DH operations. The ephemeral keys are generated per-handshake and thrown away. An attacker who steals a device's static private key can impersonate that device in future sessions — but cannot recompute the session keys from past sessions, because those depended on ephemeral keys that no longer exist.
+In Noise, session keys are derived from a mix of static and ephemeral DH operations. The ephemeral keys are per-handshake and discarded. Someone who steals a static private key can impersonate that device in *future* sessions — but they can't recompute session keys from *past* sessions, because those depended on ephemeral keys that no longer exist anywhere.
 
-## The Handshake Hash
+## The handshake hash
 
-At the end of every Noise handshake, both sides produce a `handshake_hash` — a BLAKE2s digest of the entire transcript. Both sides must arrive at the same value. This hash is what makes the handshake tamper-evident: if any message was modified, reordered, or injected, the hashes won't match and decryption of the first post-handshake message will fail.
+When a Noise handshake completes, both sides produce a `handshake_hash`: a BLAKE2s digest of the entire transcript. Both sides must arrive at the same value. This is what makes the handshake tamper-evident — if any message was modified, reordered, or injected, the hashes don't match and decryption of the first post-handshake message fails.
 
-The handshake hash is also used as the associated data for post-handshake encryption — it is mixed into every subsequent message, binding the encrypted session to the specific handshake that created it.
+The handshake hash is also used as associated data for post-handshake encryption. It's mixed into every subsequent message, binding the encrypted session to the specific handshake that created it.
 
-## After the Handshake: Split
+## After the handshake: split
 
-When the handshake completes, `SymmetricState.split()` derives two independent `CipherStates` from the final chaining key:
+When the handshake finishes, `SymmetricState.split()` derives two independent `CipherStates` from the final chaining key:
 
 - `fromInitiator` — used to encrypt messages sent by the Initiator, decrypted by the Responder.
-- `fromResponder` — used to encrypt messages sent by the Responder, decrypted by the Initiator.
+- `fromResponder` — the other direction.
 
-Two separate cipher states means the nonce counters are independent — the Initiator and Responder can send simultaneously without coordinating. Each state is keyed differently, so a message sent in one direction cannot be replayed in the other.
+Two separate cipher states means the nonce counters are independent and the two sides can send simultaneously without coordinating. Each direction is keyed differently, so a message sent one way can't be replayed back the other.
 
 ## Patterns
 
 The Noise spec defines a small grammar of handshake patterns. A pattern specifies:
 
-- Which keys each side has before the handshake begins (pre-shared knowledge).
+- What each side already knows before the handshake starts (pre-shared knowledge).
 - The sequence of messages exchanged.
 - Which DH operations happen at each step.
 
-trueseal-noise implements two patterns:
+trueseal-noise implements two of them:
 
 - **XX** — no pre-shared knowledge, mutual authentication, three messages.
-- **NK** — Initiator knows Responder's static key, Initiator is anonymous, two messages.
+- **NK** — Initiator already knows the Responder's static key, Initiator stays anonymous, two messages.
 
 <NextPage href="/docs/components/trueseal-noise/xx-pattern" label="XX Pattern" />

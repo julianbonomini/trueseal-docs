@@ -6,23 +6,23 @@ import NextPage from '../../../../components/mdx/NextPage.astro';
 
 # Inbox & TTL
 
-The Inbox is the relay's storage unit. Every device has one — a set of blobs addressed to its public key that have not yet been delivered. The relay's entire storage model is built around this simple structure.
+The Inbox is the relay's storage unit. Every device has one — a set of blobs addressed to its public key that haven't been delivered yet. The relay's whole storage model is built around that one structure.
 
-## The InboxStore Contract
+## The InboxStore contract
 
-The InboxStore has four operations:
+Four operations:
 
-**Put** — store a blob for a recipient. The blob is persisted durably before the relay sends an Ack. A relay that crashes between Put and Ack loses the blob — the client's outbox will replay it on reconnect. A relay that sends an Ack before Put succeeds is lying: the blob is lost with no retry. Put never deduplicates — if the same blob arrives twice (e.g. outbox replay after a crash), both copies are stored. Deduplication is the recipient client's responsibility.
+**Put** — store a blob for a recipient. The blob is persisted durably *before* the relay sends an Ack. A relay that crashes between Put and Ack loses the blob, but that's fine: the client's outbox will replay it on reconnect. A relay that Acks before Put has actually committed is lying — the blob is then lost with no retry. Put never deduplicates: if the same blob shows up twice (e.g. outbox replay after a crash), both copies are stored. Dedup is the recipient client's job.
 
-**Flush** — fetch all blobs for a recipient without deleting them. Returns blobs in insertion order (FIFO). Blobs remain in the store until a DeliverAck is received for each.
+**Flush** — fetch all blobs for a recipient without deleting them. Returns blobs in insertion order (FIFO). They stay in the store until a DeliverAck is received for each.
 
-**Delete** — delete a specific blob by ID, called after a DeliverAck arrives. If the session drops before a DeliverAck is received, the blob survives and is re-delivered on the next Receive Session. Clients must handle duplicate delivery — deduplication is the client's responsibility.
+**Delete** — delete a specific blob by ID after a DeliverAck arrives. If the session drops before the ack lands, the blob survives and comes around again on the next Receive Session. Clients must handle duplicates.
 
-**Reap** — delete all blobs whose TTL has elapsed. Called periodically by the TTL reaper goroutine. Reaping is policy, not data loss — it handles abandoned and permanently offline devices without unbounded storage growth.
+**Reap** — delete all blobs whose TTL has elapsed. Called periodically by the reaper goroutine. Reaping is policy, not data loss — it's what stops abandoned and permanently offline devices from making storage grow without bound.
 
-## SQLite Backend
+## SQLite backend
 
-The default storage backend is SQLite. Schema:
+The default backend is SQLite. Schema:
 
 ```sql
 CREATE TABLE inbox (
@@ -33,14 +33,14 @@ CREATE TABLE inbox (
 );
 ```
 
-SQLite is opened in WAL mode with `synchronous=FULL` — every Put is crash-safe before the Ack is sent. A single connection serialises all writes, avoiding `SQLITE_BUSY` under concurrency.
+SQLite is opened in WAL mode with `synchronous=FULL`, so every Put is crash-safe before the Ack goes out. A single connection serialises all writes, which avoids `SQLITE_BUSY` under concurrency.
 
-## TTL and Reaping
+## TTL and reaping
 
-Every blob has a TTL set at Put time. When the TTL expires, the blob is eligible for reaping. The TTL reaper runs on a configurable interval (default: 1 hour) and deletes all expired blobs in a single sweep.
+Every blob has a TTL set at Put time. When it expires, the blob becomes eligible for reaping. The reaper runs on a configurable interval (default: 1 hour) and deletes all expired blobs in one sweep.
 
-The default TTL is 30 days. This is generous — reaping is a last resort for permanently offline or abandoned devices, not routine housekeeping. Operators can configure a shorter TTL for resource-constrained deployments.
+Default TTL is 30 days, deliberately generous. Reaping is a last resort for permanently offline or abandoned devices, not routine housekeeping. Operators with tighter storage budgets can shorten the TTL.
 
-A device that reconnects after its blobs have been reaped will miss those blobs permanently. The relay has no way to recover them. This is the one scenario where the delivery guarantee does not hold — documented honestly in [Delivery Guarantees](/docs/components/trueseal-sync/delivery-guarantees).
+A device that reconnects after its blobs have already been reaped will miss them, permanently. The relay has no way to bring them back. This is the one scenario where the delivery guarantee doesn't hold — documented honestly in [Delivery Guarantees](/docs/components/trueseal-sync/delivery-guarantees).
 
 <NextPage href="/docs/components/trueseal-relay/deploying" label="Deploying" />

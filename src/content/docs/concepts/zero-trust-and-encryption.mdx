@@ -6,63 +6,63 @@ import NextPage from '../../../components/mdx/NextPage.astro';
 
 # Zero Trust & Encryption
 
-Zero trust is not a policy. It is a structural property. The relay receives ciphertext, has no keys, and cannot read what it routes — regardless of who operates it.
+Zero trust here isn't a policy you opt into. It's a structural fact. The relay receives ciphertext, holds no keys, and can't read what it's routing — and that doesn't change based on who's running the relay.
 
 ## TL;DR
 
-- **Layer 1 — Addressed encryption.** Each blob is encrypted on-device for its specific recipient. Only that recipient's private key can open it.
+- **Layer 1 — Addressed encryption.** Each blob is encrypted on the device for one specific recipient. Only that recipient's private key opens it.
 - **Layer 2 — Noise sessions.** The transport channel between device and relay is encrypted and forward-secret.
 - **Signatures.** Every envelope is Ed25519-signed; tampering and impersonation both fail verification.
-- **What the relay sees.** Recipient public keys. Nothing else.
+- **What the relay sees.** Recipient public keys. That's it.
 
-## Two Layers of Encryption
+## Two layers of encryption
 
-trueseal encrypts data at two distinct layers, for two distinct purposes. They are independent — Layer 1 protects the blob at rest (even if the relay's database is captured), Layer 2 protects the channel in transit (even if network traffic is intercepted).
+trueseal encrypts at two different layers for two different reasons. They're independent. Layer 1 protects the blob at rest, even if someone walks off with the relay's database. Layer 2 protects the channel in transit, even if someone is sitting on the network.
 
-### Layer 1 — Addressed Encryption (at rest)
+### Layer 1 — Addressed encryption (at rest)
 
-Before a blob leaves the sender's device, it is encrypted for each recipient individually. The blob is addressed to a specific recipient's public key, and only the holder of the corresponding private key can decrypt it.
+Before a blob leaves the sender's device, it gets encrypted separately for each recipient. The blob is addressed to a specific public key, and only the holder of that key's private half can decrypt it.
 
-The encryption uses X25519 key agreement combined with ChaCha20-Poly1305 authenticated encryption. The sender performs a Diffie-Hellman exchange with the recipient's static public key to derive a shared secret, then encrypts the payload with that secret. The result:
+The mechanics: X25519 key agreement combined with ChaCha20-Poly1305 authenticated encryption. The sender does a Diffie-Hellman against the recipient's static public key to derive a shared secret, then encrypts with it. End result:
 
-- Only the intended recipient can decrypt
-- Cannot be read by the relay, any intermediary, or any other device
-- Is authenticated — any tampering renders it undecryptable
+- Only the intended recipient can decrypt.
+- The relay, any middlebox, any other device — none of them can read it.
+- Tampering breaks the authentication tag, so it just won't decrypt.
 
-The sender's identity (`author_pub`) is not a visible header on the envelope. It is prepended inside the plaintext before encryption. The relay never sees who sent a blob — only who it is addressed to.
+The sender's identity (`author_pub`) isn't a visible field on the envelope. It's prepended *inside* the plaintext before encryption, so the relay never knows who sent what — only who it's going to.
 
-This encryption is independent of any live network connection. A blob encrypted this way can be stored on the relay and decrypted later by the recipient, with no session active at the time of encryption.
+None of this depends on a live connection. A blob encrypted this way can sit on the relay for a while and still decrypt cleanly when the recipient finally shows up.
 
-### Layer 2 — Noise Sessions (in transit)
+### Layer 2 — Noise sessions (in transit)
 
-The transport channel between a device and the relay is protected by the [Noise Protocol Framework](https://noiseprotocol.org/). Two session types are used:
+The transport between a device and the relay is wrapped in the [Noise Protocol Framework](https://noiseprotocol.org/). Two session shapes, two handshake patterns:
 
-**Receive Sessions** use the `Noise XX` handshake pattern — mutual authentication. Both the device and the relay verify each other's static public keys. The result is a forward-secret, authenticated channel. If session keys are compromised after the fact, past traffic cannot be decrypted.
+**Receive Sessions** use `Noise XX` — mutual auth. Device and relay each verify the other's static public key. The result is a forward-secret authenticated channel: even if a session key leaks later, past traffic stays unreadable.
 
-**Push Sessions** use the `Noise NK` handshake pattern — the device verifies the relay's static public key, but the relay never learns the device's identity. A fresh ephemeral keypair is generated for each push. Push sessions are closed immediately after the blobs are sent.
+**Push Sessions** use `Noise NK` — the device verifies the relay's static public key, but the relay never learns who the device is. A throwaway ephemeral keypair is generated for each push, and the session is closed the moment the blobs are sent.
 
 ## Signatures
 
-Every envelope is signed by the sender's Ed25519 signing key. The signature covers the sequence number, parent hashes, recipient public key, and the ciphertext. This provides two guarantees:
+Every envelope is signed by the sender's Ed25519 signing key. The signature covers the sequence number, parent hashes, recipient public key, and ciphertext. That gets you two things:
 
-**Tamper detection.** Any modification to the envelope after signing — changing the recipient, altering the ciphertext, replaying an old sequence number — invalidates the signature. The recipient discards the envelope silently.
+**Tamper detection.** Change anything — flip a byte of ciphertext, swap the recipient, replay an old sequence number — and the signature stops matching. The recipient drops the envelope without ceremony.
 
-**Sender binding.** The sender's identity (`author_pub`) is inside the encrypted payload. When the recipient decrypts the envelope, they extract `author_pub` and verify the signature matches. A device cannot impersonate another — if device B encrypts a payload claiming to be from device A, the signature check fails because the signature was made with B's key, not A's.
+**Sender binding.** The sender's `author_pub` lives inside the encrypted payload. When the recipient decrypts, they pull `author_pub` out and check the signature against it. Device B can't pretend to be device A: if B encrypts a payload and labels it as A's, the signature was made with B's key, so verification fails.
 
-Senders not in the current Group Manifest are discarded after signature verification. The manifest is the authoritative list of trusted devices. See [Sync Groups](/docs/concepts/sync-groups) for how membership is managed.
+After signature verification, the sender is checked against the current Group Manifest. Anything from a key that isn't a member gets discarded. The manifest is the authoritative trusted-device list — see [Sync Groups](/docs/concepts/sync-groups) for how it's managed.
 
-## What the Relay Knows
+## What the relay knows
 
-The relay observes the recipient public key per blob (required for routing) and which keys have active Receive Sessions (required to deliver immediately). It does not learn who sent any blob, which devices belong to the same group, or anything about content. An adversary who compromises the relay entirely — binary, database, network — gains a list of public keys that received blobs, and nothing else.
+It sees the recipient public key on each blob (needed for routing) and which keys have active Receive Sessions (needed to deliver immediately). It doesn't see who sent a blob, doesn't see groups, doesn't see content. Compromise the relay fully and you walk away with a list of public keys that received blobs, and nothing else.
 
-See [What the Relay Sees](/docs/architecture#what-the-relay-sees) in Architecture for the by-component breakdown.
+For the by-component breakdown, see [What the Relay Sees](/docs/architecture#what-the-relay-actually-sees) in Architecture.
 
-## What Zero Trust Does Not Cover
+## What zero trust doesn't cover
 
-Zero trust protects against a compromised or malicious relay. It does not protect against:
+Zero trust covers a malicious or compromised relay. It does not cover:
 
-- **A compromised device.** If an attacker has access to a device's private key, they can decrypt any blob addressed to that device and impersonate it as a sender. Device security is the caller's and the platform's responsibility.
-- **Traffic analysis at the network level.** The relay knows which IPs connect and when. An adversary with network-level access can observe connection patterns even without reading content. trueseal does not route through a mix network or provide timing anonymity.
-- **Blobs sent before a compromised device is removed.** If a device is removed from a group, it cannot decrypt future blobs. It retains the private key for any blobs it received before removal. See [Revocation](/docs/concepts/revocation).
+- **A compromised device.** If an attacker has a device's private key, they can decrypt anything addressed to that device and forge messages as it. Device security is on the OS, the platform, and the application — not on us.
+- **Network-level traffic analysis.** The relay sees which IPs connect when. Anyone watching the network can observe connection patterns without reading any payload. trueseal doesn't run over a mix network and doesn't pretend to give you timing anonymity.
+- **Blobs already received before removal.** If a device gets kicked from a group, it can't decrypt anything new — but anything it already received and decrypted is its forever. See [Revocation](/docs/concepts/revocation).
 
 <NextPage href="/docs/concepts/sync-groups" label="Sync Groups" />

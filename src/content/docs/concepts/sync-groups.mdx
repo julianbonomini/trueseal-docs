@@ -6,61 +6,61 @@ import NextPage from '../../../components/mdx/NextPage.astro';
 
 # Sync Groups
 
-A Sync Group is the set of devices that share data. Every blob sent by any member is delivered to every other member. Membership is not implicit — it is defined by a signed document called the **Group Manifest**, which every member holds and every member can update.
+A Sync Group is just the set of devices that share data. Every blob sent by any member is delivered to every other member. Membership isn't implicit — it lives in a signed document called the **Group Manifest**, which every member holds a copy of and any member can update.
 
 ## TL;DR
 
 - **A group is its manifest.** No central registry, no server-side state.
-- **Any member can update it.** Authority is membership; there is no admin.
-- **Updates converge by version.** Higher version wins. No consensus protocol required.
-- **The relay sees nothing.** It routes blobs by recipient public key — it has no concept of "group."
+- **Any member can update it.** Authority is membership; no admin role exists.
+- **Updates converge by version.** Higher version wins. No consensus protocol involved.
+- **The relay sees nothing.** It routes blobs by recipient public key. It has no concept of "group."
 
 ## The Group Manifest
 
-The Group Manifest is the authoritative, versioned record of who belongs to a Sync Group. It carries a stable Group ID, a monotonically increasing version number, the member list (each member's noise + signing public keys), and an Ed25519 signature from the member who issued this version.
+The manifest is the authoritative, versioned record of who's in the group. It contains a stable Group ID, a version number that only goes up, the member list (each member's noise and signing public keys), and an Ed25519 signature from whoever issued this version.
 
-Any current member can issue a new manifest version. There is no coordinator, no device with elevated authority. Authority derives from membership — if you are in the current manifest, you can issue the next one.
+Any current member can cut a new version. No coordinator, no privileged device. Authority comes from membership — if you're in the current manifest, you can issue the next one.
 
-For the byte-level structure, see [Group Manifest](/docs/components/trueseal-sync/group-manifest) in the component reference.
+For the byte-level layout, see [Group Manifest](/docs/components/trueseal-sync/group-manifest) in the component reference.
 
-## Validity and Convergence
+## Validity and convergence
 
-When a device receives a new manifest, it accepts it if:
+When a device receives a new manifest, it accepts it only if all of these hold:
 
-1. The signature is valid.
-2. The issuer is a member of the device's *current* manifest — the update came from someone who was legitimately a member at the time of issuance.
-3. The version number is strictly higher than the current version.
+1. The signature checks out.
+2. The issuer is a member of the device's *current* manifest — i.e. the update came from someone who was actually a member at the time.
+3. The version number is strictly higher than the current one.
 
-If two members simultaneously issue conflicting updates — A removes B while C adds D — both propagate. The higher version wins. Membership converges without any consensus protocol.
+If two members issue conflicting updates at roughly the same time — A removes B while C adds D — both propagate. Whichever has the higher version wins. Convergence falls out without any consensus protocol.
 
-## Sending to the Group
+## Sending to the group
 
-When a device calls `send()`, trueseal-sync reads the current Group Manifest and produces one encrypted blob per member, each addressed individually to that member's noise public key. The relay receives N independent blobs and routes each to the appropriate Inbox.
+When a device calls `send()`, trueseal-sync reads the current manifest and produces one encrypted blob per member, each addressed individually to that member's noise public key. The relay receives N independent blobs and drops each into the right Inbox.
 
-The relay has no concept of the group. It sees N blobs addressed to N public keys. It does not know they are related, or that the senders and recipients share a membership.
+From the relay's point of view, there's no group — just N blobs going to N public keys. It doesn't know they're related or that the parties share any membership.
 
-## Receiving and Filtering
+## Receiving and filtering
 
-Every inbound blob is verified against the current Group Manifest. If the sender's signing public key is not in the manifest, the blob is silently discarded — even if the Ed25519 signature itself is valid.
+Every inbound blob gets checked against the current manifest. If the sender's signing public key isn't in the manifest, the blob is dropped silently — even if the Ed25519 signature itself is fine.
 
-This is how soft removal takes effect. When a device is removed from the manifest, remaining members update their local copy and begin discarding that device's messages. The removed device can still push blobs to the relay — the relay enforces nothing about sender identity — but every recipient discards them silently on receipt.
+This is how soft removal actually takes effect. When a device gets removed, the remaining members update their local manifest and start dropping that device's messages on receipt. The removed device can technically still push blobs to the relay (the relay doesn't enforce anything about sender identity), but nobody will accept them.
 
-## Joining the Group
+## Joining the group
 
-A new device joins through the [Pairing ceremony](/docs/concepts/pairing). Once the initiating device accepts the request, two things happen:
+A new device joins through [Pairing](/docs/concepts/pairing). Once the initiator accepts, two things happen:
 
-1. The current manifest is sent to the new device, giving it an immediate complete view of the group.
-2. A new manifest version is issued that includes the new device, signed by the admitting device, and pushed to every existing member.
+1. The current manifest is sent to the new device, giving it a complete view of who's in.
+2. A new manifest version including the new device is issued, signed by the admitting device, and pushed to every existing member.
 
-There is no convergence lag — every existing member receives the same authoritative document.
+No convergence lag — everyone gets the same authoritative document.
 
-## Offline Members
+## Offline members
 
-A device that is offline when a manifest update is issued will receive it when it reconnects, via the relay's deferred delivery. Until then it operates with a stale manifest:
+A device that's offline when a manifest update is issued will pick it up when it reconnects, via deferred delivery on the relay. Until then it's running on a stale manifest:
 
-- It will not send to newly added members.
-- It will not filter messages from newly removed members.
+- It won't send to newly added members yet.
+- It won't filter messages from newly removed members yet.
 
-This is narrow and temporary. The moment the device reconnects, it receives the queued update and converges immediately.
+That window is narrow and self-healing — the moment the device reconnects, the queued update lands and the membership view catches up immediately.
 
 <NextPage href="/docs/concepts/pairing" label="Pairing" />
