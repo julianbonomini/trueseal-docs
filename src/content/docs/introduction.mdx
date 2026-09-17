@@ -39,7 +39,7 @@ Above all three sits [trueseal-protocol](/docs/protocol/overview), the wire spec
 trueseal is a transport, not a framework. It's deliberately uninterested in:
 
 - The shape of your data. Payloads are opaque bytes; bring your own format.
-- Conflict resolution. Delivery and ordering are guaranteed; divergence is yours to handle.
+- Conflict resolution and exactly-once application commits. Transport retries and Message IDs are provided; divergence is yours to handle.
 - History replay for new devices. Pairing adds a member to the group, not the group's past. If a joiner needs catch-up, your app sends it.
 - Users. A device is a keypair. Mapping devices to humans is a layer above this one.
 - Permissions. There is no admin and no hierarchy — if you're in the group, you can do anything any other member can do.

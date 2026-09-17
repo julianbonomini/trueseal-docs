@@ -15,7 +15,7 @@ trueseal is opinionated. Every choice in the stack traces back to a short list o
 | **Zero Trust** | The relay can't read your data. |
 | **Anonymity** | No accounts, no human identity, no communication graph the server can piece together. |
 | **Fault Tolerance** | Devices drop offline. Networks die. Any device can be gone for a long time and come back current. |
-| **Guaranteed Delivery** | Every blob reaches every group member. Eventually, unconditionally. |
+| **Durable Transport** | Sender and relay retain blobs across disconnects within documented boundaries. |
 | **Revocability** | No device gets permanent access. The mechanism matches the threat. |
 | **No Lock-In** | Any relay instance works. Self-host, public, switch around. The security model doesn't change. |
 
@@ -23,7 +23,8 @@ trueseal is opinionated. Every choice in the stack traces back to a short list o
 |---|---|
 | **Not a P2P System** | The relay is always in the path. |
 | **Not a Real-Time Channel** | Background sync with strong delivery, not streaming. Sync might be fast, but "fast" isn't a guarantee we make. |
-| **Not a Conflict Resolver** | We guarantee delivery and order. Conflicts are yours. |
+| **Not Exactly-Once Processing** | SDKs provide stable Message IDs; applications make their own writes idempotent. |
+| **Not a Conflict Resolver** | Payload meaning and conflicts are yours. |
 | **Not an Identity System** | A device is a keypair. Linking it to a human happens above this layer. |
 | **Not a Durable Log** | The relay is a delivery buffer. Blobs are deleted on delivery. |
 | **Not a Platform** | No admins, no hierarchies. If you're in the group, you're in. |
@@ -54,11 +55,11 @@ Phones go in pockets. Wi-Fi drops in tunnels. Laptops sleep for a week. Any devi
 
 Undelivered blobs sit in the relay until the recipient reconnects, and they also sit in the sender's local outbox until the relay confirms delivery. Two safety nets, one on each side.
 
-### Guaranteed Delivery
+### Durable Transport
 
-A blob that gets sent reaches every group member. Eventually, no excuses.
+A blob survives sender disconnects until the relay accepts it. The relay then holds it for an offline recipient until receipt or TTL expiry.
 
-Without that, "sync" is misleading. The combination of relay-side hold-for-offline and sender-side outbox replay is what makes it actually true — nothing gets silently dropped because the wrong subset of devices happened to be online at the time.
+Relay delivery is at least once, so duplicates are possible. Each SDK provides a stable Message ID for application deduplication. A client acknowledges frame receipt before application processing; exactly-once application commits are outside the transport boundary.
 
 ### Revocability
 
@@ -92,11 +93,11 @@ The trueseal relay solves the connectivity problem cleanly: outbound connections
 
 No WebSockets, no sub-second delivery promises.
 
-This is background sync with strong delivery guarantees. The design optimises for correctness and privacy. Latency is whatever it happens to be.
+This is background sync with durable, retrying transport. The design optimises for correctness and privacy. Latency is whatever it happens to be.
 
 ### Not a Conflict Resolver
 
-We guarantee every device receives every blob, in order. What happens when two offline devices write contradictory things is your call.
+We transport every accepted blob toward each addressed device and expose stable Message IDs for duplicates. What happens when two offline devices write contradictory things is your call.
 
 trueseal doesn't pick a winner and it doesn't merge. It has no opinion on your data model.
 

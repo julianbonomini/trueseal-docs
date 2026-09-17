@@ -58,10 +58,10 @@ Sent by the relay to hand a blob to a connected device.
 [blob_id: 8 bytes u64 BE][envelope: bytes]
 ```
 
-- `blob_id` — an opaque 8-byte identifier the relay assigns. The client echoes it back in a DeliverAck once the blob has been durably written. The client must strip these 8 bytes before decoding the Envelope.
+- `blob_id` — an opaque 8-byte identifier the relay assigns. The client echoes it back in a DeliverAck immediately after receiving the frame bytes. The client must strip these 8 bytes before decoding the Envelope.
 - `envelope` — the serialized Envelope, forwarded verbatim.
 
-The relay doesn't delete the blob from its InboxStore at delivery time. Deletion only happens after a matching DeliverAck arrives. If the session drops first, the blob comes around again on the next Receive Session. **Clients have to handle duplicate delivery — dedup is on the client.**
+The relay doesn't delete the blob from its InboxStore at send time. Deletion only happens after a matching DeliverAck arrives. If the session drops first, the blob comes around again on the next Receive Session. Public SDKs expose a stable application Message ID derived from signed Envelope metadata; applications persist that ID to make processing idempotent.
 
 ---
 

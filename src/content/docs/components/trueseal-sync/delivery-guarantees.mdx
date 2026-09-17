@@ -1,24 +1,32 @@
 ---
 title: Delivery Guarantees
-description: How trueseal-sync guarantees every blob reaches every member — outbox replay on the sender side, deferred delivery on the relay side, and where the limits are.
+description: How trueseal-sync provides at-least-once transport — outbox replay, deferred relay delivery, stable Message IDs, and the application boundary.
 ---
 import NextPage from '../../../../components/mdx/NextPage.astro';
 
 # Delivery Guarantees
 
-trueseal-sync guarantees that every blob sent reaches every current group member. Eventually, unconditionally. This isn't best-effort. It's the contract.
+trueseal-sync provides at-least-once transport within the relay TTL. It retries until the relay accepts a blob, and the relay retains that blob until the recipient process acknowledges its bytes.
 
-This page covers how that guarantee is actually built, and where the limits are.
+That is not the same as exactly-once application processing. This page defines the boundary precisely.
 
 ## The two-sided mechanism
 
-Guaranteed delivery comes from two independent mechanisms working in tandem:
+Durable transport comes from two independent mechanisms working in tandem:
 
 **Sender side: the Outbox.** Every blob is written to the local Operation Log before it's pushed to the relay. It's marked undelivered until the relay confirms receipt. If the sender drops offline before the push succeeds, the blob stays in the Outbox. On reconnect, the session replays every undelivered entry to the relay in global sequence order. The sender never loses a blob — it stays locally until delivery is confirmed.
 
-**Relay side: deferred delivery.** When the relay receives a blob addressed to a recipient that's currently offline, it stores it in that recipient's Inbox. When the recipient reconnects, the relay flushes the Inbox immediately and deletes each blob on confirmed delivery. The relay holds blobs for offline recipients so the sender doesn't have to wait around.
+**Relay side: deferred delivery.** When the relay receives a blob addressed to an offline recipient, it stores it in that recipient's Inbox. When the recipient reconnects, the relay sends the Inbox and deletes each blob after the client acknowledges receipt of its bytes.
 
-Combined: the sender keeps trying until the relay confirms. The relay holds the blob until the recipient collects it. Between them, nothing gets dropped.
+Combined: the sender keeps trying until the relay confirms durable storage. The relay holds the blob until the recipient process receives it.
+
+## Application processing and Message IDs
+
+The client sends `DeliverAck` immediately after receiving a frame, before decryption and before invoking application code. This keeps acknowledgement behavior independent of whether ciphertext is valid and prevents a malicious relay from using acknowledgements as a decryption oracle.
+
+Consequently, a process crash after `DeliverAck` but before the application stores the payload can lose that application update. TrueSeal cannot atomically commit into an application's database.
+
+Relay retries can also deliver the same Envelope more than once. Every SDK therefore exposes an opaque `messageId` that remains identical across re-delivery. Applications should persist `messageId` in the same transaction as their state change and ignore an ID already stored. This gives idempotent application behavior without making TrueSeal understand the payload.
 
 ## What "eventually" actually means
 
@@ -26,7 +34,7 @@ Combined: the sender keeps trying until the relay confirms. The relay holds the 
 
 The sender's Outbox isn't subject to TTL. Undelivered entries stay in the local Operation Log indefinitely. If a sender has been offline for months and reconnects, the Outbox gets replayed in full. But the relay will only accept and deliver those blobs to recipients who are online now or who reconnect within their own TTL window.
 
-So the practical edge case: if both sender and recipient are offline longer than the relay TTL, delivery isn't guaranteed. Within the TTL, it is.
+If a recipient remains offline past TTL, the relay can reap the blob. Even within TTL, TrueSeal guarantees transport to the recipient process, not a durable application commit.
 
 ## Order of delivery
 
@@ -40,7 +48,7 @@ trueseal-sync doesn't buffer or reorder Envelopes on the recipient side. What ar
 
 When a device calls `send()`, trueseal-sync builds one Envelope per current group member and pushes all of them over a single Push Session. Each Envelope is independently addressed and encrypted. The relay routes each one to the right Inbox.
 
-Delivery to each recipient is tracked independently. A blob isn't really "delivered" until every current member has confirmed receipt. The Outbox tracks delivery per `(object_id, sequence)` entry — not per recipient. In v0, an entry is marked delivered when the relay confirms the push succeeded, which means all N Envelopes for that send were accepted by the relay.
+The relay stores one independently addressed Envelope per recipient. In v0, the sender's Outbox entry is marked delivered when the relay confirms that the fan-out push was accepted. The sender does not receive per-recipient application confirmation.
 
 ## What delivery doesn't cover
 
@@ -48,6 +56,10 @@ Delivery to each recipient is tracked independently. A blob isn't really "delive
 
 **Removed members.** A device removed from the group won't receive blobs sent after the manifest update that excludes it. It may still receive blobs that were in-flight at the time of removal — already addressed to its key and sitting in the relay's Inbox.
 
-**Relay TTL expiry.** As above: blobs held past the relay TTL are reaped. This is the only scenario where a blob can be permanently lost without the sender knowing about it.
+**Relay TTL expiry.** Blobs held past the relay TTL are reaped.
+
+**Application crash window.** The client acknowledges received bytes before invoking application code. A crash between those events is outside the durable transport guarantee.
+
+**Exactly-once processing.** Networks and separate databases cannot provide this automatically. Applications use `messageId` to make their own state changes idempotent.
 
 <NextPage href="/docs/components/trueseal-relay/overview" label="trueseal-relay" />

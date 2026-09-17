@@ -6,7 +6,7 @@ import NextPage from '../../../../components/mdx/NextPage.astro';
 
 # trueseal-sync — Overview
 
-trueseal-sync is the Rust sync engine. It's the protocol authority of the stack: it owns the Envelope format, addressed encryption, pairing, group membership, and the delivery guarantees. Drop it into an application and your data is encrypted before it gets anywhere near the network.
+trueseal-sync is the Rust sync engine. It's the protocol authority of the stack: it owns the Envelope format, addressed encryption, pairing, group membership, and transport semantics. Drop it into an application and your data is encrypted before it gets anywhere near the network.
 
 ## What it does
 
@@ -24,7 +24,7 @@ It runs the whole lifecycle of syncing encrypted data between a group of devices
 It's a transport primitive. It won't:
 
 - Interpret what's inside a blob. That's your data model.
-- Resolve conflicts. Delivery and ordering are guaranteed; what to do with conflicting writes is on you.
+- Commit application state or resolve conflicts. It retries transport and supplies Message IDs; application semantics remain yours.
 - Backfill history for new devices. When `onMemberJoined` fires, you decide what to send.
 - Enforce a permission hierarchy. Any member can do anything any other member can do.
 
@@ -59,6 +59,6 @@ Four sub-pages with the internals:
 - [Envelopes & Blobs](./envelopes-and-blobs) — wire format and addressed encryption.
 - [Group Manifest](./group-manifest) — membership structure and convergence rules.
 - [Operation Log & Outbox](./operation-log-and-outbox) — durable send record and reconnect replay.
-- [Delivery Guarantees](./delivery-guarantees) — what "eventually, unconditionally" actually means.
+- [Delivery Guarantees](./delivery-guarantees) — retry, TTL, duplicates, and the application boundary.
 
 <NextPage href="/docs/components/trueseal-relay/overview" label="trueseal-relay" />

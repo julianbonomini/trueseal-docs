@@ -10,6 +10,8 @@ trueseal-sync is written in Rust. The SDKs below wrap that one Rust core through
 
 API reference, install instructions and integration examples live in each repo's README. This page is just the entry point — pick a platform, follow the link.
 
+All SDKs expose a stable opaque Message ID with each received blob. Relay delivery is at least once, so applications persist that ID with their own state and ignore an ID already processed. Payloads remain opaque to TrueSeal.
+
 ## Available
 
 | SDK | Status | Repo |
