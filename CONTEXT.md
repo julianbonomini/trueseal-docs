@@ -50,7 +50,7 @@ _Avoid_: Figma export, design handoff
 
 ## Relationships
 
-- The **Landing** and **Docs** live in the same Astro project and share the same design token system and component library.
+- The **Landing**, **Human Docs** and **Agent Docs** live in the same Astro project and share the same design token system and component library.
 - **Design tokens** are defined in Figma, exported via token export, and consumed by both **Astro components** and **Islands**.
 - An **Island** is always a React component. An **Astro component** is never interactive.
 - **Content collections** power the **Human Docs** and **Agent Docs** surfaces. The **Landing** is hand-authored Astro, not driven by a content collection.
