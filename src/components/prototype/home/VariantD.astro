@@ -1,0 +1,309 @@
+---
+// PROTOTYPE (throwaway, trueseal-roadmap#17).
+// Variant D: A's monochrome system and cursor wordmark + B's product storytelling and
+// comparison + C's journey (Overview / Integrate / Operate / Trust).
+// One focal point: a live seal demo in the hero. Colour has one meaning: readable
+// plaintext is highlighted; ciphertext never is. Everything else stays monochrome.
+import { snippets, installs, relaySees, limits, agentPrompt } from './content';
+import ThemeToggle from '../../ui/ThemeToggle.tsx';
+
+const journey = [
+  { title: 'Overview', items: ['What TrueSeal is', 'How it works', 'Is it right for my app?', 'Developer Preview status'] },
+  { title: 'Integrate', items: ['Quickstart with your agent', 'Quickstart: Swift', 'Quickstart: Kotlin', 'Quickstart: TypeScript', 'Pairing devices', 'Sending and receiving', 'Membership and leaving', 'Destroy Group', 'Errors and delivery issues'] },
+  { title: 'Operate', items: ['Run a relay with Docker', 'Relay address and keypair', 'Quotas and limits', 'Backups and upgrades'] },
+  { title: 'Trust', items: ['Threat model', 'What the relay can see', 'Known limitations', 'Report a vulnerability'] },
+  { title: 'Reference', items: ['SDK API', 'Protocol specification', 'Wire format and test vectors', 'Compatibility table', 'Glossary'] },
+];
+---
+
+<div class="d">
+  <header class="d__nav">
+    <a class="d__logo" href="/">trueseal<span class="d__cursor">_</span></a>
+    <nav>
+      <a href="#overview">Overview</a>
+      <a href="#integrate">Integrate</a>
+      <a href="#operate">Operate</a>
+      <a href="#trust">Trust</a>
+    </nav>
+    <div class="d__nav-right">
+      <a href="#">Docs</a>
+      <a href="#">GitHub</a>
+      <ThemeToggle client:load />
+    </div>
+  </header>
+
+  <section class="d__hero">
+    <h1>Sync your users’ data between their devices. <span>Your servers only ever carry sealed bytes.</span></h1>
+    <p class="d__lede">
+      TrueSeal is an open-source building block for Swift, Kotlin and TypeScript apps.
+      Keys are made on the device and never leave it. There are no accounts to create and no company to trust.
+    </p>
+
+    <div class="d__demo" data-demo>
+      <div class="d__dev">
+        <div class="d__dev-head"><span>Your phone</span><span>plaintext</span></div>
+        <label class="d__sr" for="d-input">Type a message to seal</label>
+        <textarea id="d-input" rows="3" maxlength="160" spellcheck="false"></textarea>
+        <p class="d__hint">Type anything. It’s encrypted in this page before it moves.</p>
+      </div>
+
+      <div class="d__relay">
+        <div class="d__dev-head"><span>The relay</span><span>what it stores</span></div>
+        <pre class="d__cipher" data-cipher></pre>
+        <dl class="d__meta">
+          <div><dt>For</dt><dd>device 7f3a…c902</dd></div>
+          <div><dt>Size</dt><dd data-size>0 bytes</dd></div>
+          <div><dt>Arrived</dt><dd data-time>–</dd></div>
+        </dl>
+        <p class="d__hint">It can see the size and the time. It can’t see the words.</p>
+      </div>
+
+      <div class="d__dev">
+        <div class="d__dev-head"><span>Your laptop</span><span>plaintext</span></div>
+        <p class="d__out"><mark data-out></mark></p>
+        <p class="d__hint" data-status>Waiting for a message</p>
+      </div>
+    </div>
+
+    <div class="d__ctas">
+      <a class="d__btn d__btn--primary" href="#">Start the quickstart</a>
+      <a class="d__btn" href="#">See how it works</a>
+      <code class="d__install">{installs.ts}</code>
+    </div>
+  </section>
+
+  <section class="d__sec" id="overview">
+    <p class="d__step"><b>1</b> Overview</p>
+    <h2>Private sync is usually a backend you’d rather not build.</h2>
+    <p class="d__body">
+      To sync a note, a clipboard or a health log between two devices, most apps send it to a
+      server that can read it. That means accounts, a database of user data, and a promise
+      you have to keep forever. TrueSeal replaces that server with a relay that stores only ciphertext
+      until the other device picks it up.
+    </p>
+    <div class="d__table-wrap">
+      <table class="d__compare">
+        <thead><tr><th></th><th>Your own backend</th><th>Platform cloud sync</th><th class="d__us">TrueSeal</th></tr></thead>
+        <tbody>
+          <tr><td>Server can read user data</td><td>Yes</td><td>Depends on the vendor</td><td class="d__us">No</td></tr>
+          <tr><td>User accounts</td><td>You build them</td><td>A platform account</td><td class="d__us">None</td></tr>
+          <tr><td>Apple, Android and web</td><td>If you build it</td><td>Usually one platform</td><td class="d__us">Swift, Kotlin, TypeScript</td></tr>
+          <tr><td>Run it yourself</td><td>Yes</td><td>No</td><td class="d__us">One container</td></tr>
+          <tr><td>Ready for production</td><td>Yours to judge</td><td>Yes</td><td class="d__us">Not yet, it’s a preview</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="d__sec d__split" id="integrate">
+    <div>
+      <p class="d__step"><b>2</b> Integrate</p>
+      <h2>Three calls. Pairing included.</h2>
+      <ol class="d__calls">
+        <li><code>open()</code> connects to your relay in the background.</li>
+        <li><code>startPairing()</code> gives you a code to show as a QR. The other device scans it and you accept it.</li>
+        <li><code>send()</code> reaches every device in the group, at least once and in order.</li>
+      </ol>
+      <p class="d__body">Or let your coding agent do it. Paste this into your project:</p>
+      <pre class="d__prompt">{agentPrompt}</pre>
+    </div>
+    <div class="d__code">
+      <div class="d__tabs"><span class="on">TypeScript</span><span>Swift</span><span>Kotlin</span></div>
+      <pre>{snippets.ts}</pre>
+    </div>
+  </section>
+
+  <section class="d__sec d__split" id="operate">
+    <div>
+      <p class="d__step"><b>3</b> Operate</p>
+      <h2>One container, one SQLite file, one keypair.</h2>
+      <p class="d__body">
+        The relay holds ciphertext for devices that are offline and drops it once it’s delivered or expires.
+        It doesn’t log IP addresses or anything about your users unless you turn on dev mode.
+      </p>
+    </div>
+    <pre class="d__term"><span>$</span> {installs.relay}
+<span class="d__dim">relay listening on :7700 and :7701
+relay address: trueseal://9f2c…e41a@localhost</span></pre>
+  </section>
+
+  <section class="d__sec" id="trust">
+    <p class="d__step"><b>4</b> Trust</p>
+    <h2>We write down what the relay can see.</h2>
+    <div class="d__sees">
+      <div>
+        <h3>It can’t see</h3>
+        <ul>{relaySees.cannot.map(s => <li>{s}</li>)}</ul>
+      </div>
+      <div>
+        <h3>It can see</h3>
+        <ul>{relaySees.can.map(s => <li>{s}</li>)}</ul>
+      </div>
+    </div>
+    <table class="d__limits">{limits.map(([k, v]) => <tr><td>{k}</td><td>{v}</td></tr>)}</table>
+    <p class="d__body"><a href="#">Read the threat model and known limitations</a></p>
+  </section>
+
+  <section class="d__why"><div class="d__why-in">
+    <h2>Why it’s free</h2>
+    <p>
+      TrueSeal isn’t a business. It’s open source under Apache-2.0 because privacy should be the
+      default in every app, and the hard part shouldn’t have to be rebuilt each time.
+      Use it, run your own relay, and read every line.
+    </p>
+    <a class="d__btn d__btn--primary" href="#">Start the quickstart</a>
+  </div></section>
+
+  <footer class="d__foot">
+    <p class="d__proto-note">PROTOTYPE: docs IA follows the journey</p>
+    <div class="d__foot-grid">
+      {journey.map(s => <div><h4>{s.title}</h4><ul>{s.items.map(i => <li>{i}</li>)}</ul></div>)}
+    </div>
+  </footer>
+</div>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-demo]');
+  if (root) {
+    const input = root.querySelector<HTMLTextAreaElement>('textarea')!;
+    const cipher = root.querySelector<HTMLElement>('[data-cipher]')!;
+    const size = root.querySelector<HTMLElement>('[data-size]')!;
+    const time = root.querySelector<HTMLElement>('[data-time]')!;
+    const out = root.querySelector<HTMLElement>('[data-out]')!;
+    const status = root.querySelector<HTMLElement>('[data-status]')!;
+    const keyP = crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt']);
+    let timer: number | undefined;
+
+    const hex = (b: Uint8Array) => Array.from(b, x => x.toString(16).padStart(2, '0')).join('')
+      .replace(/(.{8})/g, '$1 ').trim();
+
+    async function seal(text: string) {
+      if (!text) {
+        cipher.textContent = ''; size.textContent = '0 bytes'; time.textContent = '–';
+        out.textContent = ''; status.textContent = 'Waiting for a message';
+        return;
+      }
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await keyP, new TextEncoder().encode(text)));
+      const all = new Uint8Array(iv.length + ct.length); all.set(iv); all.set(ct, iv.length);
+      cipher.textContent = hex(all);
+      size.textContent = `${all.length} bytes`;
+      time.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      status.textContent = 'Sealing…';
+      clearTimeout(timer);
+      timer = window.setTimeout(() => { out.textContent = text; status.textContent = 'Delivered and opened on this device'; }, 450);
+    }
+
+    input.addEventListener('input', () => seal(input.value));
+
+    const sample = 'wifi at the cabin: correct-horse-battery-staple';
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      input.value = sample; seal(sample);
+    } else {
+      let i = 0;
+      const tick = () => {
+        if (document.activeElement === input) return;
+        input.value = sample.slice(0, ++i); seal(input.value);
+        if (i < sample.length) setTimeout(tick, 45 + Math.random() * 60);
+      };
+      setTimeout(tick, 600);
+    }
+  }
+</script>
+
+<style>
+  .d {
+    --hl: #ffe45c; --hl-ink: #1b1b1b;
+    background: var(--color-background); color: var(--color-on-surface);
+  }
+  :global([data-theme='dark']) .d { --hl: #e9d24a; --hl-ink: #141313; }
+  .d a { color: inherit; }
+  .d :focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+
+  .d__nav { display: flex; align-items: center; gap: 40px; max-width: 1200px; margin: 0 auto; padding: 18px 24px; }
+  .d__logo { font: 600 19px var(--font-mono); text-decoration: none; }
+  .d__cursor { animation: d-blink 1.05s steps(1) infinite; }
+  @keyframes d-blink { 50% { opacity: 0; } }
+  .d__nav nav { display: flex; gap: 28px; flex: 1; font-size: 15px; }
+  .d__nav a { text-decoration: none; color: var(--color-on-surface-variant); }
+  .d__nav a:hover { color: var(--color-on-surface); }
+  .d__nav-right { display: flex; align-items: center; gap: 20px; font-size: 15px; }
+  @media (max-width: 760px) { .d__nav nav { display: none; } .d__nav { justify-content: space-between; } }
+
+  .d__hero { max-width: 1200px; margin: 0 auto; padding: 72px 24px 96px; }
+  .d__hero h1 { font-size: clamp(36px, 5.6vw, 76px); line-height: 1.02; letter-spacing: -.035em; font-weight: 600; max-width: 15ch; }
+  .d__hero h1 span { display: block; color: var(--color-on-surface-variant); font-weight: 500; }
+  .d__lede { font-size: 19px; line-height: 1.55; color: var(--color-on-surface-variant); max-width: 60ch; margin: 28px 0 56px; }
+
+  .d__demo { display: grid; grid-template-columns: 1fr; border: 1px solid var(--color-on-surface); }
+  @media (min-width: 900px) { .d__demo { grid-template-columns: 1fr 1.25fr 1fr; } }
+  .d__dev, .d__relay { padding: 20px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+  .d__relay { background: var(--color-surface-container-high); border-block: 1px solid var(--color-on-surface); }
+  @media (min-width: 900px) { .d__relay { border-block: 0; border-inline: 1px solid var(--color-on-surface); } }
+  .d__dev-head { display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; }
+  .d__dev-head span:last-child { font-weight: 400; color: var(--color-on-surface-variant); }
+  .d__dev textarea { font: 17px/1.5 var(--font-sans); background: var(--hl); color: var(--hl-ink); border: 0; padding: 12px; resize: none; width: 100%; }
+  .d__cipher { font: 13px/1.6 var(--font-mono); white-space: pre-wrap; word-break: break-all; min-height: 96px; color: var(--color-on-surface); }
+  .d__meta { display: grid; grid-template-columns: repeat(3, auto); gap: 8px 20px; font-size: 13px; justify-content: start; }
+  .d__meta dt { color: var(--color-on-surface-variant); }
+  .d__meta dd { font-family: var(--font-mono); }
+  .d__out { font-size: 17px; line-height: 1.5; min-height: 78px; padding: 12px 0; }
+  .d__out mark { background: var(--hl); color: var(--hl-ink); padding: 2px 4px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+  .d__out mark:empty { display: none; }
+  .d__hint { font-size: 13px; color: var(--color-on-surface-variant); }
+  .d__sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+  .d__ctas { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 32px; }
+  .d__btn { font-size: 15px; font-weight: 500; padding: 13px 22px; border: 1px solid var(--color-on-surface); text-decoration: none; display: inline-block; }
+  .d__btn--primary { background: var(--color-primary); color: var(--color-on-primary) !important; }
+  .d__install { font: 14px var(--font-mono); color: var(--color-on-surface-variant); margin-left: 8px; }
+
+  .d__sec { max-width: 1200px; margin: 0 auto; padding: 96px 24px; border-top: 1px solid var(--color-outline-variant); }
+  .d__step { font-size: 15px; font-weight: 500; color: var(--color-on-surface-variant); margin-bottom: 16px; display: flex; gap: 10px; align-items: center; }
+  .d__step b { display: inline-grid; place-items: center; width: 26px; height: 26px; border: 1px solid var(--color-on-surface); color: var(--color-on-surface); font: 600 13px var(--font-mono); }
+  .d__sec h2, .d__why h2 { font-size: clamp(28px, 3.6vw, 44px); line-height: 1.1; letter-spacing: -.025em; font-weight: 600; max-width: 22ch; margin-bottom: 24px; }
+  .d__body { font-size: 17px; line-height: 1.6; color: var(--color-on-surface-variant); max-width: 64ch; margin-bottom: 20px; }
+  .d__split { display: grid; grid-template-columns: 1fr; gap: 48px; align-items: start; }
+  @media (min-width: 960px) { .d__split { grid-template-columns: 5fr 6fr; } }
+
+  .d__table-wrap { overflow-x: auto; margin-top: 40px; }
+  .d__compare { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 15px; }
+  .d__compare th, .d__compare td { text-align: left; padding: 15px 18px; border-bottom: 1px solid var(--color-outline-variant); }
+  .d__compare th { font-weight: 500; color: var(--color-on-surface-variant); }
+  .d__compare .d__us { background: var(--color-inverse-surface); color: var(--color-inverse-on-surface); font-weight: 600; border-bottom-color: var(--color-inverse-surface); }
+
+  .d__calls { display: grid; gap: 14px; padding-left: 22px; font-size: 17px; line-height: 1.55; margin-bottom: 28px; }
+  .d__calls code, .d__body code { font: 15px var(--font-mono); }
+  .d__prompt { font: 14px/1.6 var(--font-mono); white-space: pre-wrap; border: 1px solid var(--color-on-surface); padding: 14px 16px; }
+  .d__code { border: 1px solid var(--color-on-surface); background: var(--color-surface-container-lowest); min-width: 0; }
+  .d__tabs { display: flex; border-bottom: 1px solid var(--color-outline-variant); font-size: 14px; }
+  .d__tabs span { padding: 11px 18px; color: var(--color-on-surface-variant); }
+  .d__tabs .on { color: var(--color-on-surface); box-shadow: inset 0 -2px var(--color-on-surface); }
+  .d__code pre { font: 13px/1.7 var(--font-mono); padding: 22px; overflow-x: auto; }
+  .d__term { font: 13px/1.8 var(--font-mono); background: var(--color-inverse-surface); color: var(--color-inverse-on-surface); padding: 22px; overflow-x: auto; min-width: 0; white-space: pre-wrap; word-break: break-all; }
+  .d__term span:first-child { opacity: .6; margin-right: 8px; }
+  .d__dim { opacity: .65; }
+
+  .d__sees { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); border: 1px solid var(--color-on-surface); margin: 40px 0; }
+  .d__sees > div { padding: 28px; }
+  .d__sees > div + div { border-left: 1px solid var(--color-on-surface); background: var(--color-surface-container-high); }
+  @media (max-width: 660px) { .d__sees > div + div { border-left: 0; border-top: 1px solid var(--color-on-surface); } }
+  .d__sees h3 { font-size: 18px; margin-bottom: 14px; }
+  .d__sees ul { display: grid; gap: 10px; padding-left: 20px; }
+  .d__limits { width: 100%; border-collapse: collapse; font-size: 15px; margin-bottom: 28px; }
+  .d__limits td { border-top: 1px solid var(--color-outline-variant); padding: 13px 0; }
+  .d__limits td:last-child { text-align: right; }
+
+  .d__why { background: var(--color-inverse-surface); color: var(--color-inverse-on-surface); padding: 120px 24px; }
+  .d__why-in { max-width: 1200px; margin: 0 auto; }
+  .d__why p { font-size: clamp(20px, 2.2vw, 26px); line-height: 1.5; max-width: 48ch; margin: 0 0 40px; opacity: .85; }
+  .d__why .d__btn { background: var(--color-inverse-on-surface); color: var(--color-inverse-surface) !important; border-color: var(--color-inverse-on-surface); }
+
+  .d__foot { max-width: 1200px; margin: 0 auto; padding: 64px 24px 120px; }
+  .d__proto-note { font: 600 11px var(--font-mono); color: #ff2d78; margin-bottom: 24px; }
+  .d__foot-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 32px; }
+  .d__foot h4 { font-size: 14px; margin-bottom: 12px; }
+  .d__foot ul { list-style: none; display: grid; gap: 6px; font-size: 14px; color: var(--color-on-surface-variant); }
+
+  @media (prefers-reduced-motion: reduce) { .d__cursor { animation: none; } }
+</style>
