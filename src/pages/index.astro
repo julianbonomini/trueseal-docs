@@ -6,15 +6,35 @@ import Hero from '../components/landing/Hero.astro';
 import ProtocolStack from '../components/landing/ProtocolStack.astro';
 import CoreGuarantees from '../components/landing/CoreGuarantees.astro';
 import CtaSection from '../components/landing/CtaSection.astro';
+// PROTOTYPE (throwaway, trueseal-roadmap#17): three home-page variants on `/`, switchable
+// via ?variant=A|B|C and the floating bar. `?variant=current` shows today's page. Dev only.
+import VariantA from '../components/prototype/home/VariantA.astro';
+import VariantB from '../components/prototype/home/VariantB.astro';
+import VariantC from '../components/prototype/home/VariantC.astro';
+import PrototypeSwitcher from '../components/prototype/PrototypeSwitcher.astro';
+
+const proto = import.meta.env.DEV;
+const variants = [
+  { key: 'A', name: 'Refined monochrome · by audience' },
+  { key: 'B', name: 'Product marketing · Diátaxis' },
+  { key: 'C', name: 'Docs are the home · journey' },
+  { key: 'CURRENT', name: 'today’s site' },
+];
 ---
 
 <LandingLayout description="trueseal makes zero-trust sync a drop-in primitive. End-to-end encrypted, no accounts, no server you have to trust, no lock-in.">
-  <Navbar activeItem="ecosystem" />
-  <main>
-    <Hero />
-    <ProtocolStack />
-    <CoreGuarantees />
-    <CtaSection />
-  </main>
-  <Footer />
+  {proto && <div data-proto-variant="A"><VariantA /></div>}
+  {proto && <div data-proto-variant="B" hidden><VariantB /></div>}
+  {proto && <div data-proto-variant="C" hidden><VariantC /></div>}
+  <div data-proto-variant="CURRENT" hidden={proto}>
+    <Navbar activeItem="ecosystem" />
+    <main>
+      <Hero />
+      <ProtocolStack />
+      <CoreGuarantees />
+      <CtaSection />
+    </main>
+    <Footer />
+  </div>
+  {proto && <PrototypeSwitcher variants={variants} />}
 </LandingLayout>

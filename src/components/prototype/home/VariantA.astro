@@ -1,0 +1,180 @@
+---
+// PROTOTYPE (throwaway, trueseal-roadmap#17).
+// Variant A: "Refined monochrome". Keeps the current light/dark token system and the
+// terminal-grid feel, but leads with code and an honest "what the relay sees" panel.
+// IA: split by audience (Build an app / Self-host / Security / Reference / AI agents).
+import { snippets, installs, relaySees, limits, iaAudience, agentPrompt } from './content';
+import ThemeToggle from '../../ui/ThemeToggle.tsx';
+---
+
+<div class="a">
+  <div class="a__banner">DEVELOPER PREVIEW 0.6 · APIs and wire format may break between releases · <a href="#">What that means</a></div>
+
+  <header class="a__nav">
+    <a class="a__logo" href="/">trueseal<span>_</span></a>
+    <nav>
+      <a href="#">Build an app</a>
+      <a href="#">Self-host</a>
+      <a href="#">Security</a>
+      <a href="#">Reference</a>
+      <a href="#">AI agents</a>
+    </nav>
+    <div class="a__nav-right">
+      <span class="a__search">Search <kbd>⌘K</kbd></span>
+      <a href="#">GitHub</a>
+      <ThemeToggle client:load />
+    </div>
+  </header>
+
+  <section class="a__hero">
+    <div>
+      <p class="a__eyebrow">// END-TO-END ENCRYPTED SYNC FOR YOUR APP</p>
+      <h1>Sync between your users’ devices.<br />Read by none of your servers.</h1>
+      <p class="a__lede">
+        TrueSeal is an SDK for Swift, Kotlin and TypeScript. Devices pair directly, encrypt on-device,
+        and pass ciphertext through a relay you can run yourself. No accounts. No key server.
+      </p>
+      <div class="a__ctas">
+        <a class="a__btn a__btn--primary" href="#">Quickstart →</a>
+        <a class="a__btn" href="#">Read the threat model</a>
+      </div>
+      <pre class="a__install"><span>$</span> {installs.ts}</pre>
+    </div>
+    <div class="a__code">
+      <div class="a__code-tabs"><span class="on">TypeScript</span><span>Swift</span><span>Kotlin</span></div>
+      <pre>{snippets.ts}</pre>
+    </div>
+  </section>
+
+  <section class="a__steps">
+    {[
+      ['01', 'Open', 'One call, one relay address string. Connects in the background; send() works immediately.'],
+      ['02', 'Pair', 'Show a token as a QR code. The other device joins, you accept it. No account, no email.'],
+      ['03', 'Send', 'Bytes in, bytes out, on every device in the group. At least once, in order per sender.'],
+    ].map(([n, t, d]) => (
+      <div class="a__step"><span class="a__num">{n}</span><h3>{t}</h3><p>{d}</p></div>
+    ))}
+  </section>
+
+  <section class="a__sees">
+    <h2 class="a__h2">what_the_relay_sees <span>// WE WRITE DOWN THE LIMITS</span></h2>
+    <div class="a__sees-grid">
+      <div>
+        <h3>Cannot see</h3>
+        <ul>{relaySees.cannot.map(s => <li class="no">{s}</li>)}</ul>
+      </div>
+      <div>
+        <h3>Can see</h3>
+        <ul>{relaySees.can.map(s => <li class="yes">{s}</li>)}</ul>
+        <a href="#">Full threat model and known limitations →</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="a__two">
+    <div class="a__card">
+      <p class="a__eyebrow">// SELF-HOST</p>
+      <h3>One container, one SQLite file, one keypair.</h3>
+      <p>The relay stores ciphertext for offline devices and forgets it after delivery or TTL. It logs nothing about clients outside dev mode.</p>
+      <pre class="a__install"><span>$</span> {installs.relay}</pre>
+    </div>
+    <div class="a__card">
+      <p class="a__eyebrow">// WITH YOUR AI AGENT</p>
+      <h3>Paste one prompt.</h3>
+      <p>Every page has a Markdown twin, and <code>llms.txt</code> indexes them, so your coding agent reads the same docs you do.</p>
+      <pre class="a__prompt">{agentPrompt}</pre>
+    </div>
+  </section>
+
+  <section class="a__limits">
+    <h2 class="a__h2">limits <span>// PUBLISHED, NOT DISCOVERED</span></h2>
+    <table>{limits.map(([k, v]) => <tr><td>{k}</td><td>{v}</td></tr>)}</table>
+  </section>
+
+  <footer class="a__sitemap">
+    <p class="a__proto-note">PROTOTYPE · IA proposal A: split by audience</p>
+    <div class="a__sitemap-grid">
+      {iaAudience.map(sec => (
+        <div>
+          <h4>{sec.title}</h4>
+          <ul>
+            {sec.items.map(i => typeof i === 'string'
+              ? <li>{i}</li>
+              : <li>{i.title}<ul>{i.items.map(c => <li>{c}</li>)}</ul></li>)}
+          </ul>
+        </div>
+      ))}
+    </div>
+    <p class="a__legal">Apache-2.0 · No analytics · trueseal.dev</p>
+  </footer>
+</div>
+
+<style>
+  .a { background: var(--color-background); color: var(--color-on-surface); }
+  .a__banner { font: 500 12px/1.4 var(--font-mono); text-align: center; padding: 8px 16px; background: var(--color-inverse-surface); color: var(--color-inverse-on-surface); letter-spacing: .04em; }
+  .a__banner a { color: inherit; }
+  .a__nav { display: flex; align-items: center; gap: 32px; max-width: var(--layout-max-width); margin: 0 auto; padding: 16px 24px; border-bottom: 1px solid var(--color-outline-variant); }
+  .a__logo { font: 600 18px var(--font-mono); text-decoration: none; }
+  .a__logo span { animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .a__nav nav { display: flex; gap: 24px; font-size: 14px; flex: 1; }
+  .a__nav nav a, .a__nav-right a { text-decoration: none; color: var(--color-on-surface-variant); }
+  .a__nav nav a:hover { color: var(--color-on-surface); }
+  .a__nav-right { display: flex; align-items: center; gap: 16px; font-size: 14px; }
+  .a__search { font: 12px var(--font-mono); border: 1px solid var(--color-outline-variant); padding: 4px 10px; color: var(--color-on-surface-variant); }
+  .a__search kbd { margin-left: 16px; }
+  @media (max-width: 900px) { .a__nav nav, .a__search { display: none; } }
+
+  .a__hero { max-width: var(--layout-max-width); margin: 0 auto; padding: 80px 24px; display: grid; gap: 48px; grid-template-columns: 1fr; align-items: center; }
+  @media (min-width: 960px) { .a__hero { grid-template-columns: 6fr 5fr; } }
+  .a__eyebrow { font: 500 12px var(--font-mono); letter-spacing: .06em; color: var(--color-on-surface-variant); margin-bottom: 16px; }
+  .a__hero h1 { font-size: clamp(34px, 4.4vw, 54px); line-height: 1.05; letter-spacing: -.03em; font-weight: 600; }
+  .a__lede { margin: 24px 0 32px; font-size: 18px; color: var(--color-on-surface-variant); max-width: 560px; border-left: 2px solid var(--color-primary); padding-left: 16px; }
+  .a__ctas { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+  .a__btn { font: 500 14px var(--font-mono); padding: 12px 20px; border: 1px solid var(--color-outline); text-decoration: none; }
+  .a__btn--primary { background: var(--color-primary); color: var(--color-on-primary); border-color: var(--color-primary); }
+  .a__install { font: 13px var(--font-mono); background: var(--color-surface-container-low); border: 1px solid var(--color-outline-variant); padding: 12px 16px; overflow-x: auto; }
+  .a__install span { color: var(--color-on-surface-variant); margin-right: 8px; user-select: none; }
+  .a__code { border: 1px solid var(--color-outline-variant); background: var(--color-surface-container-lowest); min-width: 0; }
+  .a__code-tabs { display: flex; border-bottom: 1px solid var(--color-outline-variant); font: 12px var(--font-mono); }
+  .a__code-tabs span { padding: 10px 16px; color: var(--color-on-surface-variant); }
+  .a__code-tabs .on { color: var(--color-on-surface); box-shadow: inset 0 -2px var(--color-primary); }
+  .a__code pre { font: 13px/1.65 var(--font-mono); padding: 20px; overflow-x: auto; }
+
+  .a__steps { max-width: var(--layout-max-width); margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1px; background: var(--color-outline-variant); border: 1px solid var(--color-outline-variant); }
+  .a__step { background: var(--color-background); padding: 32px 24px; }
+  .a__num { font: 12px var(--font-mono); color: var(--color-on-surface-variant); }
+  .a__step h3 { font-size: 22px; margin: 8px 0; }
+  .a__step p { color: var(--color-on-surface-variant); font-size: 15px; }
+
+  .a__sees, .a__limits { max-width: var(--layout-max-width); margin: 0 auto; padding: 96px 24px 0; }
+  .a__h2 { font: 600 24px var(--font-mono); margin-bottom: 24px; }
+  .a__h2 span { font-size: 12px; font-weight: 500; color: var(--color-on-surface-variant); margin-left: 12px; letter-spacing: .06em; }
+  .a__sees-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1px; background: var(--color-outline-variant); border: 1px solid var(--color-outline-variant); }
+  .a__sees-grid > div { background: var(--color-background); padding: 28px; }
+  .a__sees-grid h3 { font: 600 13px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 16px; }
+  .a__sees-grid ul { list-style: none; display: grid; gap: 10px; margin-bottom: 20px; }
+  .a__sees-grid li { padding-left: 28px; position: relative; }
+  .a__sees-grid li::before { position: absolute; left: 0; font: 600 14px var(--font-mono); }
+  .a__sees-grid li.no::before { content: '[✕]'; }
+  .a__sees-grid li.yes::before { content: '[!]'; }
+  .a__sees-grid a { font: 13px var(--font-mono); }
+
+  .a__two { max-width: var(--layout-max-width); margin: 96px auto 0; padding: 0 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; }
+  .a__card { border: 1px solid var(--color-outline-variant); padding: 28px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+  .a__card h3 { font-size: 22px; }
+  .a__card p { color: var(--color-on-surface-variant); }
+  .a__prompt { font: 13px/1.6 var(--font-mono); white-space: pre-wrap; background: var(--color-surface-container-low); border-left: 2px solid var(--color-primary); padding: 12px 16px; }
+
+  .a__limits table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  .a__limits td { border-top: 1px solid var(--color-outline-variant); padding: 14px 0; }
+  .a__limits td:last-child { font-family: var(--font-mono); text-align: right; }
+
+  .a__sitemap { margin-top: 120px; border-top: 1px solid var(--color-outline-variant); background: var(--color-surface-container-low); padding: 48px 24px 96px; }
+  .a__proto-note { max-width: var(--layout-max-width); margin: 0 auto 24px; font: 600 11px var(--font-mono); color: #ff2d78; letter-spacing: .08em; }
+  .a__sitemap-grid { max-width: var(--layout-max-width); margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 32px; }
+  .a__sitemap h4 { font: 600 12px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 12px; }
+  .a__sitemap ul { list-style: none; display: grid; gap: 6px; font-size: 14px; color: var(--color-on-surface-variant); }
+  .a__sitemap ul ul { padding: 6px 0 0 12px; }
+  .a__legal { max-width: var(--layout-max-width); margin: 48px auto 0; font: 12px var(--font-mono); color: var(--color-on-surface-variant); }
+</style>

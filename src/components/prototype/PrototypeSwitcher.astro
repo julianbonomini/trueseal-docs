@@ -1,0 +1,85 @@
+---
+// PROTOTYPE (throwaway, trueseal-roadmap#17). Floating variant switcher.
+// Mounted only in dev. Shows the [data-proto-variant] block matching ?variant=.
+interface Props { variants: { key: string; name: string }[] }
+const { variants } = Astro.props;
+---
+
+<div class="proto-switcher" data-variants={JSON.stringify(variants)}>
+  <button type="button" data-dir="-1" aria-label="Previous variant">←</button>
+  <span class="proto-switcher__label">A</span>
+  <button type="button" data-dir="1" aria-label="Next variant">→</button>
+</div>
+
+<script>
+  const bar = document.querySelector<HTMLElement>('.proto-switcher')!;
+  const variants: { key: string; name: string }[] = JSON.parse(bar.dataset.variants!);
+  const label = bar.querySelector<HTMLElement>('.proto-switcher__label')!;
+
+  function current() {
+    const k = new URLSearchParams(location.search).get('variant')?.toUpperCase();
+    const i = variants.findIndex(v => v.key === k);
+    return i < 0 ? 0 : i;
+  }
+
+  function show(i: number) {
+    const v = variants[i];
+    document.querySelectorAll<HTMLElement>('[data-proto-variant]').forEach(el => {
+      el.hidden = el.dataset.protoVariant !== v.key;
+    });
+    label.textContent = `${v.key} (${v.name})`;
+    document.title = `[${v.key}] trueseal prototype`;
+  }
+
+  function go(delta: number) {
+    const i = (current() + delta + variants.length) % variants.length;
+    const url = new URL(location.href);
+    url.searchParams.set('variant', variants[i].key);
+    history.replaceState(null, '', url);
+    show(i);
+    window.scrollTo(0, 0);
+  }
+
+  bar.querySelectorAll<HTMLButtonElement>('button').forEach(b =>
+    b.addEventListener('click', () => go(Number(b.dataset.dir))));
+
+  document.addEventListener('keydown', e => {
+    const t = e.target as HTMLElement;
+    if (t.closest('input, textarea, [contenteditable]')) return;
+    if (e.key === 'ArrowLeft') go(-1);
+    if (e.key === 'ArrowRight') go(1);
+  });
+
+  show(current());
+</script>
+
+<style>
+  .proto-switcher {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 8px;
+    border-radius: 999px;
+    background: #ff2d78;
+    color: #fff;
+    font: 600 13px/1 system-ui, sans-serif;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  }
+  .proto-switcher button {
+    all: unset;
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.2);
+  }
+  .proto-switcher button:hover { background: rgba(255, 255, 255, 0.35); }
+  .proto-switcher__label { min-width: 200px; text-align: center; }
+</style>

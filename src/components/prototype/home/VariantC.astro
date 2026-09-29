@@ -1,0 +1,152 @@
+---
+// PROTOTYPE (throwaway, trueseal-roadmap#17).
+// Variant C: "Docs are the home". No separate marketing page: `/` is the first docs page,
+// with the persistent sidebar, an agent-first quickstart, and spec/version facts up top.
+// Dark, dense, terminal-adjacent; marketing kept to one sentence.
+// IA: one journey-ordered sidebar (Start / Integrate / Operate / Trust / Specification).
+import { snippets, installs, agentPrompt, limits, iaJourney } from './content';
+---
+
+<div class="c">
+  <header class="c__top">
+    <a class="c__logo" href="/">▚ trueseal</a>
+    <span class="c__ver">v0.6.0 · transport v1 · e2e v1 · preview</span>
+    <div class="c__search">Search docs… <kbd>/</kbd></div>
+    <a href="#">GitHub</a>
+  </header>
+
+  <div class="c__body">
+    <aside class="c__side">
+      <p class="c__proto-note">PROTOTYPE · IA proposal C: journey</p>
+      {iaJourney.map((sec, si) => (
+        <div class="c__sec">
+          <h4>{sec.title}</h4>
+          <ul>{sec.items.map((i, ii) => <li class={si === 0 && ii === 0 ? 'on' : ''}>{typeof i === 'string' ? i : i.title}</li>)}</ul>
+        </div>
+      ))}
+    </aside>
+
+    <main class="c__main">
+      <p class="c__crumb">Start / Overview</p>
+      <h1>TrueSeal</h1>
+      <p class="c__lede">
+        End-to-end encrypted sync between a user’s devices, for Swift, Kotlin and TypeScript apps.
+        Devices hold the keys; a relay you can self-host only moves ciphertext.
+      </p>
+
+      <div class="c__callout">
+        <strong>Developer Preview.</strong> Every 0.x release may break the API and the wire format.
+        There’s no external audit yet. <a href="#">Known limitations</a>
+      </div>
+
+      <h2 id="agent">Quickstart with your agent</h2>
+      <p>Paste this into Claude Code, Cursor, Codex or any coding agent, inside your project:</p>
+      <div class="c__prompt">
+        <pre>{agentPrompt}</pre>
+        <button type="button" class="c__copy" data-copy={agentPrompt}>Copy</button>
+      </div>
+      <p class="c__small">Agents read <code>/llms.txt</code> and the Markdown copy of each page. <a href="#">What the agent will do →</a></p>
+
+      <h2 id="hand">Quickstart by hand</h2>
+      <div class="c__tabs">
+        <input type="radio" name="c-lang" id="c-ts" checked /><label for="c-ts">TypeScript</label>
+        <input type="radio" name="c-lang" id="c-sw" /><label for="c-sw">Swift</label>
+        <input type="radio" name="c-lang" id="c-kt" /><label for="c-kt">Kotlin</label>
+        <div class="c__panel" data-for="c-ts"><pre class="c__cmd">$ {installs.ts}</pre><pre>{snippets.ts}</pre></div>
+        <div class="c__panel" data-for="c-sw"><pre class="c__cmd">{installs.swift}</pre><pre>{snippets.swift}</pre></div>
+        <div class="c__panel" data-for="c-kt"><pre class="c__cmd">{installs.kotlin}</pre><pre>{snippets.kotlin}</pre></div>
+      </div>
+
+      <h2 id="relay">You need a relay</h2>
+      <p>Run one for development in a single command. It prints the relay address your app passes to <code>open()</code>.</p>
+      <pre class="c__cmd">$ {installs.relay}</pre>
+
+      <h2 id="limits">Limits at a glance</h2>
+      <table class="c__table">{limits.map(([k, v]) => <tr><td>{k}</td><td>{v}</td></tr>)}</table>
+
+      <div class="c__next">
+        <a href="#"><small>Next</small>Integrate → Open a TrueSeal</a>
+        <a href="#"><small>Or read</small>Trust → Threat model</a>
+      </div>
+    </main>
+
+    <nav class="c__toc">
+      <h4>On this page</h4>
+      <a href="#agent">Quickstart with your agent</a>
+      <a href="#hand">Quickstart by hand</a>
+      <a href="#relay">You need a relay</a>
+      <a href="#limits">Limits at a glance</a>
+      <p class="c__edit">Edit this page · View as Markdown</p>
+    </nav>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('.c__copy').forEach(b =>
+    b.addEventListener('click', async () => {
+      await navigator.clipboard.writeText(b.dataset.copy!);
+      b.textContent = 'Copied';
+      setTimeout(() => (b.textContent = 'Copy'), 1500);
+    }));
+</script>
+
+<style>
+  .c { --bg: #0b0d0c; --panel: #121513; --line: #232826; --ink: #e6ebe8; --muted: #8b958f; --acc: #7cf2a8;
+       background: var(--bg); color: var(--ink); min-height: 100vh; font-family: var(--font-sans); }
+  .c a { color: var(--acc); text-decoration: none; }
+  .c code { font: 13px var(--font-mono); background: var(--panel); padding: 1px 6px; border: 1px solid var(--line); }
+  .c__top { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 20px; padding: 12px 20px; border-bottom: 1px solid var(--line); background: rgba(11, 13, 12, .92); backdrop-filter: blur(6px); font-size: 14px; }
+  .c__logo { font: 600 16px var(--font-mono); color: var(--ink) !important; }
+  .c__ver { font: 12px var(--font-mono); color: var(--muted); border: 1px solid var(--line); padding: 3px 8px; }
+  .c__search { margin-left: auto; font: 13px var(--font-mono); color: var(--muted); background: var(--panel); border: 1px solid var(--line); padding: 6px 12px; width: 260px; display: flex; justify-content: space-between; }
+  @media (max-width: 800px) { .c__ver, .c__search { display: none; } .c__top a:last-child { margin-left: auto; } }
+
+  .c__body { display: grid; grid-template-columns: 1fr; max-width: 1400px; margin: 0 auto; }
+  @media (min-width: 860px) { .c__body { grid-template-columns: 250px 1fr; } }
+  @media (min-width: 1200px) { .c__body { grid-template-columns: 250px 1fr 220px; } }
+  .c__side { border-right: 1px solid var(--line); padding: 24px 20px 100px; font-size: 14px; }
+  @media (max-width: 859px) { .c__side { border-right: 0; border-bottom: 1px solid var(--line); } }
+  .c__proto-note { font: 600 11px var(--font-mono); color: #ff2d78; letter-spacing: .08em; margin-bottom: 20px; }
+  .c__sec { margin-bottom: 22px; }
+  .c__sec h4 { font: 600 12px var(--font-mono); color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+  .c__sec ul { list-style: none; display: grid; gap: 2px; }
+  .c__sec li { padding: 5px 10px; border-left: 1px solid var(--line); color: #c3cbc6; }
+  .c__sec li.on { border-left-color: var(--acc); color: var(--acc); background: rgba(124, 242, 168, .06); }
+
+  .c__main { padding: 40px clamp(20px, 4vw, 64px) 120px; max-width: 820px; min-width: 0; }
+  .c__crumb { font: 12px var(--font-mono); color: var(--muted); margin-bottom: 12px; }
+  .c__main h1 { font-size: 44px; letter-spacing: -.03em; font-weight: 600; }
+  .c__lede { font-size: 19px; color: #c3cbc6; margin: 16px 0 24px; }
+  .c__main h2 { font-size: 22px; font-weight: 600; margin: 48px 0 12px; padding-top: 8px; }
+  .c__main p { color: #c3cbc6; margin-bottom: 12px; }
+  .c__small { font-size: 14px; }
+  .c__callout { border: 1px solid #5a4a1c; background: #1a160a; color: #f2d98a; padding: 14px 16px; font-size: 15px; }
+  .c__callout a { color: #f2d98a; text-decoration: underline; }
+  .c__prompt { position: relative; border: 1px solid var(--acc); background: rgba(124, 242, 168, .05); padding: 18px 90px 18px 18px; }
+  .c__prompt pre { font: 14px/1.6 var(--font-mono); white-space: pre-wrap; color: var(--ink); }
+  .c__copy { position: absolute; top: 12px; right: 12px; background: var(--acc); color: #06210f; border: 0; font: 600 12px var(--font-mono); padding: 6px 12px; cursor: pointer; }
+
+  .c__tabs { border: 1px solid var(--line); background: var(--panel); }
+  .c__tabs input { display: none; }
+  .c__tabs label { display: inline-block; padding: 10px 16px; font: 13px var(--font-mono); color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; }
+  .c__panel { display: none; border-top: 1px solid var(--line); }
+  #c-ts:checked + label, #c-sw:checked + label, #c-kt:checked + label { color: var(--ink); border-bottom-color: var(--acc); }
+  #c-ts:checked ~ [data-for='c-ts'], #c-sw:checked ~ [data-for='c-sw'], #c-kt:checked ~ [data-for='c-kt'] { display: block; }
+  .c__panel pre { font: 13px/1.65 var(--font-mono); padding: 18px; overflow-x: auto; }
+  .c__cmd { font: 13px var(--font-mono); color: var(--acc); background: #0e1210; border: 1px solid var(--line); padding: 12px 16px; overflow-x: auto; }
+  .c__panel .c__cmd { border: 0; border-bottom: 1px solid var(--line); }
+
+  .c__table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  .c__table td { border-top: 1px solid var(--line); padding: 10px 0; color: #c3cbc6; }
+  .c__table td:last-child { font-family: var(--font-mono); color: var(--ink); text-align: right; }
+  .c__next { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 64px; }
+  .c__next a { border: 1px solid var(--line); padding: 16px 18px; display: grid; gap: 4px; color: var(--ink); }
+  .c__next a:hover { border-color: var(--acc); }
+  .c__next small { font: 12px var(--font-mono); color: var(--muted); }
+
+  .c__toc { display: none; padding: 40px 20px; font-size: 13px; position: sticky; top: 56px; align-self: start; }
+  @media (min-width: 1200px) { .c__toc { display: grid; gap: 8px; } }
+  .c__toc h4 { font: 600 12px var(--font-mono); color: var(--muted); text-transform: uppercase; margin-bottom: 4px; }
+  .c__toc a { color: #c3cbc6; }
+  .c__edit { margin-top: 20px; color: var(--muted); font: 12px var(--font-mono); }
+</style>

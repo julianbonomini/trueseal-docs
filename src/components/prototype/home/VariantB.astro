@@ -1,0 +1,187 @@
+---
+// PROTOTYPE (throwaway, trueseal-roadmap#17).
+// Variant B: "Product marketing". Replaces the monochrome system with a warm, light,
+// colour-accented product site (Stripe/Linear school). Leads with outcomes and use cases,
+// then a comparison and an honest "promise / don't promise" split. Code comes later.
+// IA: Diátaxis (Tutorials / How-to guides / Explanation / Reference).
+import { snippets, installs, iaDiataxis, relaySees } from './content';
+---
+
+<div class="b">
+  <header class="b__nav">
+    <a class="b__logo" href="/"><span class="b__mark"></span>TrueSeal</a>
+    <nav>
+      <a href="#">How it works</a>
+      <a href="#">Security</a>
+      <a href="#">Docs</a>
+      <a href="#">Self-host</a>
+    </nav>
+    <a class="b__pill" href="#">Get started</a>
+  </header>
+
+  <section class="b__hero">
+    <span class="b__tag">Developer Preview · open source · Apache-2.0</span>
+    <h1>Your users’ data, on all their devices.<br /><em>Never on your servers.</em></h1>
+    <p>
+      TrueSeal gives your app end-to-end encrypted sync between a person’s phone, laptop and tablet,
+      without accounts, without a backend that can read anything, and without a vendor you have to trust.
+    </p>
+    <div class="b__ctas">
+      <a class="b__pill b__pill--big" href="#">Build your first synced app</a>
+      <a class="b__link" href="#">How it works →</a>
+    </div>
+
+    <div class="b__diagram" aria-hidden="true">
+      <div class="b__device">📱<span>Phone</span></div>
+      <div class="b__wire"><span>ciphertext</span></div>
+      <div class="b__relay">Relay<small>sees sealed boxes</small></div>
+      <div class="b__wire"><span>ciphertext</span></div>
+      <div class="b__device">💻<span>Laptop</span></div>
+    </div>
+  </section>
+
+  <section class="b__uses">
+    <h2>Built for data that belongs to one person</h2>
+    <div class="b__use-grid">
+      {[
+        ['📋', 'Clipboard and snippets', 'Copy on the laptop, paste on the phone.'],
+        ['📝', 'Notes and journals', 'Private writing that follows you across devices.'],
+        ['⚙️', 'Settings and state', 'Preferences, bookmarks, reading position.'],
+        ['🩺', 'Sensitive records', 'Health logs, finances, credentials you won’t hold.'],
+      ].map(([i, t, d]) => <div class="b__use"><span>{i}</span><h3>{t}</h3><p>{d}</p></div>)}
+    </div>
+  </section>
+
+  <section class="b__compare">
+    <h2>Compared with what you’d do otherwise</h2>
+    <table>
+      <thead><tr><th></th><th>Build your own backend</th><th>Platform cloud sync</th><th class="b__us">TrueSeal</th></tr></thead>
+      <tbody>
+        <tr><td>Server can read user data</td><td>Yes</td><td>Depends on vendor</td><td class="b__us">No</td></tr>
+        <tr><td>User accounts needed</td><td>Yes</td><td>Platform account</td><td class="b__us">No</td></tr>
+        <tr><td>Works across Apple, Android, web</td><td>If you build it</td><td>Usually one platform</td><td class="b__us">Swift · Kotlin · TS</td></tr>
+        <tr><td>Run it yourself</td><td>Yes</td><td>No</td><td class="b__us">One Docker container</td></tr>
+        <tr><td>Production-ready today</td><td>Yours to judge</td><td>Yes</td><td class="b__us">Not yet, preview</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="b__how">
+    <div>
+      <h2>Three calls to sync</h2>
+      <ol>
+        <li><strong>Open</strong> a TrueSeal with your relay’s address.</li>
+        <li><strong>Pair</strong> a second device by scanning a code.</li>
+        <li><strong>Send</strong> bytes. Every paired device receives them.</li>
+      </ol>
+      <code class="b__install">{installs.ts}</code>
+    </div>
+    <pre class="b__code">{snippets.ts}</pre>
+  </section>
+
+  <section class="b__honest">
+    <h2>What we promise, and what we don’t</h2>
+    <div class="b__honest-grid">
+      <div class="b__yes"><h3>The relay never sees</h3><ul>{relaySees.cannot.map(s => <li>{s}</li>)}</ul></div>
+      <div class="b__no"><h3>The relay can still see</h3><ul>{relaySees.can.map(s => <li>{s}</li>)}</ul></div>
+    </div>
+    <p class="b__fine">This is a developer preview. It hasn’t been externally audited, and APIs may change between 0.x releases. <a href="#">Read the full threat model.</a></p>
+  </section>
+
+  <section class="b__faq">
+    <h2>Questions</h2>
+    {[
+      ['Do I need to run a server?', 'You need a relay. It is one Docker container with a SQLite file. It stores only ciphertext for devices that are offline.'],
+      ['What happens if a phone is lost?', 'Remove it from any other device, or destroy the group. Removed devices get no new messages.'],
+      ['How big can a message be?', 'Up to 60 KiB of payload. Groups hold up to 32 devices.'],
+      ['Can my AI coding agent set this up?', 'Yes. The docs ship an llms.txt and Markdown copies of every page, so an agent can follow the quickstart for you.'],
+    ].map(([q, a]) => <details><summary>{q}</summary><p>{a}</p></details>)}
+  </section>
+
+  <section class="b__cta">
+    <h2>Ship private sync this week.</h2>
+    <a class="b__pill b__pill--big b__pill--inv" href="#">Start the tutorial</a>
+  </section>
+
+  <footer class="b__foot">
+    <p class="b__proto-note">PROTOTYPE · IA proposal B: Diátaxis</p>
+    <div class="b__foot-grid">
+      {iaDiataxis.map(sec => (
+        <div><h4>{sec.title}</h4><ul>{sec.items.map(i => <li>{typeof i === 'string' ? i : i.title}</li>)}</ul></div>
+      ))}
+    </div>
+  </footer>
+</div>
+
+<style>
+  .b { --ink: #1d1b2e; --muted: #5d5a73; --bg: #fbf8f4; --card: #ffffff; --line: #ebe5dc; --accent: #5b3df5; --accent-2: #ff8a4c;
+       background: var(--bg); color: var(--ink); font-family: var(--font-sans); }
+  .b a { color: inherit; }
+  .b__nav { display: flex; align-items: center; gap: 40px; max-width: 1140px; margin: 0 auto; padding: 20px 24px; }
+  .b__logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; text-decoration: none; }
+  .b__mark { width: 22px; height: 22px; border-radius: 7px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); }
+  .b__nav nav { display: flex; gap: 28px; flex: 1; font-size: 15px; }
+  .b__nav nav a { text-decoration: none; color: var(--muted); }
+  @media (max-width: 800px) { .b__nav nav { display: none; } .b__nav { justify-content: space-between; } }
+  .b__pill { background: var(--ink); color: #fff !important; text-decoration: none; padding: 9px 18px; border-radius: 999px; font-size: 14px; font-weight: 500; }
+  .b__pill--big { padding: 14px 26px; font-size: 16px; }
+  .b__pill--inv { background: #fff; color: var(--ink) !important; }
+
+  .b__hero { text-align: center; max-width: 900px; margin: 0 auto; padding: 72px 24px 48px; }
+  .b__tag { display: inline-block; font-size: 13px; padding: 6px 14px; border-radius: 999px; background: #efeaff; color: var(--accent); font-weight: 500; }
+  .b__hero h1 { font-size: clamp(38px, 6vw, 72px); line-height: 1.02; letter-spacing: -.035em; margin: 28px 0 24px; font-weight: 700; }
+  .b__hero h1 em { font-style: normal; background: linear-gradient(90deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .b__hero > p { font-size: 20px; color: var(--muted); max-width: 680px; margin: 0 auto; }
+  .b__ctas { display: flex; justify-content: center; align-items: center; gap: 24px; margin: 36px 0 64px; flex-wrap: wrap; }
+  .b__link { text-decoration: none; font-weight: 500; }
+
+  .b__diagram { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+  .b__device, .b__relay { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 20px 24px; display: grid; gap: 6px; font-size: 30px; box-shadow: 0 12px 40px -18px rgba(40, 20, 90, .25); }
+  .b__device span, .b__relay small { font-size: 13px; color: var(--muted); }
+  .b__relay { font-size: 18px; font-weight: 600; background: var(--ink); color: #fff; }
+  .b__relay small { color: #b9b4d6; }
+  .b__wire { width: 90px; height: 2px; background: repeating-linear-gradient(90deg, var(--accent) 0 8px, transparent 8px 14px); position: relative; }
+  .b__wire span { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font: 11px var(--font-mono); color: var(--accent); }
+
+  .b section h2 { font-size: clamp(28px, 3.5vw, 40px); letter-spacing: -.02em; font-weight: 700; margin-bottom: 32px; }
+  .b__uses, .b__compare, .b__how, .b__honest, .b__faq { max-width: 1140px; margin: 0 auto; padding: 96px 24px 0; }
+  .b__use-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 20px; }
+  .b__use { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 28px; }
+  .b__use span { font-size: 28px; }
+  .b__use h3 { font-size: 18px; margin: 14px 0 6px; }
+  .b__use p { color: var(--muted); font-size: 15px; }
+
+  .b__compare { overflow-x: auto; }
+  .b__compare table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--card); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; font-size: 15px; min-width: 640px; }
+  .b__compare th, .b__compare td { padding: 16px 20px; text-align: left; border-bottom: 1px solid var(--line); }
+  .b__compare tr:last-child td { border-bottom: 0; }
+  .b__compare th { font-size: 13px; color: var(--muted); font-weight: 600; }
+  .b__us { background: #f4f0ff; color: var(--accent) !important; font-weight: 600; }
+
+  .b__how { display: grid; grid-template-columns: 1fr; gap: 48px; align-items: center; }
+  @media (min-width: 900px) { .b__how { grid-template-columns: 4fr 5fr; } }
+  .b__how ol { display: grid; gap: 14px; font-size: 18px; padding-left: 22px; margin-bottom: 28px; color: var(--muted); }
+  .b__how strong { color: var(--ink); }
+  .b__install { font: 14px var(--font-mono); background: #efeaff; color: var(--accent); padding: 10px 14px; border-radius: 10px; display: inline-block; }
+  .b__code { background: #16142a; color: #e7e3ff; font: 13px/1.7 var(--font-mono); padding: 28px; border-radius: 20px; overflow-x: auto; min-width: 0; }
+
+  .b__honest-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+  .b__honest-grid > div { border-radius: 20px; padding: 28px; }
+  .b__yes { background: #eaf8ef; } .b__no { background: #fff3e8; }
+  .b__honest-grid h3 { font-size: 18px; margin-bottom: 14px; }
+  .b__honest-grid ul { display: grid; gap: 8px; padding-left: 20px; }
+  .b__fine { margin-top: 20px; color: var(--muted); font-size: 15px; }
+
+  .b__faq details { border-bottom: 1px solid var(--line); padding: 20px 0; }
+  .b__faq summary { font-size: 18px; font-weight: 600; cursor: pointer; }
+  .b__faq details p { color: var(--muted); margin-top: 10px; max-width: 720px; }
+
+  .b__cta { margin: 120px auto 0; max-width: 1140px; padding: 72px 24px; text-align: center; border-radius: 32px; background: linear-gradient(135deg, var(--accent), #8a3df5 55%, var(--accent-2)); color: #fff; }
+  .b__cta h2 { color: #fff; }
+
+  .b__foot { max-width: 1140px; margin: 0 auto; padding: 72px 24px 110px; }
+  .b__proto-note { font: 600 11px var(--font-mono); color: #ff2d78; letter-spacing: .08em; margin-bottom: 24px; }
+  .b__foot-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 32px; }
+  .b__foot h4 { font-size: 14px; margin-bottom: 12px; }
+  .b__foot ul { list-style: none; display: grid; gap: 6px; font-size: 14px; color: var(--muted); }
+</style>
