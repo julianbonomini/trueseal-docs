@@ -7,15 +7,19 @@ import ProtocolStack from '../components/landing/ProtocolStack.astro';
 import CoreGuarantees from '../components/landing/CoreGuarantees.astro';
 import CtaSection from '../components/landing/CtaSection.astro';
 // PROTOTYPE (throwaway, trueseal-roadmap#17): three home-page variants on `/`, switchable
-// via ?variant=D|A|B|C and the floating bar. `?variant=current` shows today's page. Dev only.
+// via ?variant=E|E-DOCS|D|A|B|C and the floating bar. `?variant=current` shows today's page. Dev only.
 import VariantA from '../components/prototype/home/VariantA.astro';
 import VariantB from '../components/prototype/home/VariantB.astro';
 import VariantC from '../components/prototype/home/VariantC.astro';
 import VariantD from '../components/prototype/home/VariantD.astro';
+import VariantE from '../components/prototype/home/VariantE.astro';
+import VariantEDocs from '../components/prototype/home/VariantEDocs.astro';
 import PrototypeSwitcher from '../components/prototype/PrototypeSwitcher.astro';
 
 const proto = import.meta.env.DEV;
 const variants = [
+  { key: 'E', name: 'Brandbook · home' },
+  { key: 'E-DOCS', name: 'Brandbook · docs page' },
   { key: 'D', name: 'Monochrome product · journey' },
   { key: 'A', name: 'Refined monochrome · by audience' },
   { key: 'B', name: 'Product marketing · Diátaxis' },
@@ -25,7 +29,9 @@ const variants = [
 ---
 
 <LandingLayout description="trueseal makes zero-trust sync a drop-in primitive. End-to-end encrypted, no accounts, no server you have to trust, no lock-in.">
-  {proto && <div data-proto-variant="D"><VariantD /></div>}
+  {proto && <div data-proto-variant="E"><VariantE /></div>}
+  {proto && <div data-proto-variant="E-DOCS" hidden><VariantEDocs /></div>}
+  {proto && <div data-proto-variant="D" hidden><VariantD /></div>}
   {proto && <div data-proto-variant="A" hidden><VariantA /></div>}
   {proto && <div data-proto-variant="B" hidden><VariantB /></div>}
   {proto && <div data-proto-variant="C" hidden><VariantC /></div>}

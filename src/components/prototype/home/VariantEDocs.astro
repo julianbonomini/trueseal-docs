@@ -1,0 +1,175 @@
+---
+// PROTOTYPE (throwaway, trueseal-roadmap#17).
+// Variant E, docs page: C's docs layout (persistent sidebar, on-page contents, version facts)
+// in the brandbook's look. Human Docs follow the journey; Agent Docs are their own tree
+// (trueseal-docs ADR-0003). Sample page: "Pair devices", written in the brand voice.
+import ThemeToggle from '../../ui/ThemeToggle.tsx';
+
+const human = [
+  ['Overview', ['What TrueSeal is', 'How it works', 'Is it right for my app?', 'Why TrueSeal exists', 'Developer preview']],
+  ['Integrate', ['Quickstart for Swift', 'Quickstart for Kotlin', 'Quickstart for TypeScript', 'Pair devices', 'Send and receive', 'Members and leaving', 'Destroy a group', 'Delivery issues']],
+  ['Operate', ['Run a relay', 'Relay address and keypair', 'Limits and quotas', 'Backups and upgrades']],
+  ['Trust', ['Threat model', 'Known limitations', 'Report a vulnerability']],
+  ['Reference', ['Protocol specification', 'Wire format and test vectors', 'Compatibility table', 'Glossary']],
+] as const;
+
+const admit = `const token = await ts.startPairing()
+showQr(token)
+
+ts.onEvent(async (event) => {
+  if (event.type === 'joinRequest') {
+    if (await confirmOnScreen(event.request.name)) {
+      await ts.accept(event.request)
+    }
+  }
+})`;
+
+const join = `await ts.join(scannedToken)
+// status is now 'pendingJoin' until the other device accepts`;
+---
+
+<div class="ed">
+  <header class="ed__top">
+    <a class="ed__logo" href="/">trueseal<span class="ed__cursor" aria-hidden="true"></span></a>
+    <nav class="ed__surfaces" aria-label="Documentation">
+      <a href="#" aria-current="page">Docs</a>
+      <a href="#">Agent Docs</a>
+    </nav>
+    <span class="ed__ver">0.6.0 preview</span>
+    <div class="ed__search">Search the docs <kbd>/</kbd></div>
+    <a class="ed__gh" href="#">GitHub</a>
+    <ThemeToggle client:load />
+  </header>
+
+  <div class="ed__body">
+    <aside class="ed__side" aria-label="Docs navigation">
+      {human.map(([title, items]) => (
+        <div class="ed__group">
+          <p class="ed__group-title">{title}</p>
+          <ul>{items.map(i => <li><a href="#" aria-current={i === 'Pair devices' ? 'page' : undefined}>{i}</a></li>)}</ul>
+        </div>
+      ))}
+      <a class="ed__agents" href="#">Full SDK API in the Agent Docs</a>
+    </aside>
+
+    <main class="ed__main">
+      <p class="ed__crumb">Integrate</p>
+      <h1>Pair devices</h1>
+      <p class="ed__lede">
+        Pairing is how a second device joins a group. One device shows a code, the other scans it,
+        and the first device accepts the request. Nobody creates an account.
+      </p>
+
+      <h2 id="how">How it works</h2>
+      <p>
+        The pairing code carries the group’s signing key and a secret that works once. The joining device trusts
+        only that key, so the relay can’t slip it into a different group. Nothing is shared until you accept.
+      </p>
+
+      <h2 id="admit">On the device that’s already in the group</h2>
+      <pre><code>{admit}</code></pre>
+      <p>
+        Show the joining device’s name and let the person confirm it. If nobody accepts, the request goes away
+        when the pairing window closes. There’s no reject call, because the protocol sends no decline.
+      </p>
+
+      <h2 id="join">On the new device</h2>
+      <pre><code>{join}</code></pre>
+
+      <div class="ed__callout">
+        <p class="ed__callout-title">Your app’s job</p>
+        <p>The screens. Showing the QR code, scanning it and confirming the name are yours to design. TrueSeal handles the keys and the messages behind them.</p>
+      </div>
+
+      <h2 id="fails">When pairing fails</h2>
+      <table class="ed__table">
+        <thead><tr><th scope="col">Error</th><th scope="col">What happened</th></tr></thead>
+        <tbody>
+          <tr><td><code>invalidPairingToken</code></td><td>The code is malformed, expired or already used. Start pairing again.</td></tr>
+          <tr><td><code>pairingClosed</code></td><td>The window closed before you accepted. Start pairing again.</td></tr>
+          <tr><td><code>groupFull</code></td><td>The group is at its device limit. Remove a device first.</td></tr>
+          <tr><td><code>alreadyInGroup</code></td><td>This device is already a member. Leave the group first.</td></tr>
+        </tbody>
+      </table>
+
+      <div class="ed__next">
+        <a href="#"><span>Previous</span>Quickstart for TypeScript</a>
+        <a href="#"><span>Next</span>Send and receive</a>
+      </div>
+    </main>
+
+    <nav class="ed__toc" aria-label="On this page">
+      <p class="ed__group-title">On this page</p>
+      <a href="#how">How it works</a>
+      <a href="#admit">On the device that’s already in the group</a>
+      <a href="#join">On the new device</a>
+      <a href="#fails">When pairing fails</a>
+      <p class="ed__page-actions"><a href="#">Copy as Markdown</a><a href="#">Agent Docs version</a><a href="#">Edit on GitHub</a></p>
+    </nav>
+  </div>
+</div>
+
+<style>
+  .ed {
+    --paper: #f5f1e8; --ink: #1a1814; --ink-muted: #5c574e; --seal: #a3301e;
+    --rule: color-mix(in srgb, var(--ink-muted) 35%, transparent);
+    --wash: color-mix(in srgb, var(--ink) 4%, var(--paper));
+    background: var(--paper); color: var(--ink); min-height: 100vh; font-family: var(--font-sans);
+  }
+  :global([data-theme='dark']) .ed { --paper: #161412; --ink: #ede7da; --ink-muted: #9c958a; --seal: #e4644b; }
+  .ed a { color: var(--seal); text-underline-offset: 3px; }
+  .ed :focus-visible { outline: 2px solid var(--seal); outline-offset: 2px; }
+  .ed code, .ed pre { font-family: var(--font-mono); }
+
+  .ed__top { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 24px; padding: 14px 24px; background: var(--paper); border-bottom: 1px solid var(--rule); font-size: 14px; }
+  .ed__logo { font: 500 18px var(--font-mono); color: var(--ink) !important; text-decoration: none; display: inline-flex; align-items: center; }
+  .ed__cursor { display: inline-block; width: .6em; height: 1.05em; margin-left: 3px; background: var(--seal); animation: ed-blink 1.1s steps(1) infinite; }
+  @keyframes ed-blink { 50% { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .ed__cursor { animation: none; } }
+  .ed__surfaces { display: flex; gap: 4px; }
+  .ed__surfaces a { color: var(--ink-muted); text-decoration: none; padding: 6px 12px; border: 1px solid transparent; }
+  .ed__surfaces a[aria-current] { color: var(--ink); border-color: var(--ink); }
+  .ed__ver { font: 12px var(--font-mono); color: var(--ink-muted); }
+  .ed__search { margin-left: auto; width: 260px; display: flex; justify-content: space-between; padding: 7px 12px; border: 1px solid var(--rule); color: var(--ink-muted); }
+  .ed__search kbd { font: 12px var(--font-mono); }
+  .ed__gh { color: var(--ink-muted) !important; text-decoration: none; }
+  @media (max-width: 860px) { .ed__ver, .ed__search { display: none; } .ed__gh { margin-left: auto; } }
+
+  .ed__body { display: grid; grid-template-columns: 1fr; max-width: 1360px; margin: 0 auto; }
+  @media (min-width: 900px) { .ed__body { grid-template-columns: 260px minmax(0, 1fr); } }
+  @media (min-width: 1240px) { .ed__body { grid-template-columns: 260px minmax(0, 1fr) 240px; } }
+  .ed__side { padding: 28px 24px 96px; border-right: 1px solid var(--rule); font-size: 14px; }
+  @media (max-width: 899px) { .ed__side { display: none; } }
+  .ed__group { margin-bottom: 26px; }
+  .ed__group-title { font: 500 13px var(--font-mono); color: var(--ink-muted); margin-bottom: 8px; }
+  .ed__side ul { list-style: none; display: grid; gap: 1px; }
+  .ed__side li a { display: block; padding: 5px 12px; color: var(--ink); text-decoration: none; border-left: 1px solid var(--rule); }
+  .ed__side li a:hover { border-left-color: var(--ink); }
+  .ed__side li a[aria-current] { border-left: 2px solid var(--seal); padding-left: 11px; font-weight: 600; }
+  .ed__agents { display: block; margin-top: 8px; padding-top: 16px; border-top: 1px solid var(--rule); }
+
+  .ed__main { padding: 48px clamp(20px, 5vw, 72px) 120px; max-width: 800px; }
+  .ed__crumb { font: 13px var(--font-mono); color: var(--ink-muted); margin-bottom: 12px; }
+  .ed__main h1 { font-size: 44px; line-height: 1.05; letter-spacing: -.035em; font-weight: 600; }
+  .ed__lede { font-size: 20px; line-height: 1.55; color: var(--ink-muted); margin: 18px 0 8px; }
+  .ed__main h2 { font-size: 22px; letter-spacing: -.015em; font-weight: 600; margin: 48px 0 14px; }
+  .ed__main > p { font-size: 17px; line-height: 1.65; margin-bottom: 14px; max-width: 66ch; }
+  .ed__main pre { font-size: 13px; line-height: 1.7; padding: 20px 22px; background: var(--wash); border: 1px solid var(--rule); overflow-x: auto; margin-bottom: 16px; }
+  .ed__main p code, .ed__table code { font-size: 14px; }
+  .ed__callout { border-left: 2px solid var(--ink); padding: 4px 0 4px 20px; margin: 40px 0; font-size: 16px; line-height: 1.6; }
+  .ed__callout-title { font-weight: 600; margin-bottom: 4px; }
+  .ed__table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  .ed__table th, .ed__table td { text-align: left; padding: 12px 12px 12px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  .ed__table thead th { font-weight: 500; color: var(--ink-muted); border-bottom-color: var(--ink); }
+  .ed__next { display: grid; grid-template-columns: 1fr 1fr; margin-top: 72px; border: 1px solid var(--ink); }
+  .ed__next a { display: grid; gap: 4px; padding: 16px 20px; color: var(--ink); text-decoration: none; }
+  .ed__next a + a { border-left: 1px solid var(--ink); text-align: right; }
+  .ed__next a:hover { color: var(--seal); }
+  .ed__next span { font: 12px var(--font-mono); color: var(--ink-muted); }
+
+  .ed__toc { display: none; padding: 48px 24px; position: sticky; top: 60px; align-self: start; font-size: 13px; }
+  @media (min-width: 1240px) { .ed__toc { display: grid; gap: 9px; } }
+  .ed__toc > a { color: var(--ink-muted); text-decoration: none; }
+  .ed__toc > a:hover { color: var(--ink); }
+  .ed__page-actions { display: grid; gap: 8px; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--rule); }
+</style>
