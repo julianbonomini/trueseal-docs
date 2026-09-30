@@ -99,7 +99,7 @@ C. "Private by default, not by effort. Pair devices, sync bytes, and let no one 
 
 - "About 10 lines" and "three screens" are brand claims that must be verified against the shipped SDKs (ADR-0031 ties claims to tests).
 - Recovery: say "not even TrueSeal or your relay host can recover or read it". Never lead with "no recovery".
-- Don't use "anonymous" (see 10), and don't say "can't see your IP" until the IP decision is made.
+- Don't use "anonymous" (see 10), and don't say "can't see your IP". Say the relay "never logs, stores or uses your IP" (trueseal-roadmap#26).
 
 ### Open questions
 
