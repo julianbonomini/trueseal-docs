@@ -1,6 +1,6 @@
 # trueseal-docs
 
-The website for the TrueSeal ecosystem — a static Astro site combining a marketing landing page and developer documentation, built against a Figma-first design system.
+The website for the TrueSeal ecosystem — a static Astro site combining a marketing landing page and developer documentation, styled by the brandbook in `brand/90_SYNTHESIS.md`.
 
 ## Language
 
@@ -24,8 +24,16 @@ _Avoid_: rules file, prompt
 The values both the Human Docs and the Agent Docs state and that must never differ between them: error cases, event cases, limits, protocol versions and the Relay Address format. They come from one generated source.
 _Avoid_: constants (too code-specific)
 
+**Journey**
+The order the site tells the story in: Overview, Integrate, Operate, Trust. The Landing's sections follow it, and so does the Human Docs sidebar, with Reference after it (ADR-0004).
+_Avoid_: funnel, onboarding flow
+
+**Seal Demo**
+The Island in the Landing hero. A location update on one phone is encrypted in the browser, the relay column shows only sealed packets with their size and time, and the update appears on the other phone (ADR-0004).
+_Avoid_: hero animation, playground
+
 **Design token**
-A named, theme-aware design value (color, spacing, radius, typography) exported from Figma and consumed in code as a CSS custom property. The contract between Figma and code.
+A named, theme-aware design value (color, spacing, radius, typography) consumed in code as a CSS custom property in `src/styles/tokens.css`. Values come from brandbook section 8, which is the source of truth (ADR-0004).
 _Avoid_: CSS variable (too impl-specific), design variable
 
 **Island**
@@ -44,14 +52,10 @@ _Avoid_: pages, content folder
 The active visual mode — `light` or `dark`. Switched via a `data-theme` attribute on `<html>`. Both themes are fully supported and share the same design token names; the values differ per theme.
 _Avoid_: mode, color scheme (use theme)
 
-**Token export**
-The process of extracting design tokens from Figma (via Token Studio plugin) into a `tokens.json` file, then transforming them into CSS custom properties via Style Dictionary.
-_Avoid_: Figma export, design handoff
-
 ## Relationships
 
 - The **Landing**, **Human Docs** and **Agent Docs** live in the same Astro project and share the same design token system and component library.
-- **Design tokens** are defined in Figma, exported via token export, and consumed by both **Astro components** and **Islands**.
+- **Design tokens** follow the brandbook and are consumed by both **Astro components** and **Islands**.
 - An **Island** is always a React component. An **Astro component** is never interactive.
 - **Content collections** power the **Human Docs** and **Agent Docs** surfaces. The **Landing** is hand-authored Astro, not driven by a content collection.
 - Both **themes** (light and dark) resolve to the same **design token** names — only the values change.
