@@ -20,6 +20,10 @@ _Avoid_: LLM docs, AI docs, llms.txt (that is one file within the Agent Docs)
 The short block an app developer pastes into their own project's `AGENTS.md`: the integration pitfalls and a pointer to the Agent Docs. It lives in the developer's repo, not in TrueSeal's.
 _Avoid_: rules file, prompt
 
+**TrueSeal Skills**
+The Agent Skills TrueSeal publishes for coding agents: Integrate, Pairing and Relay, one per workflow, shipped from the `trueseal-skills` repo as the `trueseal` plugin. They teach steps and pitfalls and link to the Agent Docs for every API name and fact (ADR-0005).
+_Avoid_: prompts, agent docs (a different surface), plugin (the package, not the skills)
+
 **Shared Facts**
 The values both the Human Docs and the Agent Docs state and that must never differ between them: error cases, event cases, limits, protocol versions and the Relay Address format. They come from one generated source.
 _Avoid_: constants (too code-specific)
