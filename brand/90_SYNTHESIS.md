@@ -213,13 +213,13 @@ These are brand claims today. Each needs a test or a check before it appears in 
 - "A relay in one container", checked against the self-hosting guide.
 - The Life360 data-broker report (The Markup, December 2021), if cited at all.
 - Etebase's current status, if named at all.
-- Any IP wording. Say "The relay doesn't record or use your IP" until the relay IP decision lands, never "can't see".
+- IP wording. Use "The relay never logs, stores or uses your IP address. The server it runs on still sees the connection, as with any internet service. To hide your IP from the server too, use a VPN or Tor." Never say "can't see". The release gate checks the relay's logs and store (trueseal-relay ADR-0012).
 
 ## 11. Open items handed off
 
 - **Visual rendering:** Prototype: docs site structure, home page, and visual direction (trueseal-roadmap#17) applies this brandbook to the site.
 - **Mascot artwork:** to be drawn from the spec in section 8. This is execution work, filed in trueseal-docs.
-- **Relay IP visibility:** Decision: should the relay be unable to see client IPs in the preview? (trueseal-roadmap#26).
+- **Relay IP visibility:** decided in Decision: should the relay be unable to see client IPs in the preview? (trueseal-roadmap#26). The relay never logs, stores or uses IPs in any mode. Hiding IPs from the host is deferred past the preview.
 - **Browser support:** not in the preview. Revisit as a future scope decision.
 
 ## Appendix. Why these choices
@@ -240,7 +240,7 @@ Each rule above has a reason. Change a rule only if its reason no longer holds. 
 | Sage plus Creator | Sage plus Outlaw | Outlaw reads as "I know better". Creator hands over the tool and steps back. |
 | Plain and precise look | A playful, quirky look | Precision attracts the right engineers. The playfulness moves to the mascot and one joke per page. |
 | Anti-AI writing rules | A generic "friendly docs" tone | The writing has to read like a person who built the thing. Machine-sounding patterns cost that trust. |
-| No "fully private", no "anonymous", and no "can't see your IP" yet | Stronger privacy adjectives | The relay sees metadata (ADR-0024, ADR-0031). Claims are limited to what tests prove. |
+| No "fully private", no "anonymous", and no "can't see your IP" | Stronger privacy adjectives | The relay sees metadata (ADR-0024, ADR-0031). Claims are limited to what tests prove. |
 | Reader-led story, founder's story on the Why page | Founder story on the home page | The reader is the hero. The founder's story explains conviction, but it doesn't sell the primitive. |
 | Privacy as an afterthought ending | A dramatic privacy climax | The point is that privacy is there by default, without anyone worrying about it. |
 | Founder brand, first person | "We", or a faceless project | It's one person. "We" would imply a team that doesn't exist. |
