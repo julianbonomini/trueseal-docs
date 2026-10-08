@@ -1,0 +1,86 @@
+# The only Workflow in this repo. trueseal-docs is mostly prose, with no test
+# suite or check script, so each Ticket goes through a writer and a fresh
+# reviewer, both held to CONTEXT.md, the brandbook and the no-ai-writing
+# skill, and both checking every claim about TrueSeal against the code in the
+# sibling repos. Setup and use are in .vago/README.md. Prompt paths resolve
+# from .vago/, include paths from the repo root, and shell commands run in the
+# Goal's worktree.
+#
+# Git: Vago runs each Goal in its own worktree on the Goal's branch,
+# vago/<goal>, which Vago cuts from the repo's default branch and owns.
+# This Workflow builds each Ticket on <goal>/<ticket>, cut from vago/<goal>,
+# and squash-merges it back as one commit. The human merges the Goal's PR.
+# Shell Steps get the names in $VAGO_GOAL and $VAGO_TICKET, and
+# $VAGO_LAST_TICKET is true when every other Ticket of the Goal is done, and
+# $VAGO_PROJECT_ROOT is the main checkout's path.
+#
+# A Step's name is what the TUI and `vago run` show. Its id is what
+# {{steps.<id>.output}} and log file names use, and a Step without a name
+# shows its id.
+#
+# Besides [[steps]], which every Ticket goes through, a Workflow can list two
+# groups of Goal Steps, which take the same types and options. [[before_all]]
+# runs once, before the Goal's first Ticket, and not again once it has
+# succeeded. [[after_all]] runs once no Tickets are left, and again after any
+# Ticket added later is done, so a Step that mustn't repeat checks for itself.
+# Goal Steps run in the Goal's worktree on vago/<goal>, with $VAGO_GOAL and
+# $VAGO_PROJECT_ROOT but no Ticket, and {{steps.<id>.output}} reads only Steps
+# of its own group. This Workflow has no before_all.
+#
+# An agent Step with goal_report = true puts its output in the Goal report,
+# which `vago goal report` prints, collapsed under the Ticket. merge.sh makes
+# the report the PR's body after each Ticket, and the describe Step keeps the
+# report's Runs at the end of the body it writes.
+
+# The Harness is the coding agent that performs each agent Step: "claude-code"
+# or "codex". A Step can set its own harness and model, such as review on
+# harness = "codex" with model = "gpt-6-sol" while Claude Code writes; set
+# both together, since a model belongs to one Harness.
+harness = "claude-code"
+model   = "claude-opus-5-5"
+# args = []             # appended to the Harness command; a Step can set its own
+idle_timeout = "10m"  # how long the Harness may print nothing before the Run fails
+
+[[steps]]
+id   = "branch"
+name = "New branch"
+type = "shell"
+run  = "sh .vago/scripts/branch.sh"
+
+[[steps]]
+id     = "write"
+name   = "Write"
+type   = "agent"
+prompt = "prompts/write.md"
+
+[[steps]]
+id          = "review"
+name        = "Review"
+type        = "agent"
+prompt      = "prompts/review.md"
+goal_report = true   # its Sources and Concerns go in the PR
+
+[[steps]]
+id     = "goal-review"
+name   = "Goal review"
+type   = "agent"
+prompt = "prompts/goal-review.md"
+when   = "last-ticket"   # skipped on every other Ticket
+
+[[steps]]
+id   = "merge"
+name = "Squash merge"
+type = "shell"
+run  = "sh .vago/scripts/merge.sh"
+
+[[after_all]]
+id     = "describe"
+name   = "PR description"
+type   = "agent"
+prompt = "prompts/describe.md"
+
+[[after_all]]
+id   = "ready"
+name = "Ready for review"
+type = "shell"
+run  = "sh .vago/scripts/ready.sh"
