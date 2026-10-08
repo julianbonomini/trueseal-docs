@@ -25,7 +25,7 @@ Confidence: medium. The private set is 14 conversational samples; the public set
 
 Source Set
 - Private working voice: 14 of the founder's own replies in the 2026-09-29/30 brand interview (paraphrased in modules 10 to 50). The pasted competitor table in 20 is excluded as researched or AI-assisted text.
-- Public voice (authorship unconfirmed): trueseal-docs src/content/docs/introduction.mdx ("The gap" and "The core guarantee").
+- Public voice (authorship unconfirmed): trueseal-docs src/content/docs/overview/introduction.mdx ("The gap" and "The core guarantee").
 
 Rhythm
 - Private: long, spoken run-on sentences joined with "and / but / so", punctuated by short flat verdicts: "I didn't want that." "I don't care." "It's not good enough for me."

@@ -113,3 +113,21 @@ describe('Old design system', () => {
     expect(named).toEqual([]);
   });
 });
+
+describe('Section display', () => {
+  test('the Landing section look is written once, in global.css', () => {
+    const globalPath = 'src/styles/global.css';
+    const values = [
+      /clamp\(64px, 10vw, 104px\)/,
+      /font-size:\s*var\(--text-section\)/,
+      /max-width:\s*18ch/,
+      /max-width:\s*60ch/,
+    ];
+    for (const pattern of values) {
+      expect(hits(cssTexts, pattern, [globalPath])).toEqual([]);
+    }
+    const global = readFileSync(join(root, globalPath), 'utf8');
+    expect(global).toContain('.section-display__heading');
+    expect(global).toContain('.section-display__lede');
+  });
+});

@@ -1,5 +1,6 @@
 /*
  * Site-wide styles on the Design tokens: the reset, the base, markdown prose,
+ * the shared Landing section look (.section-display),
  * and the styles of Islands that can't scope their own (CodeBlock, ThemeToggle).
  */
 
@@ -176,6 +177,38 @@ code, kbd, samp, pre {
 
 .prose strong {
   font-weight: 600;
+}
+
+/* ─── Section display ───────────────────────────────────── */
+/* The look of a Landing section's opening, shared by LandingSection.astro and the 404 page. */
+
+.section-display {
+  padding: clamp(64px, 10vw, 104px) var(--landing-gutter);
+}
+
+.section-display__kicker {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-muted);
+  margin-bottom: 20px;
+}
+
+.section-display__heading {
+  font-size: var(--text-section);
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+  font-weight: 600;
+  max-width: 18ch;
+}
+
+/* A lede is a paragraph with the class, or any paragraph directly inside a .section-display__body. */
+.section-display__lede,
+.section-display__body > p {
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--ink-muted);
+  max-width: 60ch;
 }
 
 /* ─── CodeBlock (React Island) ──────────────────────────── */

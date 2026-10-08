@@ -8,11 +8,11 @@ import Button from '../components/ui/Button.astro';
 
 <BaseLayout title="Page not found" description="This page doesn't exist on trueseal.dev." searchable={false}>
   <Navbar />
-  <main class="not-found">
+  <main class="not-found section-display">
     <div class="not-found__mascot"><Mascot /></div>
-    <p class="not-found__code">404</p>
-    <h1>This page doesn't exist.</h1>
-    <p class="not-found__lead">The link may be old or mistyped.</p>
+    <p class="section-display__kicker">404</p>
+    <h1 class="section-display__heading">This page doesn't exist.</h1>
+    <p class="not-found__lead section-display__lede">The link may be old or mistyped.</p>
     <div class="not-found__actions">
       <Button href="/">Back to the start</Button>
       <Button variant="secondary" href="/docs/overview/introduction">Read the docs</Button>
@@ -26,7 +26,6 @@ import Button from '../components/ui/Button.astro';
     max-width: var(--layout-max-width);
     width: 100%;
     margin: 0 auto;
-    padding: clamp(64px, 10vw, 104px) var(--landing-gutter);
     flex: 1;
   }
 
@@ -35,27 +34,7 @@ import Button from '../components/ui/Button.astro';
     margin-bottom: 40px;
   }
 
-  .not-found__code {
-    font-family: var(--font-mono);
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--ink-muted);
-    margin-bottom: 20px;
-  }
-
-  h1 {
-    font-size: var(--text-section);
-    line-height: 1.06;
-    letter-spacing: -0.03em;
-    font-weight: 600;
-    max-width: 18ch;
-  }
-
   .not-found__lead {
-    font-size: 18px;
-    line-height: 1.6;
-    color: var(--ink-muted);
-    max-width: 60ch;
     margin-top: 24px;
   }
 
