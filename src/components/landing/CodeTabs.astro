@@ -1,0 +1,91 @@
+---
+// Code in up to three languages, one shown at a time. CSS-only radios: Tab and the arrow keys
+// switch tabs without JS; without CSS every panel shows. The first tab starts selected.
+// Throws at build time for fewer than one or more than three tabs.
+export interface CodeTab {
+  label: string;
+  code: string;
+}
+
+interface Props {
+  /** The radio group name, unique on the page; also prefixes the input ids. */
+  name: string;
+  tabs: CodeTab[];
+}
+
+const { name, tabs } = Astro.props;
+// The stylesheet below has one selector per tab position, written out for three.
+if (tabs.length < 1 || tabs.length > 3) throw new Error('CodeTabs renders one to three tabs');
+---
+
+<div class="code-tabs" role="group" aria-label="Code example language">
+  {
+    tabs.map((_, i) => (
+      <input
+        type="radio"
+        class="code-tabs__radio visually-hidden"
+        name={name}
+        id={`${name}-${i}`}
+        checked={i === 0}
+      />
+    ))
+  }
+  <div class="code-tabs__bar">
+    {tabs.map((tab, i) => <label for={`${name}-${i}`}>{tab.label}</label>)}
+  </div>
+  {
+    tabs.map(tab => (
+      <pre class="code-tabs__panel"><code>{tab.code}</code></pre>
+    ))
+  }
+</div>
+
+<style>
+  .code-tabs {
+    border: 1px solid var(--ink);
+    min-width: 0;
+  }
+
+  .code-tabs__bar {
+    display: flex;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .code-tabs__bar label {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    padding: 11px 18px;
+    color: var(--ink-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+  }
+
+  .code-tabs__panel {
+    display: none;
+    margin: 0;
+    padding: 22px;
+    font-size: 13px;
+    line-height: 1.7;
+    overflow-x: auto;
+  }
+
+  .code-tabs__radio:nth-of-type(1):checked ~ .code-tabs__panel:nth-of-type(1),
+  .code-tabs__radio:nth-of-type(2):checked ~ .code-tabs__panel:nth-of-type(2),
+  .code-tabs__radio:nth-of-type(3):checked ~ .code-tabs__panel:nth-of-type(3) {
+    display: block;
+  }
+
+  .code-tabs__radio:nth-of-type(1):checked ~ .code-tabs__bar label:nth-of-type(1),
+  .code-tabs__radio:nth-of-type(2):checked ~ .code-tabs__bar label:nth-of-type(2),
+  .code-tabs__radio:nth-of-type(3):checked ~ .code-tabs__bar label:nth-of-type(3) {
+    color: var(--ink);
+    border-bottom-color: var(--ink);
+  }
+
+  .code-tabs__radio:nth-of-type(1):focus-visible ~ .code-tabs__bar label:nth-of-type(1),
+  .code-tabs__radio:nth-of-type(2):focus-visible ~ .code-tabs__bar label:nth-of-type(2),
+  .code-tabs__radio:nth-of-type(3):focus-visible ~ .code-tabs__bar label:nth-of-type(3) {
+    outline: 2px solid var(--seal);
+    outline-offset: -2px;
+  }
+</style>

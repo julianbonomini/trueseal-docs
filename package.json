@@ -7,7 +7,7 @@
     "dev": "ASTRO_TELEMETRY_DISABLED=1 astro dev",
     "build": "ASTRO_TELEMETRY_DISABLED=1 astro build && pagefind --site dist",
     "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",
-    "check": "ASTRO_TELEMETRY_DISABLED=1 astro check && bun test --pass-with-no-tests && bun run build",
+    "check": "ASTRO_TELEMETRY_DISABLED=1 astro check && bun run build && bun test --pass-with-no-tests",
     "screenshot": "bun scripts/screenshot.ts"
   },
   "dependencies": {

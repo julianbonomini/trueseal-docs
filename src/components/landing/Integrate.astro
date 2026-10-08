@@ -1,0 +1,140 @@
+---
+// The Integrate part of the Journey: the integration in each SDK's language, and the Agent Snippet.
+import LandingSection from './LandingSection.astro';
+import CodeTabs, { type CodeTab } from './CodeTabs.astro';
+
+// TODO: brandbook section 10. "About ten lines" is unchecked against the shipped SDKs (DOCS-9).
+
+// TODO: brandbook section 10. Names follow trueseal-sync ADR-0028 and package names ADR-0030; the SDK repos still ship TruesealSyncClient, so check against the shipped 0.6 SDKs (DOCS-9).
+const snippets: CodeTab[] = [
+  {
+    label: 'Swift',
+    code: `// Package.swift: .package(url: "https://github.com/julianbonomini/trueseal-sync-swift", from: "0.6.0")
+import TruesealSync
+
+let trueseal = try await TrueSeal.open(
+  relay: "trueseal://9f2c…e41a@relay.example.com",
+  storage: .applicationSupport
+)
+
+trueseal.onMessage { message in
+  try await store.save(message.id, message.body)
+}
+
+let token = try await trueseal.startPairing() // the other device calls join(token)
+try await trueseal.send(location)`,
+  },
+  {
+    label: 'Kotlin',
+    code: `// build.gradle.kts: implementation("dev.trueseal:trueseal-sync:0.6.0")
+import dev.trueseal.sync.Storage
+import dev.trueseal.sync.TrueSeal
+
+val trueseal = TrueSeal.open(
+  relay = "trueseal://9f2c…e41a@relay.example.com",
+  storage = Storage.android(context),
+)
+
+trueseal.onMessage { message ->
+  repository.save(message.id, message.body)
+}
+
+val token = trueseal.startPairing() // the other device calls join(token)
+trueseal.send(location)`,
+  },
+  {
+    label: 'TypeScript',
+    code: `// npm install @trueseal/sync
+import { TrueSeal } from '@trueseal/sync'
+
+const trueseal = await TrueSeal.open(
+  'trueseal://9f2c…e41a@relay.example.com',
+  './trueseal-state',
+)
+
+trueseal.onMessage(async (message) => {
+  await db.put(message.id, message.body)
+})
+
+const token = await trueseal.startPairing() // the other device calls join(token)
+await trueseal.send(location)`,
+  },
+];
+
+// TODO: the agent-docs Goal owns the Agent Snippet text and ships /agents/llms.txt.
+const agentSnippet = `## TrueSeal
+This app syncs user data with TrueSeal.
+Before changing sync code, read https://trueseal.dev/agents/llms.txt.
+Payloads are opaque bytes up to the published limit. Conflict
+resolution and the pairing screens belong to this app.`;
+---
+
+<LandingSection
+  id="integrate"
+  heading="About ten lines."
+  docs={{ href: '/docs/guides/integrating-trueseal-sync', label: 'Read the integration guide' }}
+>
+  <p>
+    Open a TrueSeal with your relay's address. Show the pairing token as a QR code on one device and join with it on
+    the other. Then send bytes, and every device in the group receives them.
+  </p>
+  <p>
+    Your feature list gets a new line. <em class="integrate__line">Syncs across all your devices, and no one else can
+    read it.</em>
+  </p>
+
+  <CodeTabs slot="aside" name="integrate-code" tabs={snippets} />
+
+  <div slot="wide" class="agent">
+    <div>
+      <h3 class="agent__heading">For your coding agent</h3>
+      <p class="agent__text">
+        Paste this into your project's <code>AGENTS.md</code>. It points the agent at the Agent Docs, which hold the
+        full API.
+      </p>
+    </div>
+    <pre class="agent__snippet">{agentSnippet}</pre>
+  </div>
+</LandingSection>
+
+<style>
+  .integrate__line {
+    font-style: normal;
+    color: var(--ink);
+  }
+
+  .agent {
+    display: grid;
+    grid-template-columns: var(--landing-columns);
+    gap: 24px 64px;
+    padding-top: 40px;
+    border-top: 1px solid var(--rule);
+  }
+
+  .agent > * {
+    min-width: 0;
+  }
+
+  .agent__heading {
+    font-size: 22px;
+    font-weight: 600;
+  }
+
+  .agent__text {
+    margin-top: 12px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--ink-muted);
+    max-width: 52ch;
+  }
+
+  .agent__snippet {
+    margin: 0;
+    background: var(--wash);
+    border-left: 2px solid var(--ink);
+    white-space: pre-wrap;
+    padding: 18px 20px;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+</style>

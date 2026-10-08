@@ -49,6 +49,10 @@
   --text-h3: 18px;
   --weight-heading: 600;
 
+  /* Landing display sizes (variant E). */
+  --text-hero: clamp(44px, 7.2vw, 104px);
+  --text-section: clamp(30px, 3.8vw, 48px);
+
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 16px;
@@ -57,6 +61,8 @@
   --space-2xl: 64px;
 
   --layout-max-width: 1200px;
+  /* Side padding of the Landing sections. */
+  --landing-gutter: clamp(16px, 5vw, 24px);
   --header-height: 56px;
 
   /* Code is monochrome ink with muted comments (astro.config.mjs uses Shiki's CSS-variables theme). */

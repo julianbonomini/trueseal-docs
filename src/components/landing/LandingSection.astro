@@ -1,0 +1,109 @@
+---
+// One Journey section of the Landing: the kicker naming its Journey part, the heading,
+// a two-column body, an optional full-width block and the link into the Human Docs.
+// Slots: default (below the heading), "aside" (second column, below on phones), "wide" (full width).
+// A grid in the "wide" slot can use `grid-template-columns: var(--landing-columns)` to line up with the body.
+interface Props {
+  /** The anchor id, which also gives the kicker ("overview" → "Overview"). */
+  id: 'overview' | 'integrate' | 'operate' | 'trust';
+  heading: string;
+  /** Where this part of the Journey continues in the Human Docs. */
+  docs: { href: string; label: string };
+}
+
+const { id, heading, docs } = Astro.props;
+const kicker = id[0].toUpperCase() + id.slice(1);
+---
+
+<section id={id} class="landing-section">
+  <p class="landing-section__kicker">{kicker}</p>
+  <div class="landing-section__grid">
+    <div class="landing-section__body">
+      <h2 class="landing-section__heading">{heading}</h2>
+      <slot />
+    </div>
+    {
+      Astro.slots.has('aside') && (
+        <div class="landing-section__body">
+          <slot name="aside" />
+        </div>
+      )
+    }
+  </div>
+  {
+    Astro.slots.has('wide') && (
+      <div class="landing-section__wide">
+        <slot name="wide" />
+      </div>
+    )
+  }
+  <a class="landing-section__docs" href={docs.href}>{docs.label}</a>
+</section>
+
+<style>
+  .landing-section {
+    border-top: 1px solid var(--rule);
+    max-width: var(--layout-max-width);
+    margin: 0 auto;
+    padding: clamp(64px, 10vw, 104px) var(--landing-gutter);
+    --landing-columns: minmax(0, 1fr);
+  }
+
+  @media (min-width: 960px) {
+    .landing-section {
+      --landing-columns: 5fr 6fr;
+    }
+  }
+
+  .landing-section__kicker {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink-muted);
+    margin-bottom: 20px;
+  }
+
+  .landing-section__grid {
+    display: grid;
+    grid-template-columns: var(--landing-columns);
+    gap: 24px 64px;
+  }
+
+  .landing-section__grid > * {
+    min-width: 0;
+  }
+
+  .landing-section__heading {
+    font-size: var(--text-section);
+    line-height: 1.06;
+    letter-spacing: -0.03em;
+    font-weight: 600;
+    max-width: 18ch;
+    /* With the body's 16px gap, 24px between the heading and the first paragraph. */
+    margin-bottom: 8px;
+  }
+
+  .landing-section__body {
+    display: grid;
+    gap: 16px;
+    align-content: start;
+  }
+
+  .landing-section__body > :global(p) {
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--ink-muted);
+    max-width: 60ch;
+  }
+
+  .landing-section__wide {
+    margin-top: 56px;
+    min-width: 0;
+  }
+
+  .landing-section__docs {
+    display: inline-block;
+    margin-top: 40px;
+    font-size: 16px;
+  }
+</style>

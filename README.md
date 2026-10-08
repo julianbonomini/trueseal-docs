@@ -35,7 +35,7 @@ Output goes to `dist/`. Static site, no adapter needed.
 bun run check
 ```
 
-Type-checks with `astro check`, runs `bun test`, then builds.
+Type-checks with `astro check`, builds, then runs `bun test`. Some tests read the built site in `dist/`, so run `bun run build` before running `bun test` on its own.
 
 To screenshot built pages in both themes at desktop and phone width (run `bunx playwright install chromium` once first):
 
@@ -95,4 +95,4 @@ src/
   styles/         # tokens.css, global.css
 ```
 
-`tests/` holds the brand checks run by `bun test`.
+`tests/` holds the brand checks on the source and the Landing checks on the built site, run by `bun test`.
