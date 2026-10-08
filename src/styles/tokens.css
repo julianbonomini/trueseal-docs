@@ -1,200 +1,74 @@
 /*
- * TrueSeal design tokens
- * Source of truth: trueseal-light-design-system.md + trueseal-dark-design-system.md
- *
- * Structure:
- *   --color-*     Full color system (Material-style roles)
- *   --font-*      Font families (Geist + JetBrains Mono)
- *   --text-*      Typography scale (size, weight, line-height, tracking)
- *   --space-*     Spacing scale
- *   --layout-*    Grid / container values
+ * TrueSeal Design tokens.
+ * Source of truth: brand/90_SYNTHESIS.md section 8 (ADR-0004). The four brandbook
+ * colours per Theme are the only hex values; every other colour mixes from them.
  */
 
-/* ─── Fonts ──────────────────────────────────────────────── */
 @import '@fontsource-variable/geist';
 @import '@fontsource/jetbrains-mono/400.css';
 @import '@fontsource/jetbrains-mono/500.css';
 @import '@fontsource/jetbrains-mono/600.css';
 
-/* ─── Light theme ────────────────────────────────────────── */
 :root,
 [data-theme='light'] {
-  /* Surface */
-  --color-surface:                  #f9f9f9;
-  --color-surface-dim:              #dadada;
-  --color-surface-bright:           #f9f9f9;
-  --color-surface-container-lowest: #ffffff;
-  --color-surface-container-low:    #f3f3f3;
-  --color-surface-container:        #eeeeee;
-  --color-surface-container-high:   #e8e8e8;
-  --color-surface-container-highest:#e2e2e2;
-  --color-surface-variant:          #e2e2e2;
-  --color-surface-tint:             #5e5e5e;
-
-  /* On-surface */
-  --color-on-surface:               #1b1b1b;
-  --color-on-surface-variant:       #4c4546;
-  --color-inverse-surface:          #303030;
-  --color-inverse-on-surface:       #f1f1f1;
-
-  /* Outline */
-  --color-outline:                  #7e7576;
-  --color-outline-variant:          #cfc4c5;
-
-  /* Primary */
-  --color-primary:                  #000000;
-  --color-on-primary:               #ffffff;
-  --color-primary-container:        #1b1b1b;
-  --color-on-primary-container:     #848484;
-  --color-inverse-primary:          #c6c6c6;
-  --color-primary-fixed:            #e2e2e2;
-  --color-primary-fixed-dim:        #c6c6c6;
-  --color-on-primary-fixed:         #1b1b1b;
-  --color-on-primary-fixed-variant: #474747;
-
-  /* Secondary */
-  --color-secondary:                #5e5e5e;
-  --color-on-secondary:             #ffffff;
-  --color-secondary-container:      #e1dfdf;
-  --color-on-secondary-container:   #626262;
-  --color-secondary-fixed:          #e4e2e2;
-  --color-secondary-fixed-dim:      #c7c6c6;
-  --color-on-secondary-fixed:       #1b1c1c;
-  --color-on-secondary-fixed-variant:#464747;
-
-  /* Tertiary */
-  --color-tertiary:                 #000000;
-  --color-on-tertiary:              #ffffff;
-  --color-tertiary-container:       #1b1b1b;
-  --color-on-tertiary-container:    #848484;
-  --color-tertiary-fixed:           #e2e2e2;
-  --color-tertiary-fixed-dim:       #c6c6c6;
-  --color-on-tertiary-fixed:        #1b1b1b;
-  --color-on-tertiary-fixed-variant:#474747;
-
-  /* Error */
-  --color-error:                    #ba1a1a;
-  --color-on-error:                 #ffffff;
-  --color-error-container:          #ffdad6;
-  --color-on-error-container:       #93000a;
-
-  /* Background */
-  --color-background:               #f9f9f9;
-  --color-on-background:            #1b1b1b;
+  --paper: #F5F1E8;
+  --ink: #1A1814;
+  --ink-muted: #5C574E;
+  --seal: #A3301E;
+  color-scheme: light;
 }
 
-/* ─── Dark theme ─────────────────────────────────────────── */
 [data-theme='dark'] {
-  /* Surface */
-  --color-surface:                  #141313;
-  --color-surface-dim:              #141313;
-  --color-surface-bright:           #3a3939;
-  --color-surface-container-lowest: #0e0e0e;
-  --color-surface-container-low:    #1c1b1b;
-  --color-surface-container:        #201f1f;
-  --color-surface-container-high:   #2a2a2a;
-  --color-surface-container-highest:#353434;
-  --color-surface-variant:          #353434;
-  --color-surface-tint:             #c6c6c7;
-
-  /* On-surface */
-  --color-on-surface:               #e5e2e1;
-  --color-on-surface-variant:       #c4c7c8;
-  --color-inverse-surface:          #e5e2e1;
-  --color-inverse-on-surface:       #313030;
-
-  /* Outline */
-  --color-outline:                  #8e9192;
-  --color-outline-variant:          #444748;
-
-  /* Primary */
-  --color-primary:                  #ffffff;
-  --color-on-primary:               #2f3131;
-  --color-primary-container:        #e2e2e2;
-  --color-on-primary-container:     #636565;
-  --color-inverse-primary:          #5d5f5f;
-  --color-primary-fixed:            #e2e2e2;
-  --color-primary-fixed-dim:        #c6c6c7;
-  --color-on-primary-fixed:         #1a1c1c;
-  --color-on-primary-fixed-variant: #454747;
-
-  /* Secondary */
-  --color-secondary:                #c6c6cf;
-  --color-on-secondary:             #2f3037;
-  --color-secondary-container:      #45464e;
-  --color-on-secondary-container:   #b4b4bd;
-  --color-secondary-fixed:          #e2e1eb;
-  --color-secondary-fixed-dim:      #c6c6cf;
-  --color-on-secondary-fixed:       #1a1b22;
-  --color-on-secondary-fixed-variant:#45464e;
-
-  /* Tertiary */
-  --color-tertiary:                 #ffffff;
-  --color-on-tertiary:              #2f3131;
-  --color-tertiary-container:       #e2e2e2;
-  --color-on-tertiary-container:    #636565;
-  --color-tertiary-fixed:           #e2e2e2;
-  --color-tertiary-fixed-dim:       #c6c6c7;
-  --color-on-tertiary-fixed:        #1a1c1c;
-  --color-on-tertiary-fixed-variant:#454747;
-
-  /* Error */
-  --color-error:                    #ffb4ab;
-  --color-on-error:                 #690005;
-  --color-error-container:          #93000a;
-  --color-on-error-container:       #ffdad6;
-
-  /* Background */
-  --color-background:               #141313;
-  --color-on-background:            #e5e2e1;
+  --paper: #161412;
+  --ink: #EDE7DA;
+  --ink-muted: #9C958A;
+  --seal: #E4644B;
+  color-scheme: dark;
 }
 
-/* ─── Typography (both themes) ───────────────────────────── */
 :root {
+  /* Hairline rules and the faint fill behind code. */
+  --rule: color-mix(in srgb, var(--ink-muted) 35%, transparent);
+  --wash: color-mix(in srgb, var(--ink) 4%, var(--paper));
+
   --font-sans: 'Geist Variable', 'Geist', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  /* Scale — from dark design system */
-  --text-display-size:    48px;
-  --text-display-weight:  600;
-  --text-display-leading: 1.1;
-  --text-display-tracking: -0.02em;
+  --text-meta: 12px;
+  --text-label: 13px;
+  --text-code: 13px;
+  --text-ui: 14px;
+  --text-body: 17px;
+  --leading-body: 1.65;
+  --text-lede: 20px;
+  --text-h1: clamp(32px, 8vw, 44px);
+  --leading-h1: 1.05;
+  --tracking-h1: -0.035em;
+  --text-h2: 22px;
+  --tracking-h2: -0.015em;
+  --text-h3: 18px;
+  --weight-heading: 600;
 
-  --text-headline-lg-size:    32px;
-  --text-headline-lg-weight:  500;
-  --text-headline-lg-leading: 1.2;
-  --text-headline-lg-tracking: -0.01em;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 40px;
+  --space-2xl: 64px;
 
-  --text-headline-md-size:    24px;
-  --text-headline-md-weight:  500;
-  --text-headline-md-leading: 1.3;
-
-  --text-body-lg-size:    16px;
-  --text-body-lg-weight:  400;
-  --text-body-lg-leading: 1.6;
-
-  --text-body-sm-size:    14px;
-  --text-body-sm-weight:  400;
-  --text-body-sm-leading: 1.5;
-
-  --text-mono-label-size:    13px;
-  --text-mono-label-weight:  500;
-  --text-mono-label-leading: 1.4;
-  --text-mono-label-tracking: 0.02em;
-
-  --text-mono-code-size:    12px;
-  --text-mono-code-weight:  400;
-  --text-mono-code-leading: 1.6;
-
-  /* ─── Spacing (from dark design system) ─────────────────── */
-  --space-xs:  4px;
-  --space-sm:  8px;
-  --space-md:  16px;
-  --space-lg:  24px;
-  --space-xl:  40px;
-
-  /* ─── Layout ─────────────────────────────────────────────── */
-  --layout-gutter:    16px;
-  --layout-margin:    24px;
   --layout-max-width: 1200px;
+  --header-height: 56px;
+
+  /* Code is monochrome ink with muted comments (astro.config.mjs uses Shiki's CSS-variables theme). */
+  --shiki-foreground: var(--ink);
+  --shiki-background: var(--wash);
+  --shiki-token-comment: var(--ink-muted);
+  --shiki-token-constant: var(--ink);
+  --shiki-token-string: var(--ink);
+  --shiki-token-keyword: var(--ink);
+  --shiki-token-parameter: var(--ink);
+  --shiki-token-function: var(--ink);
+  --shiki-token-string-expression: var(--ink);
+  --shiki-token-punctuation: var(--ink);
+  --shiki-token-link: var(--ink);
 }

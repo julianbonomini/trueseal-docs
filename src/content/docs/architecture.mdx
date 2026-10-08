@@ -49,13 +49,12 @@ Compromise the relay completely — grab the binary, dump the database, sniff ev
     id: "SENDER",
     role: "DEVICE",
     steps: [
-      { icon: "groups", label: "Read Manifest" },
-      { icon: "lock", label: "Encrypt per recipient" },
-      { icon: "draw", label: "Sign envelope" },
+      { label: "Read Manifest" },
+      { label: "Encrypt per recipient" },
+      { label: "Sign envelope" },
     ]
   }}
   center={{
-    icon: "send",
     title: "RELAY",
     subtitle: "PUSH SESSION (NOISE NK)",
     meta: [
@@ -67,8 +66,8 @@ Compromise the relay completely — grab the binary, dump the database, sniff ev
     id: "RECIPIENT",
     role: "DEVICE",
     steps: [
-      { icon: "inbox", label: "Inbox if offline" },
-      { icon: "bolt", label: "Deliver if online" },
+      { label: "Inbox if offline" },
+      { label: "Deliver if online" },
     ]
   }}
 />
@@ -96,12 +95,11 @@ When a device calls `send()`:
     id: "RELAY",
     role: "INBOX",
     steps: [
-      { icon: "all_inbox", label: "Held blobs" },
-      { icon: "outbox", label: "Stream new blobs" },
+      { label: "Held blobs" },
+      { label: "Stream new blobs" },
     ]
   }}
   center={{
-    icon: "swap_horiz",
     title: "RECEIVE SESSION",
     subtitle: "NOISE XX (MUTUAL AUTH)",
     meta: [
@@ -113,9 +111,9 @@ When a device calls `send()`:
     id: "RECEIVER",
     role: "DEVICE",
     steps: [
-      { icon: "check_circle", label: "Ack bytes" },
-      { icon: "lock_open", label: "Decrypt + verify" },
-      { icon: "fact_check", label: "Callback + Message ID" },
+      { label: "Ack bytes" },
+      { label: "Decrypt + verify" },
+      { label: "Callback + Message ID" },
     ]
   }}
 />
@@ -139,13 +137,12 @@ When a device connects to the relay:
     id: "HOST",
     role: "INITIATOR",
     steps: [
-      { icon: "qr_code_2", label: "Generate Token" },
-      { icon: "share", label: "Share out-of-band" },
-      { icon: "task_alt", label: "Accept request" },
+      { label: "Generate Token" },
+      { label: "Share out-of-band" },
+      { label: "Accept request" },
     ]
   }}
   center={{
-    icon: "hub",
     title: "RELAY",
     subtitle: "OPAQUE BLOB ROUTING",
     meta: [
@@ -157,8 +154,8 @@ When a device connects to the relay:
     id: "JOINER",
     role: "DEVICE",
     steps: [
-      { icon: "qr_code_scanner", label: "Read Token" },
-      { icon: "send", label: "Send Pair message" },
+      { label: "Read Token" },
+      { label: "Send Pair message" },
     ]
   }}
 />

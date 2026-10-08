@@ -72,7 +72,7 @@ Use `.mdx` when a page needs custom components (flow diagrams, phase breakdowns,
 | `<CodeBlock lang="..." code={...} />` | Single-language code block with copy button |
 | `<CodeBlock tabs={[{lang, code}]} />` | Multi-language tabbed code block |
 | `<PhaseStack phases={[...]} />` | Numbered phase breakdown with optional code/checklist per phase |
-| `<FlowDiagram left center right />` | 3-panel node flow diagram (device → relay → device) |
+| `<FlowDiagram left center right />` | 3-panel node flow diagram (device → relay → device); each step is `{ label }` |
 | `<NextPage href label />` | Bottom page navigation |
 
 ---
@@ -84,12 +84,15 @@ src/
   components/
     landing/      # Landing page sections
     docs/         # Sidebar
-    layout/       # Navbar, Footer
+    layout/       # Navbar, Wordmark, Footer
     mdx/          # Reusable MDX components
     ui/           # Buttons, badges, theme toggle
+  config/         # nav.ts (sidebar), site.ts (version label)
   content/
     docs/         # All documentation markdown
   layouts/        # BaseLayout, DocsLayout, LandingLayout
   pages/          # Astro routes
   styles/         # tokens.css, global.css
 ```
+
+`tests/` holds the brand checks run by `bun test`.

@@ -4,16 +4,16 @@ interface Props {
 }
 const { variant = 'note' } = Astro.props;
 
-const icons = {
-  note:    'info',
-  tip:     'lightbulb',
-  warning: 'warning',
-  danger:  'dangerous',
+const labels = {
+  note:    'Note',
+  tip:     'Tip',
+  warning: 'Warning',
+  danger:  'Danger',
 };
 ---
 
 <div class:list={['callout', `callout--${variant}`]}>
-  <span class="material-symbols-outlined callout__icon">{icons[variant]}</span>
+  <p class="callout__label">{labels[variant]}</p>
   <div class="callout__body">
     <slot />
   </div>
@@ -21,64 +21,35 @@ const icons = {
 
 <style>
   .callout {
-    display: flex;
-    gap: var(--space-md);
-    padding: var(--space-md) var(--space-lg);
-    border: 1px solid;
-    margin-bottom: var(--space-lg);
+    border-left: 2px solid var(--ink-muted);
+    padding: 4px 0 4px 20px;
+    margin: var(--space-xl) 0;
+    color: var(--ink);
   }
 
-  .callout__icon {
-    font-size: 18px;
-    flex-shrink: 0;
-    margin-top: 2px;
+  .callout--warning,
+  .callout--danger {
+    border-left-color: var(--ink);
+  }
+
+  .callout__label {
+    font-family: var(--font-mono);
+    font-size: var(--text-label);
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+
+  .callout--danger .callout__label {
+    font-weight: 600;
   }
 
   .callout__body {
-    font-size: var(--text-body-sm-size);
-    line-height: var(--text-body-sm-leading);
-    flex: 1;
+    font-size: 16px;
+    line-height: 1.6;
   }
 
   .callout__body :global(p) {
     margin: 0;
-    color: inherit;
     font-size: inherit;
   }
-
-  .callout__body :global(strong) {
-    color: inherit;
-  }
-
-  /* note */
-  .callout--note {
-    border-color: var(--color-outline-variant);
-    background: var(--color-surface-container-low);
-    color: var(--color-on-surface-variant);
-  }
-  .callout--note .callout__icon { color: var(--color-outline); }
-
-  /* tip */
-  .callout--tip {
-    border-color: var(--color-outline-variant);
-    background: var(--color-surface-container-lowest);
-    color: var(--color-on-surface-variant);
-  }
-  .callout--tip .callout__icon { color: var(--color-on-surface); }
-
-  /* warning */
-  .callout--warning {
-    border-color: var(--color-outline);
-    background: var(--color-surface-container-low);
-    color: var(--color-on-surface);
-  }
-  .callout--warning .callout__icon { color: var(--color-on-surface); }
-
-  /* danger */
-  .callout--danger {
-    border-color: var(--color-primary);
-    background: var(--color-primary);
-    color: var(--color-on-primary);
-  }
-  .callout--danger .callout__icon { color: var(--color-on-primary); }
 </style>

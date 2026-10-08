@@ -1,0 +1,35 @@
+---
+// The `trueseal` wordmark with its blinking seal-red block cursor (brandbook section 8).
+// The cursor is the site's one idle animation and its one seal fill.
+---
+
+<a class="wordmark" href="/" aria-label="TrueSeal home">trueseal<span class="wordmark__cursor" aria-hidden="true"></span></a>
+
+<style>
+  .wordmark {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .wordmark__cursor {
+    display: inline-block;
+    width: 0.6em;
+    height: 1.05em;
+    margin-left: 3px;
+    background: var(--seal);
+    animation: wordmark-blink 1.1s steps(1) infinite;
+  }
+
+  @keyframes wordmark-blink {
+    50% { opacity: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .wordmark__cursor { animation: none; }
+  }
+</style>

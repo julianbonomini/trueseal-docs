@@ -51,22 +51,22 @@ const layers = [
 <style>
   .protocol-stack {
     width: 100%;
-    border-top: 1px solid var(--color-outline-variant);
-    background: var(--color-surface-container-low);
+    border-top: 1px solid var(--rule);
   }
 
   .protocol-stack__inner {
     max-width: var(--layout-max-width);
     margin: 0 auto;
-    padding: calc(var(--space-xl) * 2) var(--space-xl);
+    padding: var(--space-2xl) clamp(16px, 5vw, var(--space-xl));
   }
 
   .protocol-stack__grid {
-    border: 1px solid var(--color-outline-variant);
-    /* 1px gaps between rows using the parent background as the "gap color" */
+    border: 1px solid var(--rule);
     display: flex;
     flex-direction: column;
-    gap: 1px;
-    background: var(--color-outline-variant);
+  }
+
+  .protocol-stack__grid > :global(* + *) {
+    border-top: 1px solid var(--rule);
   }
 </style>

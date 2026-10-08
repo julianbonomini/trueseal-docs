@@ -18,10 +18,12 @@
     "@fontsource/jetbrains-mono": "^5.2.8",
     "astro": "^5.0.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "shiki": "^3.21.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@types/bun": "^1.4.2",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "pagefind": "^1.0.0",

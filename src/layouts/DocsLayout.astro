@@ -1,241 +1,158 @@
 ---
+// The Human Docs page: header, a persistent sidebar (a "Menu" disclosure below 900px),
+// the page with its section crumb, and an "On this page" list of its h2 headings.
+// It ships no JS of its own.
+import type { MarkdownHeading } from 'astro';
 import BaseLayout from './BaseLayout.astro';
 import Navbar from '../components/layout/Navbar.astro';
 import Footer from '../components/layout/Footer.astro';
 import DocsSidebar from '../components/docs/DocsSidebar.astro';
+import { sectionOf, slugOf } from '../config/nav';
+import { versionLabel } from '../config/site';
 
 interface Props {
   title: string;
   description?: string;
+  headings: MarkdownHeading[];
 }
 
-const { title, description } = Astro.props;
+const { title, description, headings } = Astro.props;
 
-// Auto-generate breadcrumb from pathname
-const pathname = Astro.url.pathname;
-const segments = pathname
-  .replace(/^\/docs\/?/, '')
-  .split('/')
-  .filter(Boolean);
-
-// Detect right rail — renders 3-col if slot is filled
-const hasRightRail = Astro.slots.has('right-rail');
+const section = sectionOf(slugOf(Astro.url.pathname));
+const toc = headings.filter(h => h.depth === 2);
 ---
 
 <BaseLayout title={title} description={description}>
-  <Navbar activeItem="docs" />
+  <Navbar />
 
-  <div class="docs-shell" id="docs-shell">
-    <div class="docs-sidebar-wrapper">
+  <div class="docs">
+    <aside class="docs__side">
       <DocsSidebar />
-    </div>
+    </aside>
 
-    <!-- Mobile backdrop -->
-    <div class="docs-backdrop" id="docs-backdrop"></div>
+    <main class="docs__main">
+      <details class="docs__menu">
+        <summary>Menu <span class="docs__menu-version">{versionLabel}</span></summary>
+        <DocsSidebar />
+      </details>
+      {section && <p class="docs__crumb">{section.title}</p>}
+      <article class="prose">
+        <slot />
+      </article>
+    </main>
 
-    <div class="docs-main">
-      <div class:list={['docs-inner', { 'docs-inner--with-rail': hasRightRail }]}>
-
-        <!-- Centre column -->
-        <div class="docs-content">
-
-          <!-- Mobile menu bar -->
-          <div class="docs-mobile-bar">
-            <button class="docs-menu-btn" id="docs-menu-btn" aria-label="Open navigation">
-              <span class="material-symbols-outlined">menu</span>
-              MENU
-            </button>
-          </div>
-
-          <!-- Breadcrumb -->
-          <nav class="docs-breadcrumb">
-            <span>DOCS</span>
-            {segments.map(seg => (
-              <>
-                <span class="docs-breadcrumb__sep">/</span>
-                <span class="docs-breadcrumb__seg">
-                  {seg.replace(/-/g, '\u00a0').toUpperCase()}
-                </span>
-              </>
-            ))}
-          </nav>
-
-          <!-- Page content -->
-          <article class="prose">
-            <slot />
-          </article>
-        </div>
-
-        <!-- Right rail (optional) -->
-        {hasRightRail && (
-          <aside class="docs-right-rail">
-            <slot name="right-rail" />
-          </aside>
-        )}
-
-      </div>
-
-      <Footer />
-    </div>
+    {toc.length > 0 && (
+      <nav class="docs__toc" aria-label="On this page">
+        <p class="docs__toc-title">On this page</p>
+        {toc.map(h => <a href={`#${h.slug}`}>{h.text}</a>)}
+      </nav>
+    )}
   </div>
+
+  <Footer />
 </BaseLayout>
 
 <style>
-  /* ─── Shell ──────────────────────────────────────────── */
-  .docs-shell {
-    display: flex;
-    align-items: flex-start;
-  }
-
-  /* Sidebar wrapper — DocsLayout owns flex dimensions */
-  .docs-sidebar-wrapper {
-    width: 288px;
-    flex-shrink: 0;
-    position: sticky;
-    top: 64px;
-    height: calc(100vh - 64px);
-    overflow-y: auto;
-    z-index: 10;
-  }
-
-  /* ─── Main (everything right of sidebar) ────────────── */
-  .docs-main {
+  .docs {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    max-width: 1360px;
+    margin: 0 auto;
     flex: 1;
+  }
+
+  .docs__side {
+    display: none;
+  }
+
+  .docs__main {
+    padding: 48px clamp(16px, 5vw, 72px) 120px;
+    max-width: 800px;
     min-width: 0;
-    display: flex;
-    flex-direction: column;
   }
 
-  /* ─── Inner (prose + optional right rail) ───────────── */
-  .docs-inner {
-    flex: 1;
-    display: flex;
-    min-height: calc(100vh - 64px);
+  .docs__menu {
+    margin-bottom: 24px;
   }
 
-  /* ─── Centre content column ──────────────────────────── */
-  .docs-content {
-    flex: 1;
-    min-width: 0;
-    padding: var(--space-xl) calc(var(--space-xl) * 2);
-    max-width: 900px;
-  }
-
-  /* When right rail is present, cap prose width */
-  .docs-inner--with-rail .docs-content {
-    max-width: 900px;
-  }
-
-  /* ─── Breadcrumb ─────────────────────────────────────── */
-  .docs-breadcrumb {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
+  .docs__menu summary {
     font-family: var(--font-mono);
-    font-size: var(--text-mono-label-size);
-    font-weight: var(--text-mono-label-weight);
-    letter-spacing: var(--text-mono-label-tracking);
-    color: var(--color-secondary);
-    margin-bottom: var(--space-xl);
+    font-size: var(--text-label);
+    border: 1px solid var(--rule);
+    padding: 8px 12px;
+    cursor: pointer;
   }
 
-  .docs-breadcrumb__sep {
-    color: var(--color-outline);
+  .docs__menu[open] summary {
+    margin-bottom: 24px;
   }
 
-  .docs-breadcrumb__seg:last-child {
-    color: var(--color-on-surface);
+  .docs__menu-version {
+    color: var(--ink-muted);
   }
 
-  /* ─── Right rail ─────────────────────────────────────── */
-  .docs-right-rail {
-    width: 320px;
-    flex-shrink: 0;
-    border-left: 1px solid var(--color-outline-variant);
-    padding: var(--space-xl) var(--space-lg);
-    position: sticky;
-    top: 64px;
-    height: calc(100vh - 64px);
-    overflow-y: auto;
-    background: var(--color-surface-container-lowest);
+  .docs__crumb {
+    font-family: var(--font-mono);
+    font-size: var(--text-label);
+    color: var(--ink-muted);
+    margin-bottom: 12px;
   }
 
-  /* ─── Mobile ─────────────────────────────────────────── */
-  .docs-mobile-bar {
+  .docs__toc {
     display: none;
   }
 
-  .docs-backdrop {
-    display: none;
+  .docs__toc-title {
+    font-family: var(--font-mono);
+    font-size: var(--text-label);
+    font-weight: 500;
+    color: var(--ink-muted);
   }
 
-  @media (max-width: 767px) {
-    .docs-sidebar-wrapper {
-      position: fixed;
-      left: -288px;
-      top: 64px;
-      height: calc(100vh - 64px);
-      transition: left 0.2s ease;
-      z-index: 40;
-      border-right: 1px solid var(--color-primary);
+  .docs__toc a {
+    color: var(--ink-muted);
+    text-decoration: none;
+  }
+
+  .docs__toc a:hover {
+    color: var(--ink);
+  }
+
+  @media (min-width: 900px) {
+    .docs {
+      grid-template-columns: 260px minmax(0, 1fr);
     }
 
-    .docs-shell--open .docs-sidebar-wrapper {
-      left: 0;
-    }
-
-    .docs-backdrop {
+    .docs__side {
       display: block;
-      position: fixed;
-      inset: 0;
-      background: transparent;
-      z-index: 39;
-      pointer-events: none;
+      position: sticky;
+      top: var(--header-height);
+      height: calc(100vh - var(--header-height));
+      overflow-y: auto;
+      padding: 28px 24px 96px;
+      border-right: 1px solid var(--rule);
     }
 
-    .docs-shell--open .docs-backdrop {
-      background: rgba(0, 0, 0, 0.4);
-      pointer-events: all;
+    .docs__menu {
+      display: none;
+    }
+  }
+
+  @media (min-width: 1240px) {
+    .docs {
+      grid-template-columns: 260px minmax(0, 1fr) 240px;
     }
 
-    .docs-mobile-bar {
-      display: flex;
-      margin-bottom: var(--space-lg);
-    }
-
-    .docs-menu-btn {
-      display: flex;
-      align-items: center;
-      gap: var(--space-xs);
-      font-family: var(--font-mono);
-      font-size: var(--text-mono-label-size);
-      font-weight: var(--text-mono-label-weight);
-      letter-spacing: var(--text-mono-label-tracking);
-      color: var(--color-secondary);
-      background: transparent;
-      border: 1px solid var(--color-outline-variant);
-      padding: var(--space-xs) var(--space-md);
-      cursor: pointer;
-    }
-
-    .docs-menu-btn .material-symbols-outlined {
-      font-size: 16px;
-    }
-
-    .docs-content {
-      padding: var(--space-lg) var(--space-md);
+    .docs__toc {
+      display: grid;
+      gap: 9px;
+      align-content: start;
+      align-self: start;
+      position: sticky;
+      top: calc(var(--header-height) + 8px);
+      padding: 48px 24px;
+      font-size: 13px;
     }
   }
 </style>
-
-<script>
-  const shell = document.getElementById('docs-shell');
-  const btn = document.getElementById('docs-menu-btn');
-  const backdrop = document.getElementById('docs-backdrop');
-
-  function open() { shell?.classList.add('docs-shell--open'); }
-  function close() { shell?.classList.remove('docs-shell--open'); }
-
-  btn?.addEventListener('click', open);
-  backdrop?.addEventListener('click', close);
-</script>

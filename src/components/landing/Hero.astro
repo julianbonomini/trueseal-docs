@@ -17,10 +17,10 @@ import HeroVisual from './HeroVisual.astro';
     </p>
 
     <div class="hero__actions">
-      <Button href="/docs/introduction" variant="primary" icon="arrow_forward">
+      <Button href="/docs/introduction" variant="primary">
         Read the docs
       </Button>
-      <Button href="/showcase" variant="secondary" icon="arrow_outward" iconPosition="left">
+      <Button href="/showcase" variant="secondary">
         See who's building
       </Button>
     </div>
@@ -36,11 +36,9 @@ import HeroVisual from './HeroVisual.astro';
     width: 100%;
     max-width: var(--layout-max-width);
     margin: 0 auto;
-    padding: var(--space-xl) var(--space-xl);
-    padding-top: calc(var(--space-xl) * 2);
-    padding-bottom: calc(var(--space-xl) * 2);
+    padding: var(--space-2xl) clamp(16px, 5vw, var(--space-xl));
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--space-lg);
     align-items: center;
   }
@@ -55,30 +53,22 @@ import HeroVisual from './HeroVisual.astro';
     display: flex;
     flex-direction: column;
     gap: var(--space-xl);
-    position: relative;
-    z-index: 1;
   }
 
   .hero__headline {
-    font-family: var(--font-sans);
-    font-size: clamp(var(--text-display-size), 5vw, 64px);
-    font-weight: var(--text-display-weight);
-    line-height: var(--text-display-leading);
-    letter-spacing: var(--text-display-tracking);
-    text-transform: uppercase;
-    color: var(--color-on-surface);
+    font-size: var(--text-h1);
+    font-weight: var(--weight-heading);
+    line-height: var(--leading-h1);
+    letter-spacing: var(--tracking-h1);
   }
 
   .hero__sub {
-    font-family: var(--font-sans);
-    /* ~1/3 of hero (perfect-third scale): hero clamps 5vw → sub clamps 1.67vw */
-    font-size: clamp(18px, 2vw, 26px);
+    font-size: var(--text-lede);
     line-height: 1.5;
-    color: var(--color-on-surface-variant);
-    border-left: 2px solid var(--color-primary);
+    color: var(--ink-muted);
+    border-left: 2px solid var(--ink);
     padding-left: var(--space-md);
     max-width: 560px;
-    margin: 0;
   }
 
   .hero__actions {

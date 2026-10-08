@@ -29,7 +29,7 @@ const { phases } = Astro.props;
 
       <!-- Left column -->
       <div class="phase-row__label">
-        <span class="phase-row__number">PHASE {phase.number}</span>
+        <span class="phase-row__number">Phase {phase.number}</span>
         <span class="phase-row__title">{phase.title}</span>
       </div>
 
@@ -46,10 +46,7 @@ const { phases } = Astro.props;
         {phase.checks && phase.checks.length > 0 && (
           <ul class="phase-row__checks">
             {phase.checks.map(check => (
-              <li class="phase-check">
-                <span class="material-symbols-outlined">check_box</span>
-                <span>{check.label}</span>
-              </li>
+              <li class="phase-check">{check.label}</li>
             ))}
           </ul>
         )}
@@ -61,7 +58,7 @@ const { phases } = Astro.props;
 
 <style>
   .phase-stack {
-    border: 1px solid var(--color-outline-variant);
+    border: 1px solid var(--rule);
     margin-bottom: var(--space-lg);
   }
 
@@ -70,14 +67,13 @@ const { phases } = Astro.props;
     grid-template-columns: 1fr 3fr;
     gap: var(--space-xl);
     padding: var(--space-xl);
-    border-bottom: 1px solid var(--color-outline-variant);
+    border-bottom: 1px solid var(--rule);
   }
 
   .phase-row--last {
     border-bottom: none;
   }
 
-  /* Left column */
   .phase-row__label {
     display: flex;
     flex-direction: column;
@@ -86,80 +82,54 @@ const { phases } = Astro.props;
 
   .phase-row__number {
     font-family: var(--font-mono);
-    font-size: var(--text-mono-label-size);
-    font-weight: var(--text-mono-label-weight);
-    letter-spacing: var(--text-mono-label-tracking);
-    text-transform: uppercase;
-    color: var(--color-secondary);
+    font-size: var(--text-label);
+    color: var(--ink-muted);
   }
 
   .phase-row__title {
     font-family: var(--font-mono);
-    font-size: var(--text-mono-code-size);
-    font-weight: 700;
-    color: var(--color-on-surface);
+    font-size: var(--text-code);
+    font-weight: 600;
   }
 
-  /* Right column */
   .phase-row__content {
     display: flex;
     flex-direction: column;
     gap: var(--space-md);
+    min-width: 0;
   }
 
   .phase-row__desc {
-    font-family: var(--font-sans);
-    font-size: var(--text-body-sm-size);
-    line-height: var(--text-body-sm-leading);
-    color: var(--color-on-surface-variant);
+    font-size: var(--text-ui);
+    line-height: 1.6;
     margin: 0;
-  }
-
-  /* Inline code block */
-  .phase-row__code {
-    border: 1px solid var(--color-outline-variant);
-    background: var(--color-surface-container-lowest);
-    overflow-x: auto;
   }
 
   .phase-row__code pre {
     margin: 0;
-    padding: var(--space-md);
-    background: none;
-    border: none;
   }
 
-  .phase-row__code code {
-    font-family: var(--font-mono);
-    font-size: var(--text-mono-code-size);
-    line-height: var(--text-mono-code-leading);
-    color: var(--color-on-surface);
-    background: none;
-    border: none;
-    padding: 0;
-  }
-
-  /* Checklist */
   .phase-row__checks {
-    list-style: none;
+    list-style: square;
     display: flex;
     flex-direction: column;
     gap: var(--space-sm);
-    border-left: 2px solid var(--color-outline-variant);
-    padding-left: var(--space-md);
+    padding-left: var(--space-lg);
+    margin: 0;
   }
 
   .phase-check {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
     font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--color-secondary);
+    font-size: var(--text-meta);
+    color: var(--ink-muted);
+    margin: 0;
   }
 
-  .phase-check .material-symbols-outlined {
-    font-size: 14px;
-    color: var(--color-on-surface);
+  @media (max-width: 639px) {
+    .phase-row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-md);
+      padding: var(--space-lg) var(--space-md);
+    }
   }
 </style>

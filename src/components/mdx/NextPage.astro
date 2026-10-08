@@ -10,84 +10,68 @@ const { href, label, prevHref, prevLabel } = Astro.props;
 
 <nav class="next-page">
   {prevHref && prevLabel && (
-    <a href={prevHref} class="next-page__btn next-page__btn--prev">
-      <span class="material-symbols-outlined">arrow_back</span>
-      <div>
-        <span class="next-page__hint">Previous</span>
-        <span class="next-page__label">{prevLabel}</span>
-      </div>
+    <a href={prevHref} class="next-page__link">
+      <span class="next-page__hint">Previous</span>
+      <span class="next-page__label">{prevLabel}</span>
     </a>
   )}
-  <a href={href} class:list={['next-page__btn', 'next-page__btn--next', { 'next-page__btn--solo': !prevHref }]}>
-    <div>
-      <span class="next-page__hint">Next</span>
-      <span class="next-page__label">{label}</span>
-    </div>
-    <span class="material-symbols-outlined">arrow_forward</span>
+  <a href={href} class:list={['next-page__link', 'next-page__link--next', { 'next-page__link--solo': !prevHref }]}>
+    <span class="next-page__hint">Next</span>
+    <span class="next-page__label">{label}</span>
   </a>
 </nav>
 
 <style>
   .next-page {
-    display: flex;
-    justify-content: space-between;
-    gap: var(--space-md);
-    margin-top: calc(var(--space-xl) * 2);
-    padding-top: var(--space-xl);
-    border-top: 1px solid var(--color-outline-variant);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    margin-top: 72px;
+    border: 1px solid var(--ink);
   }
 
-  .next-page__btn {
-    display: flex;
-    align-items: center;
-    gap: var(--space-md);
-    padding: var(--space-md) var(--space-lg);
-    border: 1px solid var(--color-outline-variant);
+  .next-page__link {
+    display: grid;
+    gap: 4px;
+    padding: 16px 20px;
+    color: var(--ink);
     text-decoration: none;
-    color: var(--color-on-surface);
-    background: var(--color-surface-container-lowest);
-    transition: border-color 0.1s, background 0.1s;
-    min-width: 200px;
   }
 
-  .next-page__btn:hover {
-    border-color: var(--color-primary);
-    background: var(--color-surface-container-low);
-  }
-
-  .next-page__btn--next {
-    margin-left: auto;
+  .next-page__link--next {
     text-align: right;
-    flex-direction: row;
-    justify-content: space-between;
   }
 
-  .next-page__btn--solo {
-    margin-left: auto;
+  .next-page__link + .next-page__link {
+    border-left: 1px solid var(--ink);
   }
 
-  .next-page__btn .material-symbols-outlined {
-    font-size: 20px;
-    color: var(--color-secondary);
-    flex-shrink: 0;
+  .next-page__link--solo {
+    grid-column: 1 / -1;
   }
 
   .next-page__hint {
-    display: block;
     font-family: var(--font-mono);
-    font-size: var(--text-mono-label-size);
-    font-weight: var(--text-mono-label-weight);
-    letter-spacing: var(--text-mono-label-tracking);
-    text-transform: uppercase;
-    color: var(--color-secondary);
-    margin-bottom: 2px;
+    font-size: var(--text-meta);
+    color: var(--ink-muted);
   }
 
   .next-page__label {
-    display: block;
-    font-family: var(--font-sans);
-    font-size: var(--text-body-sm-size);
+    font-size: var(--text-ui);
     font-weight: 600;
-    color: var(--color-on-surface);
+  }
+
+  .next-page__link:hover .next-page__label {
+    color: var(--seal);
+  }
+
+  @media (max-width: 639px) {
+    .next-page {
+      grid-template-columns: 1fr;
+    }
+
+    .next-page__link + .next-page__link {
+      border-left: none;
+      border-top: 1px solid var(--ink);
+    }
   }
 </style>

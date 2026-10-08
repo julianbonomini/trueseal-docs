@@ -10,13 +10,12 @@ const { text } = Astro.props;
 <style>
   .badge {
     display: inline-block;
-    border: 1px solid var(--color-primary);
+    align-self: flex-start;
+    border: 1px solid var(--ink);
     padding: var(--space-xs) var(--space-md);
     font-family: var(--font-mono);
-    font-size: var(--text-mono-code-size);
-    font-weight: var(--text-mono-code-weight);
-    line-height: var(--text-mono-code-leading);
-    background: var(--color-surface-container-lowest);
-    color: var(--color-on-surface);
+    font-size: var(--text-code);
+    line-height: 1.6;
+    color: var(--ink);
   }
 </style>

@@ -17,20 +17,15 @@ const { title, subtitle } = Astro.props;
   }
 
   .section-header__title {
-    font-family: var(--font-sans);
-    font-size: var(--text-headline-md-size);
-    font-weight: var(--text-headline-md-weight);
-    line-height: var(--text-headline-md-leading);
-    text-transform: uppercase;
-    color: var(--color-on-surface);
+    font-size: var(--text-h2);
+    letter-spacing: var(--tracking-h2);
+    font-weight: var(--weight-heading);
     margin-bottom: var(--space-sm);
   }
 
   .section-header__subtitle {
     font-family: var(--font-mono);
-    font-size: var(--text-mono-code-size);
-    font-weight: var(--text-mono-code-weight);
-    color: var(--color-secondary);
-    margin: 0;
+    font-size: var(--text-label);
+    color: var(--ink-muted);
   }
 </style>

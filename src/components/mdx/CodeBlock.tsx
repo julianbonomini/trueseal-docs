@@ -34,14 +34,12 @@ export default function CodeBlock({ tabs, lang, code }: Props) {
               className={`code-block__tab${i === activeIdx ? ' code-block__tab--active' : ''}`}
               onClick={() => setActiveIdx(i)}
             >
-              {tab.lang.toUpperCase()}
+              {tab.lang}
             </button>
           ))}
         </div>
-        <button className="code-block__copy" onClick={copy} aria-label="Copy">
-          <span className="material-symbols-outlined">
-            {copied ? 'check' : 'content_copy'}
-          </span>
+        <button className="code-block__copy" onClick={copy}>
+          {copied ? 'Copied' : 'Copy'}
         </button>
       </div>
       <pre className="code-block__pre"><code>{active.code.trim()}</code></pre>

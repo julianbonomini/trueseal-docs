@@ -12,8 +12,6 @@ const { layer, name, description, href, active = false, isSpec = false } = Astro
 ---
 
 <div class:list={['stack-layer', { 'stack-layer--active': active, 'stack-layer--spec': isSpec }]}>
-  <div class="stack-layer__indicator" />
-
   <div class="stack-layer__id">
     <span class="stack-layer__layer">{layer}</span>
     <span class="stack-layer__name">{name}</span>
@@ -26,29 +24,17 @@ const { layer, name, description, href, active = false, isSpec = false } = Astro
   <div class="stack-layer__action">
     <a href={href} class="stack-layer__link">
       VIEW SPEC
-      <span class="material-symbols-outlined">arrow_outward</span>
     </a>
   </div>
 </div>
 
 <style>
   .stack-layer {
-    background: var(--color-surface);
-    padding: var(--space-xl);
+    padding: var(--space-xl) clamp(16px, 5vw, var(--space-xl));
     display: flex;
     flex-direction: column;
     gap: var(--space-lg);
     align-items: flex-start;
-    position: relative;
-    transition: background 0.1s;
-  }
-
-  .stack-layer:hover {
-    background: var(--color-surface-container-lowest);
-  }
-
-  .stack-layer:hover .stack-layer__indicator {
-    opacity: 1;
   }
 
   @media (min-width: 768px) {
@@ -58,21 +44,10 @@ const { layer, name, description, href, active = false, isSpec = false } = Astro
     }
   }
 
-  .stack-layer__indicator {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: var(--color-primary);
-    opacity: 0;
-    transition: opacity 0.15s;
-  }
-
   .stack-layer__id {
     width: 100%;
     font-family: var(--font-mono);
-    font-size: var(--text-mono-code-size);
+    font-size: var(--text-code);
   }
 
   @media (min-width: 768px) {
@@ -81,16 +56,14 @@ const { layer, name, description, href, active = false, isSpec = false } = Astro
 
   .stack-layer__layer {
     display: block;
-    color: var(--color-secondary);
+    color: var(--ink-muted);
     margin-bottom: var(--space-xs);
-    text-transform: uppercase;
   }
 
   .stack-layer__name {
     display: block;
     font-size: 16px;
-    font-weight: 700;
-    color: var(--color-on-surface);
+    font-weight: 600;
   }
 
   .stack-layer__desc {
@@ -102,11 +75,9 @@ const { layer, name, description, href, active = false, isSpec = false } = Astro
   }
 
   .stack-layer__desc p {
-    font-family: var(--font-sans);
-    font-size: var(--text-body-sm-size);
-    line-height: var(--text-body-sm-leading);
-    color: var(--color-on-surface-variant);
-    margin: 0;
+    font-size: var(--text-ui);
+    line-height: 1.6;
+    color: var(--ink-muted);
   }
 
   .stack-layer__action {
@@ -124,37 +95,11 @@ const { layer, name, description, href, active = false, isSpec = false } = Astro
 
   .stack-layer__link {
     font-family: var(--font-mono);
-    font-size: var(--text-mono-label-size);
-    font-weight: var(--text-mono-label-weight);
-    letter-spacing: var(--text-mono-label-tracking);
-    color: var(--color-on-surface);
-    text-decoration: none;
-    border-bottom: 1px solid var(--color-primary);
-    padding-bottom: 2px;
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-xs);
-    transition: gap 0.15s;
+    font-size: var(--text-label);
   }
 
-  .stack-layer__link:hover {
-    gap: var(--space-sm);
-  }
-
-  .stack-layer--spec {
-    background: var(--color-surface-container-low);
-  }
-
-  .stack-layer--spec .stack-layer__name {
-    color: var(--color-secondary);
-  }
-
+  .stack-layer--spec .stack-layer__name,
   .stack-layer--spec .stack-layer__link {
-    border-bottom-color: var(--color-outline);
-    color: var(--color-secondary);
-  }
-
-  .stack-layer--spec:hover {
-    background: var(--color-surface-container);
+    color: var(--ink-muted);
   }
 </style>
