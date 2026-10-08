@@ -1,0 +1,172 @@
+/* The Seal Demo's styles. All motion sits in the reduced-motion block at the end of the file. */
+
+.seal-demo {
+  margin: 0;
+  border: 1px solid var(--ink);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.seal-demo__pane {
+  padding: 20px;
+  min-width: 0;
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.seal-demo__pane + .seal-demo__pane {
+  border-top: 1px solid var(--ink);
+}
+
+.seal-demo__pane--relay {
+  background: var(--wash);
+}
+
+@media (min-width: 900px) {
+  .seal-demo {
+    grid-template-columns: 1fr 1.15fr 1fr;
+  }
+
+  .seal-demo__pane + .seal-demo__pane {
+    border-top: 0;
+    border-left: 1px solid var(--ink);
+  }
+}
+
+.seal-demo__title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.seal-demo__caption {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--ink);
+  padding: 14px 20px;
+  font-size: 14px;
+  color: var(--ink-muted);
+}
+
+.seal-demo__map {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--rule);
+  /* No overflow: hidden. Near the 0.05 bounds the dot's 44px hit area and its focus ring reach past the map. */
+  color: var(--rule);
+}
+
+.seal-demo__grid {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.seal-demo__map--source {
+  cursor: grab;
+  /* The map takes the drag, so the page doesn't scroll under a finger. */
+  touch-action: none;
+}
+
+.seal-demo__dot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+
+.seal-demo__dot--source {
+  width: 44px;
+  height: 44px;
+  appearance: none;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: grab;
+}
+
+.seal-demo__dot--source::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  transform: translate(-50%, -50%);
+  background: var(--ink);
+}
+
+.seal-demo__dot--received {
+  width: 14px;
+  height: 14px;
+  background: var(--ink);
+}
+
+.seal-demo__coords {
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  color: var(--ink-muted);
+  min-height: 1.4em;
+}
+
+/* Five rows of 36px, so a long drag never changes the page height. */
+.seal-demo__log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  height: 180px;
+  overflow: hidden;
+}
+
+.seal-demo__packet {
+  height: 36px;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto auto;
+  gap: 10px;
+  align-items: center;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: var(--text-meta);
+  color: var(--ink-muted);
+}
+
+.seal-demo__packet:first-child {
+  color: var(--ink);
+}
+
+/* An outline, never a fill: brandbook section 8 keeps seal red off fills. */
+.seal-demo__mark {
+  width: 10px;
+  height: 10px;
+  box-sizing: border-box;
+  border: 2px solid var(--seal);
+}
+
+.seal-demo__empty {
+  font-family: var(--font-mono);
+  font-size: var(--text-meta);
+  color: var(--ink-muted);
+  height: 36px;
+  display: flex;
+  align-items: center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .seal-demo__packet {
+    transition:
+      opacity 250ms ease-out,
+      transform 250ms ease-out;
+  }
+
+  @starting-style {
+    .seal-demo__packet {
+      opacity: 0;
+      transform: translateX(-12px);
+    }
+  }
+
+  .seal-demo__dot--received {
+    transition:
+      left 350ms ease-out,
+      top 350ms ease-out;
+  }
+}

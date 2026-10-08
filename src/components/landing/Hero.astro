@@ -1,7 +1,7 @@
 ---
 // The first screen of the Landing: the promise, the two ways in and the Seal Demo below them.
 import Button from '../ui/Button.astro';
-import SealDemoPlaceholder from './SealDemoPlaceholder.astro';
+import SealDemo from './SealDemo.tsx';
 ---
 
 <section id="hero" class="hero">
@@ -18,7 +18,7 @@ import SealDemoPlaceholder from './SealDemoPlaceholder.astro';
     </div>
     <p class="hero__note">TrueSeal is a developer preview, and the API may change before 1.0.</p>
   </div>
-  <SealDemoPlaceholder />
+  <SealDemo client:visible />
 </section>
 
 <style>

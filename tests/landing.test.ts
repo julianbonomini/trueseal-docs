@@ -1,8 +1,10 @@
 // Landing checks on the built site: reads dist/index.html, so run `bun run build` first.
-// Covers what the HTML can prove: Journey order, code tabs without JS, brandbook wording and docs links.
+// Covers what the HTML can prove: Journey order, code tabs without JS, the Seal Demo's static render and
+// Island, brandbook wording and docs links.
 import { describe, expect, test } from 'bun:test';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { formatLocation, START_POINT } from '../src/components/landing/sealDemo.ts';
 
 const dist = join(import.meta.dir, '..', 'dist');
 const indexPath = join(dist, 'index.html');
@@ -103,5 +105,51 @@ describe('Landing', () => {
 
   test('the mascot stays off the Landing', () => {
     expect(html).not.toMatch(/mascot/i);
+  });
+
+  test('the Seal Demo is readable with JS off', () => {
+    const visible = text(html).replace(/\s+/g, ' ');
+    for (const s of [
+      "Mum's phone",
+      'The relay',
+      'Your phone',
+      'Sealed packets appear here.',
+      'Waiting for Mum',
+      'Nothing in this demo leaves your browser.',
+      formatLocation(START_POINT),
+    ]) {
+      expect(visible).toContain(s);
+    }
+  });
+
+  test('the Seal Demo is the only Island besides the Theme toggle, hydrated when visible', () => {
+    const islands = [...html.matchAll(/<astro-island[^>]*>/g)].map(m => m[0]);
+    const names = islands.map(tag => {
+      const url = tag.match(/component-url="([^"]*)"/)?.[1] ?? '';
+      return url.slice(url.lastIndexOf('/') + 1).split('.')[0];
+    });
+    expect([...new Set(names)].sort()).toEqual(['SealDemo', 'ThemeToggle']);
+    const sealDemo = islands.find(tag => /component-url="[^"]*\/SealDemo\./.test(tag)) ?? '';
+    expect(sealDemo).toContain('client="visible"');
+  });
+});
+
+describe('Seal Demo outside the Landing', () => {
+  test('no other built page loads the Seal Demo', () => {
+    function htmlFiles(dir: string): string[] {
+      return readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
+        const path = join(dir, entry.name);
+        if (entry.isDirectory()) return htmlFiles(path);
+        return entry.name.endsWith('.html') && path !== indexPath ? [path] : [];
+      });
+    }
+    expect(htmlFiles(dist).filter(path => readFileSync(path, 'utf8').includes('SealDemo'))).toEqual([]);
+  });
+
+  test('the demo moves only when reduced motion is not requested', () => {
+    const css = readFileSync(join(import.meta.dir, '..', 'src/components/landing/SealDemo.css'), 'utf8');
+    const block = css.indexOf('@media (prefers-reduced-motion: no-preference)');
+    expect(block).toBeGreaterThan(-1);
+    expect(css.slice(0, block)).not.toMatch(/transition|@starting-style/);
   });
 });

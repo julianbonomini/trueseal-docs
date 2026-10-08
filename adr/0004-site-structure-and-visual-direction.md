@@ -1,6 +1,6 @@
 # Site structure and visual direction for the preview
 
-Status: accepted (decided 2026-09-30 in [trueseal-roadmap#17](https://github.com/julianbonomini/trueseal-roadmap/issues/17); partly implemented: Design tokens, layouts, Navbar and the Landing sections (DOCS-1); the Seal Demo is pending). The chosen design is variant E on the throwaway branch [`prototype/docs-site-shape`](https://github.com/julianbonomini/trueseal-docs/tree/prototype/docs-site-shape/src/components/prototype/home) (`?variant=E` for the Landing, `?variant=E-DOCS` for a Human Docs page). Variants A to D on the same branch record what was tried and rejected.
+Status: accepted (decided 2026-09-30 in [trueseal-roadmap#17](https://github.com/julianbonomini/trueseal-roadmap/issues/17); partly implemented: Design tokens, layouts, Navbar, the Landing sections and the Seal Demo (DOCS-1)). The chosen design is variant E on the throwaway branch [`prototype/docs-site-shape`](https://github.com/julianbonomini/trueseal-docs/tree/prototype/docs-site-shape/src/components/prototype/home) (`?variant=E` for the Landing, `?variant=E-DOCS` for a Human Docs page). Variants A to D on the same branch record what was tried and rejected.
 
 The site applies the [brandbook](../brand/90_SYNTHESIS.md). The brandbook decides the purpose, voice and visual identity. This ADR decides how the site is organised and how the Landing and the docs pages use that identity.
 
