@@ -1,3 +1,5 @@
+<p align="center"><img src="brand/mascot/mascot-readme-header.png" alt="The TrueSeal seal mascot" width="640"></p>
+
 # trueseal-docs
 
 Documentation and landing site for the [TrueSeal](https://github.com/buenomini/TrueSeal) E2EE sync ecosystem. Built with Astro 5 + React islands, deployed on Cloudflare Pages.
@@ -35,13 +37,15 @@ Output goes to `dist/`. Static site, no adapter needed.
 bun run check
 ```
 
-Type-checks with `astro check`, runs `bun test`, then builds.
+Type-checks with `astro check`, builds, then runs `bun test`. Some tests read the built site in `dist/`, so run `bun run build` before running `bun test` on its own.
 
 To screenshot built pages in both themes at desktop and phone width (run `bunx playwright install chromium` once first):
 
 ```bash
-bun run screenshot /tmp/shots / /docs/introduction
+bun run screenshot /tmp/shots / /docs/overview/introduction
 ```
+
+The mascot artwork is `brand/mascot/mascot.svg`. After changing it, run `bun run export-mascot` to regenerate the PNG exports beside it.
 
 ---
 
@@ -72,24 +76,29 @@ Use `.mdx` when a page needs custom components (flow diagrams, phase breakdowns,
 | `<CodeBlock lang="..." code={...} />` | Single-language code block with copy button |
 | `<CodeBlock tabs={[{lang, code}]} />` | Multi-language tabbed code block |
 | `<PhaseStack phases={[...]} />` | Numbered phase breakdown with optional code/checklist per phase |
-| `<FlowDiagram left center right />` | 3-panel node flow diagram (device → relay → device) |
-| `<NextPage href label />` | Bottom page navigation |
+| `<FlowDiagram left center right />` | 3-panel node flow diagram (device → relay → device); each step is `{ label }` |
+| `<NextPage prev next />` | Previous/next links; `DocsLayout` adds them from the sidebar order, so pages don't |
 
 ---
 
 ## Project Structure
 
 ```
+brand/
+  mascot/         # Mascot SVG and its PNG exports
 src/
   components/
     landing/      # Landing page sections
     docs/         # Sidebar
-    layout/       # Navbar, Footer
+    layout/       # Navbar, Wordmark, Footer
     mdx/          # Reusable MDX components
-    ui/           # Buttons, badges, theme toggle
+    ui/           # Buttons, theme toggle, mascot
+  config/         # nav.ts (sidebar and reading order), redirects.ts (moved URLs), site.ts (version label)
   content/
     docs/         # All documentation markdown
   layouts/        # BaseLayout, DocsLayout, LandingLayout
   pages/          # Astro routes
   styles/         # tokens.css, global.css
 ```
+
+`tests/` holds the brand checks on the source and the Landing checks, the mascot and 404 checks, and the redirect, link and docs-sidebar checks on the built site, run by `bun test`.

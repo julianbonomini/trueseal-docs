@@ -1,103 +1,111 @@
+// The Human Docs sidebar: its sections, their pages and the order they appear in.
+// Every other place that needs a page's section or neighbours asks placeOf().
+
+/** A sidebar link to `/docs/{slug}`. */
 export interface NavItem {
   title: string;
   slug: string;
-  icon: string;
   children?: NavItem[];
 }
 
 export interface NavSection {
   title: string;
-  icon: string;
   items: NavItem[];
 }
 
+/** A link to a docs page, as the sidebar and the previous/next links show it. */
+export interface DocLink {
+  title: string;
+  href: string;
+}
+
+/** The sidebar sections in display order, which is the Journey followed by Reference. */
 export const docsNav: NavSection[] = [
   {
-    title: 'Getting Started',
-    icon: 'info',
+    title: 'Overview',
     items: [
-      { title: 'Introduction',            slug: 'introduction',               icon: 'info' },
-      { title: 'Principles & Boundaries', slug: 'principles-and-boundaries',   icon: 'balance' },
-      { title: 'Architecture',            slug: 'architecture',               icon: 'account_tree' },
+      { title: 'Introduction',            slug: 'overview/introduction' },
+      { title: 'Architecture',            slug: 'overview/architecture' },
+      { title: 'Principles & Boundaries', slug: 'overview/principles-and-boundaries' },
+      { title: 'Roadmap & Research',      slug: 'overview/roadmap' },
+      { title: 'License',                 slug: 'overview/license' },
     ],
   },
   {
-    title: 'Concepts',
-    icon: 'lightbulb',
+    title: 'Integrate',
     items: [
-      { title: 'Device Identity',        slug: 'concepts/device-identity',          icon: 'fingerprint' },
-      { title: 'Zero Trust & Encryption',slug: 'concepts/zero-trust-and-encryption',icon: 'lock' },
-      { title: 'Sync Groups',            slug: 'concepts/sync-groups',              icon: 'group' },
-      { title: 'Pairing',                slug: 'concepts/pairing',                  icon: 'link' },
-      { title: 'Revocation',             slug: 'concepts/revocation',               icon: 'remove_circle' },
-      { title: 'The Dumb Relay',         slug: 'concepts/the-dumb-relay',           icon: 'hub' },
+      { title: 'SDKs',                      slug: 'integrate/sdks' },
+      { title: 'Integrating trueseal-sync', slug: 'integrate/integrating-trueseal-sync' },
+      { title: 'Device Identity',           slug: 'integrate/device-identity' },
+      { title: 'Pairing',                   slug: 'integrate/pairing' },
+      { title: 'Sync Groups',               slug: 'integrate/sync-groups' },
+      { title: 'Revocation',                slug: 'integrate/revocation' },
+      { title: 'Delivery Guarantees',       slug: 'integrate/delivery-guarantees' },
     ],
   },
   {
-    title: 'Protocol',
-    icon: 'description',
+    title: 'Operate',
     items: [
-      { title: 'Overview',    slug: 'protocol/overview',    icon: 'description' },
-      { title: 'Wire Format', slug: 'protocol/wire-format', icon: 'cable' },
+      { title: 'Deploying',      slug: 'operate/deploying' },
+      { title: 'trueseal-relay', slug: 'operate/trueseal-relay' },
+      { title: 'Inbox & TTL',    slug: 'operate/inbox-and-ttl' },
     ],
   },
   {
-    title: 'Guides',
-    icon: 'map',
+    title: 'Trust',
     items: [
-      { title: 'Integrating trueseal-sync',   slug: 'guides/integrating-trueseal-sync', icon: 'build' },
+      { title: 'Zero Trust & Encryption', slug: 'trust/zero-trust-and-encryption' },
+      { title: 'The Dumb Relay',          slug: 'trust/the-dumb-relay' },
     ],
   },
   {
-    title: 'Components',
-    icon: 'extension',
+    title: 'Reference',
     items: [
+      { title: 'trueseal-protocol', slug: 'reference/protocol' },
+      { title: 'Wire Format',       slug: 'reference/wire-format' },
+      { title: 'Sessions',          slug: 'reference/sessions' },
       {
         title: 'trueseal-sync',
-        slug: 'components/trueseal-sync/overview',
-        icon: 'sync',
+        slug: 'reference/trueseal-sync',
         children: [
-          { title: 'Envelopes & Blobs',      slug: 'components/trueseal-sync/envelopes-and-blobs',      icon: 'mail' },
-          { title: 'Group Manifest',         slug: 'components/trueseal-sync/group-manifest',           icon: 'groups' },
-          { title: 'Operation Log & Outbox', slug: 'components/trueseal-sync/operation-log-and-outbox', icon: 'history' },
-          { title: 'Delivery Guarantees',    slug: 'components/trueseal-sync/delivery-guarantees',      icon: 'verified' },
-        ],
-      },
-      {
-        title: 'trueseal-relay',
-        slug: 'components/trueseal-relay/overview',
-        icon: 'hub',
-        children: [
-          { title: 'Sessions',     slug: 'components/trueseal-relay/sessions',     icon: 'cable' },
-          { title: 'Inbox & TTL',  slug: 'components/trueseal-relay/inbox-and-ttl', icon: 'inbox' },
-          { title: 'Deploying',    slug: 'components/trueseal-relay/deploying',     icon: 'rocket_launch' },
+          { title: 'Envelopes & Blobs',      slug: 'reference/envelopes-and-blobs' },
+          { title: 'Group Manifest',         slug: 'reference/group-manifest' },
+          { title: 'Operation Log & Outbox', slug: 'reference/operation-log-and-outbox' },
         ],
       },
       {
         title: 'trueseal-noise',
-        slug: 'components/trueseal-noise/overview',
-        icon: 'encrypted',
+        slug: 'reference/trueseal-noise',
         children: [
-          { title: 'Noise Protocol Primer', slug: 'components/trueseal-noise/noise-protocol-primer', icon: 'school' },
-          { title: 'XX Pattern',            slug: 'components/trueseal-noise/xx-pattern',            icon: 'swap_horiz' },
-          { title: 'NK Pattern',            slug: 'components/trueseal-noise/nk-pattern',            icon: 'visibility_off' },
+          { title: 'Noise Protocol Primer', slug: 'reference/noise-protocol-primer' },
+          { title: 'XX Pattern',            slug: 'reference/xx-pattern' },
+          { title: 'NK Pattern',            slug: 'reference/nk-pattern' },
         ],
       },
     ],
   },
-  {
-    title: 'SDKs',
-    icon: 'code',
-    items: [
-      { title: 'Overview', slug: 'sdks', icon: 'code' },
-    ],
-  },
-  {
-    title: 'Project',
-    icon: 'more_horiz',
-    items: [
-      { title: 'Roadmap & Research', slug: 'future',  icon: 'explore' },
-      { title: 'License',           slug: 'license', icon: 'gavel' },
-    ],
-  },
 ];
+
+/** The docs slug of a page's URL path, e.g. `/docs/integrate/pairing/` → `integrate/pairing`. */
+export function slugOf(pathname: string): string {
+  return pathname.replace(/^\/docs\//, '').replace(/\/$/, '');
+}
+
+// Every sidebar page in reading order: sections in order, each item followed by its children.
+const readingOrder = docsNav.flatMap(section =>
+  section.items
+    .flatMap(item => [item, ...(item.children ?? [])])
+    .map(page => ({ slug: page.slug, section: section.title, link: { title: page.title, href: `/docs/${page.slug}` } })),
+);
+
+/** The slug of every page in the sidebar, children included, in reading order. */
+export const sidebarSlugs: string[] = readingOrder.map(page => page.slug);
+
+/** Where a docs page sits in the sidebar: its section's title, and the pages before and after it
+ *  in reading order (sections in order, each item followed by its children). prev is undefined on
+ *  the first page and next on the last. Undefined when the page isn't in the sidebar. */
+export function placeOf(slug: string): { section: string; prev?: DocLink; next?: DocLink } | undefined {
+  const index = readingOrder.findIndex(page => page.slug === slug);
+  if (index === -1) return undefined;
+  return { section: readingOrder[index].section, prev: readingOrder[index - 1]?.link, next: readingOrder[index + 1]?.link };
+}

@@ -36,6 +36,10 @@ _Avoid_: funnel, onboarding flow
 The Island in the Landing hero. A location update on one phone is encrypted in the browser, the relay column shows only sealed packets with their size and time, and the update appears on the other phone (ADR-0004).
 _Avoid_: hero animation, playground
 
+**Mascot**
+The seal drawn in `brand/mascot/mascot.svg`, the brand's secondary mark (brandbook section 8). An Astro component on the site; appears only where the brandbook allows (404, empty states, Why TrueSeal exists).
+_Avoid_: logo, icon (the wordmark is the logo)
+
 **Design token**
 A named, theme-aware design value (color, spacing, radius, typography) consumed in code as a CSS custom property in `src/styles/tokens.css`. Values come from brandbook section 8, which is the source of truth (ADR-0004).
 _Avoid_: CSS variable (too impl-specific), design variable

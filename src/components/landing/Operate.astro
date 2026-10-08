@@ -1,0 +1,42 @@
+---
+// The Operate part of the Journey: what running a relay takes.
+import LandingSection from './LandingSection.astro';
+
+// TODO: brandbook section 10. "One container", the printed Relay Address and the backup sentence are unchecked against the self-hosting guide (relay ADR-0012).
+// The relay is versioned apart from the SDKs and restarts at 0.2.0, and the docs pin an exact tag (trueseal-sync ADR-0030).
+// Check the tag against the first relay release.
+---
+
+<LandingSection
+  id="operate"
+  heading="A relay in one container."
+  docs={{ href: '/docs/operate/deploying', label: 'Run a relay' }}
+>
+  <p>
+    The relay holds sealed bytes for devices that are offline, which in most families means Dad's phone. It drops them
+    once they're delivered or expire. Back up one keypair and one SQLite file.
+  </p>
+
+  <pre
+    slot="aside"
+    class="terminal"><span class="terminal__dim">$</span> docker run -v trueseal:/data -p 7700:7700 -p 7701:7701 ghcr.io/julianbonomini/trueseal-relay:0.2.0
+<span class="terminal__dim">relay address  trueseal://9f2c…e41a@localhost</span></pre>
+</LandingSection>
+
+<style>
+  .terminal {
+    margin: 0;
+    background: var(--ink);
+    color: var(--paper);
+    white-space: pre-wrap;
+    word-break: break-all;
+    padding: 22px;
+    font-size: 13px;
+    line-height: 1.8;
+    min-width: 0;
+  }
+
+  .terminal__dim {
+    opacity: 0.6;
+  }
+</style>

@@ -1,0 +1,102 @@
+---
+// The Trust part of the Journey: what the relay can and can't see.
+import LandingSection from './LandingSection.astro';
+
+// Wording follows the resolution of trueseal-roadmap#16 (the Threat Model page, written by the preview-trust Goal).
+// The IP sentence is brandbook section 10, verbatim.
+const cant = [
+  'Read a message. Only the device it is addressed to can decrypt it.',
+  'Forge, change or re-address a message.',
+  'Tell who sent a stored message. Stored messages carry no sender identity.',
+  'Look up an account. There are none, and a device is a keypair.',
+];
+const can = [
+  "Each device's key, and when it is online",
+  'Who receives a message, its size and its time',
+  'Which devices receive the same messages, so likely members of one group',
+  'Which end-to-end protocol version each device runs',
+  'Often, which device sent a message, by IP address or timing',
+];
+---
+
+<LandingSection
+  id="trust"
+  heading="What the relay sees."
+  docs={{ href: '/docs/trust/threat-model', label: 'Read the threat model' }}
+>
+  <p slot="aside">
+    TrueSeal is end-to-end encrypted. The relay can't read or forge your messages. Here is the full list of what it
+    does see, and the threat model names the test behind each claim.
+  </p>
+
+  <div slot="wide">
+    <div class="sees">
+      <div class="sees__column">
+        <h3 class="sees__heading">The relay can't</h3>
+        <ul class="sees__list">{cant.map(item => <li>{item}</li>)}</ul>
+      </div>
+      <div class="sees__column sees__column--can">
+        <h3 class="sees__heading">The relay can see</h3>
+        <ul class="sees__list">{can.map(item => <li>{item}</li>)}</ul>
+      </div>
+    </div>
+    <p class="ip">
+      The relay never logs, stores or uses your IP address. The server it runs on still sees the connection, as with
+      any internet service. To hide your IP from the server too, use a VPN or Tor.
+    </p>
+  </div>
+</LandingSection>
+
+<style>
+  .sees {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    border: 1px solid var(--ink);
+  }
+
+  @media (min-width: 660px) {
+    .sees {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .sees__column {
+    padding: 28px;
+    min-width: 0;
+  }
+
+  .sees__column--can {
+    background: var(--wash);
+    border-top: 1px solid var(--ink);
+  }
+
+  @media (min-width: 660px) {
+    .sees__column--can {
+      border-top: 0;
+      border-left: 1px solid var(--ink);
+    }
+  }
+
+  .sees__heading {
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .sees__list {
+    margin: 16px 0 0;
+    padding-left: 20px;
+    display: grid;
+    gap: 10px;
+    font-size: 16px;
+    line-height: 1.55;
+    color: var(--ink-muted);
+  }
+
+  .ip {
+    margin-top: 24px;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--ink-muted);
+    max-width: 72ch;
+  }
+</style>

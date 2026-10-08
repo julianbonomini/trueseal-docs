@@ -1,0 +1,61 @@
+---
+title: trueseal-sync
+description: The Rust sync engine — device identity, pairing, group membership, addressed encryption, and guaranteed outbox replay.
+---
+
+# trueseal-sync — Overview
+
+trueseal-sync is the Rust sync engine. It's the protocol authority of the stack: it owns the Envelope format, addressed encryption, pairing, group membership, and transport semantics. Drop it into an application and your data is encrypted before it gets anywhere near the network.
+
+## What it does
+
+It runs the whole lifecycle of syncing encrypted data between a group of devices:
+
+- **Device identity.** Generates and persists an X25519 noise keypair and an Ed25519 signing keypair on first launch. The caller never touches key bytes.
+- **Pairing.** Runs the key exchange that gets two devices to trust each other. The library handles the cryptography, you handle the UX.
+- **Group membership.** Tracks who's in the group via a signed, versioned [Group Manifest](/docs/reference/group-manifest). Any member can add or remove.
+- **Addressed encryption.** Every blob is encrypted individually for each recipient device before it's sent. Only the intended recipient can decrypt.
+- **Delivery.** Pushes blobs to the relay, holds undelivered ones in a local outbox, replays them on reconnect.
+- **Session state.** Identity, manifest, and outbox live in an embedded SQLite database. Survives process restarts, crashes, the OS killing your app in the background.
+
+## What it doesn't do
+
+It's a transport primitive. It won't:
+
+- Interpret what's inside a blob. That's your data model.
+- Commit application state or resolve conflicts. It retries transport and supplies Message IDs; application semantics remain yours.
+- Backfill history for new devices. When `onMemberJoined` fires, you decide what to send.
+- Enforce a permission hierarchy. Any member can do anything any other member can do.
+
+## Two API layers
+
+**Session (`TrueSealSession`)** — the opinionated facade. It wires everything together: the relay connection, reconnection, the group manifest, message dispatch, soft removal, destroy group. This is what almost everyone uses. UniFFI exposes it to Swift and Kotlin.
+
+**Primitives** — `DeviceKeypair`, `Envelope`, `GroupManifest`, `OperationLog`, `Message`. Pure Rust, no lifecycle attached. Useful if you're going through C FFI from Go, building a custom transport, or writing tests against the internals.
+
+## Session state
+
+All durable state for a given namespace lives in an embedded SQLite database that the library manages end-to-end. You don't read it, write it, or migrate it. Inside:
+
+- **Device identity** — the two keypairs.
+- **Group Manifest** — the current, authoritative membership record.
+- **Operation Log** — every sent blob and its delivery status (this is the outbox).
+
+State is scoped by **namespace**, a string passed at construction. Most callers use the default and never think about it. If you want multiple independent sessions in the same process, give them different namespaces.
+
+## Platforms
+
+Rust core. UniFFI generates Swift and Kotlin bindings, so iOS and Android get the same implementation without anyone hand-writing FFI glue. Go consumers go through C FFI against the compiled static library.
+
+## Source
+
+[github.com/julianbonomini/trueseal-sync](https://github.com/julianbonomini/trueseal-sync).
+
+## Going deeper
+
+Four sub-pages with the internals:
+
+- [Envelopes & Blobs](/docs/reference/envelopes-and-blobs) — wire format and addressed encryption.
+- [Group Manifest](/docs/reference/group-manifest) — membership structure and convergence rules.
+- [Operation Log & Outbox](/docs/reference/operation-log-and-outbox) — durable send record and reconnect replay.
+- [Delivery Guarantees](/docs/integrate/delivery-guarantees) — retry, TTL, duplicates, and the application boundary.

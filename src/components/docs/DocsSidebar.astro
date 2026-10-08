@@ -1,276 +1,79 @@
 ---
-import { docsNav } from '../../config/nav';
+// The Human Docs sidebar, drawn from docsNav. A page's children show only while the
+// page or one of its children is the current page.
+import { docsNav, slugOf } from '../../config/nav';
 
-const currentPath = Astro.url.pathname;
+const currentSlug = slugOf(Astro.url.pathname);
+const isCurrent = (slug: string) => slug === currentSlug;
 ---
 
-<aside class="docs-sidebar">
-  <!-- Brand block -->
-  <div class="sidebar-brand">
-    <div class="sidebar-brand__icon">
-      <span class="material-symbols-outlined">lock</span>
-    </div>
-    <div>
-      <div class="sidebar-brand__name">trueseal</div>
-      <div class="sidebar-brand__version">DOCS</div>
-    </div>
-  </div>
-
-  <!-- Nav -->
-  <nav class="sidebar-nav">
-    {docsNav.map(section => (
-      <div class="sidebar-section">
-        <span class="sidebar-section__label">{section.title}</span>
+<nav class="sidebar" aria-label="Docs">
+  {docsNav.map(section => (
+    <div class="sidebar__section">
+      <p class="sidebar__group">{section.title}</p>
+      <ul>
         {section.items.map(item => {
-          const href = `/docs/${item.slug}`;
-          const active = currentPath === href;
-          const childActive = item.children?.some(c => currentPath === `/docs/${c.slug}`);
-          const expanded = item.children && (active || childActive);
+          const expanded = item.children && (isCurrent(item.slug) || item.children.some(c => isCurrent(c.slug)));
           return (
-            <>
-              <a
-                href={href}
-                class:list={['sidebar-link', { 'sidebar-link--active': active, 'sidebar-link--has-children': item.children }]}
-              >
-                <span class="material-symbols-outlined">{item.icon}</span>
-                <span class="sidebar-link__label">{item.title}</span>
-                {item.children && (
-                  <span class:list={['sidebar-link__caret', 'material-symbols-outlined', { 'sidebar-link__caret--open': expanded }]}>
-                    chevron_right
-                  </span>
-                )}
-              </a>
+            <li>
+              <a href={`/docs/${item.slug}`} aria-current={isCurrent(item.slug) ? 'page' : undefined}>{item.title}</a>
               {expanded && (
-                <div class="sidebar-children">
-                  {item.children!.map(child => {
-                    const childHref = `/docs/${child.slug}`;
-                    const isActive = currentPath === childHref;
-                    return (
-                      <a
-                        href={childHref}
-                        class:list={['sidebar-link', 'sidebar-link--child', { 'sidebar-link--active': isActive }]}
-                      >
-                        <span class="material-symbols-outlined">{child.icon}</span>
-                        {child.title}
-                      </a>
-                    );
-                  })}
-                </div>
+                <ul class="sidebar__children">
+                  {item.children!.map(child => (
+                    <li>
+                      <a href={`/docs/${child.slug}`} aria-current={isCurrent(child.slug) ? 'page' : undefined}>{child.title}</a>
+                    </li>
+                  ))}
+                </ul>
               )}
-            </>
+            </li>
           );
         })}
-      </div>
-    ))}
-  </nav>
-
-  <!-- Bottom actions -->
-  <div class="sidebar-footer">
-    <div class="sidebar-footer__divider" />
-    <a href="https://github.com/julianbonomini" class="sidebar-link sidebar-link--muted" target="_blank" rel="noopener">
-      <span class="material-symbols-outlined">code</span>
-      GitHub
-    </a>
-  </div>
-</aside>
+      </ul>
+    </div>
+  ))}
+</nav>
 
 <style>
-  .docs-sidebar {
-    width: 100%;
-    height: 100%;
-    overflow-y: auto;
-    border-right: 1px solid var(--color-outline-variant);
-    background: var(--color-surface-container-low);
-    display: flex;
-    flex-direction: column;
+  .sidebar__section {
+    margin-bottom: 26px;
   }
 
-  /* Brand */
-  .sidebar-brand {
-    display: flex;
-    align-items: center;
-    gap: var(--space-md);
-    padding: var(--space-lg) var(--space-lg);
-    border-bottom: 1px solid var(--color-outline-variant);
-    flex-shrink: 0;
-  }
-
-  .sidebar-brand__icon {
-    width: 32px;
-    height: 32px;
-    background: var(--color-primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-
-  .sidebar-brand__icon .material-symbols-outlined {
-    font-size: 18px;
-    color: var(--color-on-primary);
-    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-  }
-
-  .sidebar-brand__name {
+  .sidebar__group {
     font-family: var(--font-mono);
-    font-size: var(--text-mono-code-size);
-    font-weight: 700;
-    color: var(--color-on-surface);
-    letter-spacing: 0.02em;
-    text-transform: lowercase;
+    font-size: var(--text-label);
+    font-weight: 500;
+    color: var(--ink-muted);
+    margin-bottom: 8px;
   }
 
-  .sidebar-brand__version {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--color-secondary);
-    margin-top: 2px;
+  .sidebar ul {
+    list-style: none;
+    display: grid;
+    gap: 1px;
   }
 
-  /* Nav */
-  .sidebar-nav {
-    flex: 1;
-    padding: var(--space-lg) var(--space-md);
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-lg);
+  .sidebar__children {
+    margin: 1px 0 0 12px;
   }
 
-  .sidebar-section {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .sidebar-section__label {
-    font-family: var(--font-mono);
-    font-size: var(--text-mono-label-size);
-    font-weight: var(--text-mono-label-weight);
-    letter-spacing: var(--text-mono-label-tracking);
-    text-transform: uppercase;
-    color: var(--color-outline);
-    padding: var(--space-xs) var(--space-md);
-    margin-bottom: var(--space-xs);
-  }
-
-  .sidebar-link {
-    display: flex;
-    align-items: center;
-    gap: var(--space-md);
-    padding: var(--space-sm) var(--space-md);
-    font-family: var(--font-mono);
-    font-size: var(--text-mono-label-size);
-    font-weight: var(--text-mono-label-weight);
-    letter-spacing: var(--text-mono-label-tracking);
-    color: var(--color-secondary);
+  .sidebar a {
+    display: block;
+    font-size: var(--text-ui);
+    line-height: 1.45;
+    padding: 5px 12px;
+    color: var(--ink);
     text-decoration: none;
-    transition: background 0.1s, color 0.1s;
+    border-left: 1px solid var(--rule);
   }
 
-  .sidebar-link .material-symbols-outlined {
-    font-size: 18px;
-    flex-shrink: 0;
+  .sidebar a:hover {
+    border-left-color: var(--ink);
   }
 
-  .sidebar-link:hover {
-    background: var(--color-surface-container-high);
-    color: var(--color-on-surface);
-  }
-
-  .sidebar-link--active {
-    background: var(--color-primary);
-    color: var(--color-on-primary);
-  }
-
-  .sidebar-link--active:hover {
-    background: var(--color-primary);
-    color: var(--color-on-primary);
-  }
-
-  /* Parent caret */
-  .sidebar-link__label {
-    flex: 1;
-  }
-
-  .sidebar-link__caret {
-    font-size: 16px !important;
-    color: var(--color-outline);
-    transition: transform 0.15s;
-  }
-
-  .sidebar-link__caret--open {
-    transform: rotate(90deg);
-  }
-
-  .sidebar-link--active .sidebar-link__caret {
-    color: var(--color-on-primary);
-  }
-
-  /* Child items (nested) */
-  .sidebar-children {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    margin-left: calc(var(--space-md) + 9px); /* aligns with parent icon centre */
-    border-left: 1px solid var(--color-outline);
-    padding: var(--space-xs) 0 var(--space-xs) var(--space-md);
-    margin-top: 2px;
-    margin-bottom: var(--space-xs);
-  }
-
-  .sidebar-link--child {
-    font-size: 11px;
-    padding: var(--space-xs) var(--space-sm);
-  }
-
-  .sidebar-link--child .material-symbols-outlined {
-    font-size: 14px;
-  }
-
-  .sidebar-link--muted {
-    font-size: var(--text-mono-label-size);
-  }
-
-  /* Footer */
-  .sidebar-footer {
-    flex-shrink: 0;
-    padding: var(--space-md);
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .sidebar-footer__divider {
-    border-top: 1px solid var(--color-outline-variant);
-    margin-bottom: var(--space-sm);
-  }
-
-  .sidebar-download {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-sm);
-    padding: var(--space-sm) var(--space-md);
-    margin-bottom: var(--space-sm);
-    border: 1px solid var(--color-primary);
-    background: var(--color-surface);
-    color: var(--color-primary);
-    font-family: var(--font-mono);
-    font-size: var(--text-mono-label-size);
-    font-weight: var(--text-mono-label-weight);
-    letter-spacing: var(--text-mono-label-tracking);
-    text-decoration: none;
-    transition: background 0.1s, color 0.1s;
-    text-transform: uppercase;
-  }
-
-  .sidebar-download:hover {
-    background: var(--color-primary);
-    color: var(--color-on-primary);
-  }
-
-  .sidebar-download .material-symbols-outlined {
-    font-size: 16px;
+  .sidebar a[aria-current] {
+    border-left: 2px solid var(--seal);
+    padding-left: 11px;
+    font-weight: 600;
   }
 </style>

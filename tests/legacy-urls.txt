@@ -1,0 +1,35 @@
+# Every URL main served at 144c6c9, before the variant-E Goal. Never remove a line.
+# tests/redirects.test.ts checks that each one is still a built page or redirects to one.
+/
+/docs
+/relay
+/showcase
+/docs/architecture
+/docs/components/trueseal-noise/nk-pattern
+/docs/components/trueseal-noise/noise-protocol-primer
+/docs/components/trueseal-noise/overview
+/docs/components/trueseal-noise/xx-pattern
+/docs/components/trueseal-relay/deploying
+/docs/components/trueseal-relay/inbox-and-ttl
+/docs/components/trueseal-relay/overview
+/docs/components/trueseal-relay/sessions
+/docs/components/trueseal-sync/delivery-guarantees
+/docs/components/trueseal-sync/envelopes-and-blobs
+/docs/components/trueseal-sync/group-manifest
+/docs/components/trueseal-sync/operation-log-and-outbox
+/docs/components/trueseal-sync/overview
+/docs/concepts/device-identity
+/docs/concepts/pairing
+/docs/concepts/revocation
+/docs/concepts/sync-groups
+/docs/concepts/the-dumb-relay
+/docs/concepts/zero-trust-and-encryption
+/docs/future
+/docs/guides/integrating-trueseal-sync
+/docs/introduction
+/docs/kitchen-sink
+/docs/license
+/docs/principles-and-boundaries
+/docs/protocol/overview
+/docs/protocol/wire-format
+/docs/sdks

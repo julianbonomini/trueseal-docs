@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200" class="mascot" stroke-width="5" stroke-linecap="square" stroke-linejoin="miter">
+  <style>
+    .mascot__ink{fill:none;stroke:#1A1814}
+    .mascot__eye{fill:#1A1814;stroke:none}
+    .mascot__seal{fill:none;stroke:#A3301E}
+    @media (prefers-color-scheme: dark){
+      .mascot__ink{fill:none;stroke:#EDE7DA}
+      .mascot__eye{fill:#EDE7DA;stroke:none}
+      .mascot__seal{fill:none;stroke:#E4644B}
+    }
+  </style>
+  <g class="mascot__ink">
+    <circle cx="60" cy="70" r="34"/>
+    <path d="M91 56 C140 66 168 116 180 150"/>
+    <path d="M40 98 C42 140 82 150 120 150 L180 150"/>
+    <path d="M180 150 L212 136 L202 150 L212 164 Z"/>
+    <path d="M108 150 L94 166 L118 166"/>
+    <path d="M46 82 L34 80 M46 87 L34 89 M74 82 L86 80 M74 87 L86 89"/>
+  </g>
+  <g class="mascot__eye">
+    <circle cx="48" cy="66" r="4.5"/>
+    <circle cx="72" cy="66" r="4.5"/>
+    <path d="M56 78 L64 78 L60 83 Z"/>
+  </g>
+  <g class="mascot__seal">
+    <circle cx="94" cy="114" r="11"/>
+    <path d="M88 125 L85 137 M100 125 L103 137"/>
+  </g>
+</svg>

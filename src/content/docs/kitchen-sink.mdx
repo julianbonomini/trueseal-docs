@@ -68,12 +68,11 @@ session.start_pairing(on_member_request).await?;`} />
     id: "NODE_A",
     role: "INITIATOR",
     steps: [
-      { icon: "key", label: "Gen Ephemeral Key" },
-      { icon: "lock_clock", label: "Nonce Timestamp" },
+      { label: "Gen Ephemeral Key" },
+      { label: "Nonce Timestamp" },
     ]
   }}
   center={{
-    icon: "hub",
     title: "TRUESEAL RELAY NETWORK",
     subtitle: "Blind Forwarding",
     meta: [{ label: "latency", value: "<10ms" }, { label: "drop", value: "0%" }]
@@ -82,8 +81,8 @@ session.start_pairing(on_member_request).await?;`} />
     id: "NODE_B",
     role: "RECEIVER",
     steps: [
-      { icon: "verified", label: "Verify Signature" },
-      { icon: "vpn_key", label: "Derive Shared Secret" },
+      { label: "Verify Signature" },
+      { label: "Derive Shared Secret" },
     ]
   }}
 />
@@ -150,4 +149,4 @@ default size, with normal line height and the body color from the theme.
 
 ## Next page
 
-<NextPage href="/docs/introduction" label="Introduction" />
+<NextPage next={{ title: 'Introduction', href: '/docs/overview/introduction' }} />

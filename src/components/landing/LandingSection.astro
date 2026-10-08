@@ -1,0 +1,89 @@
+---
+// One Journey section of the Landing: the kicker naming its Journey part, the heading,
+// a two-column body, an optional full-width block and the link into the Human Docs.
+// Slots: default (below the heading), "aside" (second column, below on phones), "wide" (full width).
+// A grid in the "wide" slot can use `grid-template-columns: var(--landing-columns)` to line up with the body.
+// The padding, kicker, heading and lede look come from .section-display in global.css, which the 404 page shares.
+interface Props {
+  /** The anchor id, which also gives the kicker ("overview" → "Overview"). */
+  id: 'overview' | 'integrate' | 'operate' | 'trust';
+  heading: string;
+  /** Where this part of the Journey continues in the Human Docs. */
+  docs: { href: string; label: string };
+}
+
+const { id, heading, docs } = Astro.props;
+const kicker = id[0].toUpperCase() + id.slice(1);
+---
+
+<section id={id} class="landing-section section-display">
+  <p class="section-display__kicker">{kicker}</p>
+  <div class="landing-section__grid">
+    <div class="landing-section__body section-display__body">
+      <h2 class="landing-section__heading section-display__heading">{heading}</h2>
+      <slot />
+    </div>
+    {
+      Astro.slots.has('aside') && (
+        <div class="landing-section__body section-display__body">
+          <slot name="aside" />
+        </div>
+      )
+    }
+  </div>
+  {
+    Astro.slots.has('wide') && (
+      <div class="landing-section__wide">
+        <slot name="wide" />
+      </div>
+    )
+  }
+  <a class="landing-section__docs" href={docs.href}>{docs.label}</a>
+</section>
+
+<style>
+  .landing-section {
+    border-top: 1px solid var(--rule);
+    max-width: var(--layout-max-width);
+    margin: 0 auto;
+    --landing-columns: minmax(0, 1fr);
+  }
+
+  @media (min-width: 960px) {
+    .landing-section {
+      --landing-columns: 5fr 6fr;
+    }
+  }
+
+  .landing-section__grid {
+    display: grid;
+    grid-template-columns: var(--landing-columns);
+    gap: 24px 64px;
+  }
+
+  .landing-section__grid > * {
+    min-width: 0;
+  }
+
+  .landing-section__heading {
+    /* With the body's 16px gap, 24px between the heading and the first paragraph. */
+    margin-bottom: 8px;
+  }
+
+  .landing-section__body {
+    display: grid;
+    gap: 16px;
+    align-content: start;
+  }
+
+  .landing-section__wide {
+    margin-top: 56px;
+    min-width: 0;
+  }
+
+  .landing-section__docs {
+    display: inline-block;
+    margin-top: 40px;
+    font-size: 16px;
+  }
+</style>

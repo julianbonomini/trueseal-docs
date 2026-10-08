@@ -3,18 +3,22 @@ import LandingLayout from '../layouts/LandingLayout.astro';
 import Navbar from '../components/layout/Navbar.astro';
 import Footer from '../components/layout/Footer.astro';
 import Hero from '../components/landing/Hero.astro';
-import ProtocolStack from '../components/landing/ProtocolStack.astro';
-import CoreGuarantees from '../components/landing/CoreGuarantees.astro';
-import CtaSection from '../components/landing/CtaSection.astro';
+import Overview from '../components/landing/Overview.astro';
+import Integrate from '../components/landing/Integrate.astro';
+import Operate from '../components/landing/Operate.astro';
+import Trust from '../components/landing/Trust.astro';
+import Close from '../components/landing/Close.astro';
 ---
 
-<LandingLayout description="trueseal makes zero-trust sync a drop-in primitive. End-to-end encrypted, no accounts, no server you have to trust, no lock-in.">
-  <Navbar activeItem="ecosystem" />
+<LandingLayout>
+  <Navbar />
   <main>
     <Hero />
-    <ProtocolStack />
-    <CoreGuarantees />
-    <CtaSection />
+    <Overview />
+    <Integrate />
+    <Operate />
+    <Trust />
+    <Close />
   </main>
   <Footer />
 </LandingLayout>

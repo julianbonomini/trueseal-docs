@@ -8,18 +8,17 @@ export default function ThemeToggle() {
     setTheme(current ?? 'light');
   }, []);
 
+  const next = theme === 'light' ? 'dark' : 'light';
+
   function toggle() {
-    const next = theme === 'light' ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', next);
     localStorage.setItem('theme', next);
     setTheme(next);
   }
 
   return (
-    <button onClick={toggle} className="theme-toggle" aria-label="Toggle theme">
-      <span className="material-symbols-outlined">
-        {theme === 'light' ? 'dark_mode' : 'light_mode'}
-      </span>
+    <button onClick={toggle} className="theme-toggle" aria-label={`Switch to ${next} theme`}>
+      {theme === 'light' ? 'Dark' : 'Light'}
     </button>
   );
 }

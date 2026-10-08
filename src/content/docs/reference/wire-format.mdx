@@ -1,0 +1,138 @@
+---
+title: Wire Format
+description: Byte-level specification for every message exchanged over a trueseal-protocol connection — framing, types, push body layout, ack semantics.
+---
+
+# Wire Format
+
+Every message on a trueseal-protocol connection shares the same framing:
+
+```
+[type: u8][len: u32 BE][body: bytes]
+```
+
+- **type** — 1-byte message type tag.
+- **len** — 4-byte big-endian unsigned integer, length of `body` in bytes.
+- **body** — zero or more bytes, contents depend on the type.
+
+Minimum message size is 5 bytes (type + len, empty body). Anything shorter is malformed and a parser must treat it that way.
+
+## Message types
+
+| Tag | Name | Direction | Body |
+|---|---|---|---|
+| `0x01` | Push | client → relay | `[recipient_pub: 32 bytes][envelope: bytes]` |
+| `0x02` | Deliver | relay → client | `[blob_id: 8 bytes u64 BE][envelope: bytes]` |
+| `0x03` | Heartbeat | both | empty |
+| `0x04` | Ack | relay → client | empty |
+| `0x05` | Error | relay → client | empty |
+| `0x06` | DeliverAck | client → relay | `[blob_id: 8 bytes u64 BE]` |
+
+An unknown type tag is malformed. Close the connection.
+
+---
+
+## Push (`0x01`)
+
+Sent by the client to deliver a blob to a recipient device.
+
+**Body layout:**
+```
+[recipient_pub: 32 bytes][envelope: bytes]
+```
+
+- `recipient_pub` — the recipient's X25519 noise public key. The relay uses this to route the blob into the right Inbox. It's the only routing information in the body.
+- `envelope` — the serialized protobuf Envelope bytes, defined by trueseal-sync. The relay treats this as opaque and never looks inside.
+
+A Push body shorter than 32 bytes is malformed. The relay rejects it with an Error frame and does not Ack.
+
+---
+
+## Deliver (`0x02`)
+
+Sent by the relay to hand a blob to a connected device.
+
+**Body layout:**
+```
+[blob_id: 8 bytes u64 BE][envelope: bytes]
+```
+
+- `blob_id` — an opaque 8-byte identifier the relay assigns. The client echoes it back in a DeliverAck immediately after receiving the frame bytes. The client must strip these 8 bytes before decoding the Envelope.
+- `envelope` — the serialized Envelope, forwarded verbatim.
+
+The relay doesn't delete the blob from its InboxStore at send time. Deletion only happens after a matching DeliverAck arrives. If the session drops first, the blob comes around again on the next Receive Session. Public SDKs expose a stable application Message ID derived from signed Envelope metadata; applications persist that ID to make processing idempotent.
+
+---
+
+## Heartbeat (`0x03`)
+
+Either side can send one to keep the connection alive. The other side replies with its own Heartbeat. Body is always empty.
+
+---
+
+## Ack (`0x04`)
+
+Sent by the relay after a Push has been durably persisted to the Inbox. Body is always empty.
+
+**Ack means:** the envelope is stored and will be delivered to the recipient when they connect.
+
+**Ack does *not* mean:** the recipient has received it. They might be offline and the blob is waiting.
+
+A client that gets an Ack for a Push can mark that blob delivered in its local outbox.
+
+---
+
+## DeliverAck (`0x06`)
+
+Sent by the client once it has durably persisted a Deliver frame.
+
+**Body layout:**
+```
+[blob_id: 8 bytes u64 BE]
+```
+
+- `blob_id` — the identifier from the matching Deliver frame, echoed back as-is.
+
+When the relay receives it, the blob is deleted from the InboxStore. Anything that hasn't been DeliverAck'd survives session drops and gets re-delivered on the next Receive Session.
+
+---
+
+## Error (`0x05`)
+
+Sent by the relay when a Push is permanently rejected. Body is always empty.
+
+**Error means:** the relay will not store this blob. Don't retry — same blob, same outcome.
+
+**Current rejection reasons:**
+- Push body shorter than 32 bytes (malformed).
+- Envelope larger than the protocol size limit (see below).
+
+A client that receives an Error removes the blob from its retry queue. Retrying won't help.
+
+---
+
+## Envelope size limit
+
+The protocol caps envelope size at **1 MiB (1,048,576 bytes)**. That cap applies to the `envelope` portion of the Push body, i.e. everything after the 32-byte `recipient_pub`.
+
+The check is enforced twice:
+
+**Client-side (trueseal-sync):** before any Push Session is opened. An oversized envelope is rejected immediately with a non-retryable error. No NK handshake happens, no bytes go to the relay.
+
+**Relay-side (trueseal-relay):** on receipt, as a backstop. Rejects with an Error frame, doesn't Ack, doesn't store. This catches buggy clients and any future third-party implementation that skips the check on its end.
+
+Relay operators can configure a stricter cap if they want. Either way, the relay signals rejection via the Error frame.
+
+---
+
+## Session types
+
+The protocol uses two distinct session types, each with its own Noise handshake pattern:
+
+**Push Session** — client opens, sends one or more Push frames, closes. Uses `Noise NK`: the relay authenticates itself, but the client never reveals an identity. The relay can't link a Push Session to any device. Short-lived on purpose.
+
+**Receive Session** — client opens, stays connected. Uses `Noise XX` with mutual authentication. The relay learns the device's stable noise public key and uses it to deliver blobs as they arrive. Long-lived on purpose.
+
+The two session types run on separate TCP listeners. Splitting them keeps the routing logic clean — Push is anonymous and stateless, Receive is identified and stateful, and the relay never has to guess which one it's holding.
+
+{/* TODO: diagram — Push Session flow (NK), Receive Session flow (XX), message exchange for each */}

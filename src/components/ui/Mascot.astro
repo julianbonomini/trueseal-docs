@@ -1,0 +1,37 @@
+---
+// The seal mascot (brandbook section 8), drawn in `brand/mascot/mascot.svg`. Allowed on the 404, empty
+// states and Why TrueSeal exists; never on the Landing hero, the threat model, errors or the API reference.
+// Always decorative.
+import source from '../../../brand/mascot/mascot.svg?raw';
+
+// The SVG's own <style> follows prefers-color-scheme; on the site the mascot follows the data-theme Theme.
+const markup = source
+  .replace(/<style[\s\S]*?<\/style>/, '')
+  .replace('<svg ', '<svg aria-hidden="true" focusable="false" ');
+---
+
+<Fragment set:html={markup} />
+
+{/* Global: set:html content gets no scope attribute. */}
+<style is:global>
+  .mascot {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .mascot__ink {
+    fill: none;
+    stroke: var(--ink);
+  }
+
+  .mascot__eye {
+    fill: var(--ink);
+    stroke: none;
+  }
+
+  .mascot__seal {
+    fill: none;
+    stroke: var(--seal);
+  }
+</style>

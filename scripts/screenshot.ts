@@ -3,7 +3,7 @@
 // `bun run build` first.
 //
 //   bun run screenshot <out-dir> <path>...
-//   bun run screenshot /tmp/shots / /docs/introduction
+//   bun run screenshot /tmp/shots / /docs/overview/introduction
 //
 // Prints one line per screenshot, and flags console errors and pages wider
 // than the viewport. Exits 1 when any page fails to load.

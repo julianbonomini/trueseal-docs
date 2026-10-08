@@ -7,8 +7,9 @@
     "dev": "ASTRO_TELEMETRY_DISABLED=1 astro dev",
     "build": "ASTRO_TELEMETRY_DISABLED=1 astro build && pagefind --site dist",
     "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",
-    "check": "ASTRO_TELEMETRY_DISABLED=1 astro check && bun test --pass-with-no-tests && bun run build",
-    "screenshot": "bun scripts/screenshot.ts"
+    "check": "ASTRO_TELEMETRY_DISABLED=1 astro check && bun run build && bun test --pass-with-no-tests",
+    "screenshot": "bun scripts/screenshot.ts",
+    "export-mascot": "bun scripts/export-mascot.ts"
   },
   "dependencies": {
     "@astrojs/mdx": "^4.0.0",
@@ -18,15 +19,16 @@
     "@fontsource/jetbrains-mono": "^5.2.8",
     "astro": "^5.0.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "shiki": "^3.21.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@types/bun": "^1.4.2",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "pagefind": "^1.0.0",
     "playwright": "^1.64.0",
-    "qrcode": "^1.5.4",
     "typescript": "^5.0.0"
   }
 }

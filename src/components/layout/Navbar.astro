@@ -1,171 +1,109 @@
 ---
+// The site header: wordmark, the Docs / Agent Docs switch, the version label, GitHub and
+// the Theme toggle. It owns which path prefix belongs to which documentation surface.
+import Wordmark from './Wordmark.astro';
 import ThemeToggle from '../ui/ThemeToggle';
+import { versionLabel } from '../../config/site';
 
-interface NavLink {
-  label: string;
-  href: string;
-}
-
-interface Props {
-  activeItem?: string;
-}
-
-const { activeItem = 'ecosystem' } = Astro.props;
-
-const links: NavLink[] = [
-  { label: 'Ecosystem', href: '/' },
-  { label: 'Docs',      href: '/docs/introduction' },
-];
+const onDocs = Astro.url.pathname.startsWith('/docs');
 ---
 
-<nav class="navbar">
-  <div class="navbar__left">
-    <a class="navbar__logo" href="/">trueseal</a>
-    <div class="navbar__links">
-      {links.map(link => (
-        <a
-          href={link.href}
-          class:list={[
-            'navbar__link',
-            { 'navbar__link--active': activeItem === link.label.toLowerCase() },
-          ]}
-        >
-          {link.label.toUpperCase()}
-        </a>
-      ))}
-    </div>
-  </div>
-
+<header class="navbar">
+  <Wordmark />
+  <nav class="navbar__surfaces" aria-label="Documentation">
+    <a href="/docs/overview/introduction" aria-current={onDocs ? 'true' : undefined}>Docs</a>
+    <span class="navbar__soon-surface" aria-disabled="true">Agent Docs <span class="navbar__soon">soon</span></span>
+  </nav>
+  <span class="navbar__version">{versionLabel}</span>
   <div class="navbar__right">
+    <a class="navbar__github" href="https://github.com/julianbonomini">GitHub</a>
     <ThemeToggle client:load />
-    <a class="navbar__cta" href="/relay">PUBLIC_RELAY</a>
   </div>
-</nav>
+</header>
 
 <style>
   .navbar {
-    background: var(--color-surface);
-    border-bottom: 1px solid var(--color-primary);
-    width: 100%;
-    padding: 0 var(--space-xl);
-    height: 64px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     position: sticky;
     top: 0;
     z-index: 50;
-  }
-
-  .navbar__left {
     display: flex;
     align-items: center;
-    gap: var(--space-xl);
+    gap: 24px;
+    height: var(--header-height);
+    padding: 0 24px;
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
   }
 
-  .navbar__logo {
-    font-family: var(--font-sans);
-    font-size: var(--text-headline-md-size);
-    font-weight: 700;
-    letter-spacing: -0.04em;
-    text-transform: uppercase;
-    color: var(--color-primary);
-    text-decoration: none;
-  }
-
-  .navbar__links {
+  .navbar__surfaces {
     display: flex;
-    gap: var(--space-lg);
+    gap: 4px;
   }
 
-  .navbar__link {
-    font-family: var(--font-mono);
-    font-size: var(--text-mono-label-size);
-    font-weight: var(--text-mono-label-weight);
-    letter-spacing: var(--text-mono-label-tracking);
-    color: var(--color-secondary);
+  .navbar__surfaces > * {
+    font-size: var(--text-ui);
+    padding: 6px 12px;
+    border: 1px solid transparent;
+    color: var(--ink-muted);
     text-decoration: none;
-    padding-bottom: 2px;
-    transition: color 0.1s;
+    white-space: nowrap;
   }
 
-  .navbar__link:hover {
-    background: var(--color-surface-container-low);
-    color: var(--color-on-surface);
+  .navbar__surfaces a:hover {
+    color: var(--ink);
   }
 
-  .navbar__link--active {
-    color: var(--color-primary);
-    font-weight: 700;
-    border-bottom: 2px solid var(--color-primary);
+  .navbar__surfaces [aria-current] {
+    color: var(--ink);
+    border-color: var(--ink);
+  }
+
+  .navbar__soon-surface {
+    cursor: default;
+  }
+
+  .navbar__soon {
+    font-family: var(--font-mono);
+    font-size: var(--text-meta);
+  }
+
+  .navbar__version {
+    font-family: var(--font-mono);
+    font-size: var(--text-meta);
+    color: var(--ink-muted);
+    white-space: nowrap;
   }
 
   .navbar__right {
     display: flex;
     align-items: center;
-    gap: var(--space-md);
+    gap: 16px;
+    margin-left: auto;
   }
 
-  .navbar__search {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-    padding: var(--space-sm) var(--space-md);
-    border: 1px solid var(--color-outline);
-    background: transparent;
-    font-family: var(--font-mono);
-    font-size: var(--text-mono-label-size);
-    font-weight: var(--text-mono-label-weight);
-    letter-spacing: var(--text-mono-label-tracking);
-    color: var(--color-secondary);
-    cursor: pointer;
-    transition: border-color 0.1s, color 0.1s;
-    line-height: 1;
-  }
-
-  .navbar__search:hover {
-    border-color: var(--color-primary);
-    color: var(--color-primary);
-  }
-
-  .navbar__search .material-symbols-outlined {
-    font-size: 16px;
-  }
-
-  .navbar__cta {
-    background: var(--color-primary);
-    color: var(--color-on-primary);
-    font-family: var(--font-mono);
-    font-size: var(--text-mono-label-size);
-    font-weight: var(--text-mono-label-weight);
-    letter-spacing: var(--text-mono-label-tracking);
-    text-transform: uppercase;
+  .navbar__github {
+    font-size: var(--text-ui);
+    color: var(--ink-muted);
     text-decoration: none;
-    height: 36px;
-    padding: 0 var(--space-lg);
-    border: 1px solid var(--color-primary);
-    display: inline-flex;
-    align-items: center;
-    line-height: 1;
-    transition: background 0.1s, color 0.1s;
   }
 
-  .navbar__cta:hover {
-    background: var(--color-surface);
-    color: var(--color-primary);
+  .navbar__github:hover {
+    color: var(--ink);
   }
 
-  @media (max-width: 640px) {
+  @media (max-width: 639px) {
     .navbar {
-      padding: 0 var(--space-md);
+      padding: 0 16px;
+      gap: 12px;
     }
 
-    .navbar__cta {
+    .navbar__surfaces > * {
+      padding: 6px 8px;
+    }
+
+    .navbar__version,
+    .navbar__github {
       display: none;
-    }
-
-    .navbar__links {
-      gap: var(--space-md);
     }
   }
 </style>

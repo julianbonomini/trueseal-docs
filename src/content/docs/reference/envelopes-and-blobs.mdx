@@ -1,0 +1,93 @@
+---
+title: Envelopes & Blobs
+description: The Envelope format — anatomy, addressed encryption, the hidden sender, signature verification, and message types.
+---
+
+# Envelopes & Blobs
+
+Everything moving through trueseal-sync travels as an **Envelope** — a self-contained unit the relay can route without reading and only the intended recipient can decrypt.
+
+## Anatomy
+
+An Envelope has five fields:
+
+| Field | Type | Visible to relay |
+|---|---|---|
+| `sequence` | u64 | ✓ |
+| `parents` | `[[u8; 32]]` | ✓ |
+| `recipient_pub` | `[u8; 32]` | ✓ |
+| `signature` | `[u8; 64]` | ✓ |
+| `payload` | `Vec<u8>` | ✗ (encrypted) |
+
+**`sequence`** — the sender's global per-device counter. Increments once per Envelope sent, across all objects. Not scoped per object. See [Operation Log & Outbox](/docs/reference/operation-log-and-outbox) for the reasoning.
+
+**`parents`** — SHA-256 hashes of preceding Envelopes. In v0, every Envelope has exactly one parent (or zero, for the root). The field is already there now so v1 can introduce DAG merges with multiple parents without changing the wire format.
+
+**`recipient_pub`** — the recipient device's X25519 noise public key. The relay uses this to route the Envelope to the right Inbox. It's the only routing information the relay has.
+
+**`signature`** — an Ed25519 signature over the canonical signing message: `sequence (8 LE) || parent_hashes || recipient_pub || ciphertext`. Verified by the recipient after decryption. The relay never verifies it.
+
+**`payload`** — the encrypted blob. From the relay's perspective, opaque bytes. What's actually in there is described next.
+
+Envelopes are Protobuf on the wire.
+
+## Addressed encryption
+
+The `payload` field is built by **addressed encryption** — encrypting a blob for a specific recipient using only their public key, with no prior session.
+
+Wire layout of the encrypted payload:
+
+```
+[ephemeral_pub (32 bytes)] [nonce (12 bytes)] [ciphertext + tag]
+```
+
+**Encryption (sender side):**
+
+1. Generate a fresh ephemeral X25519 keypair, for this payload only.
+2. Do X25519 DH between the ephemeral private key and the recipient's static noise public key. Output: shared secret.
+3. Derive a 32-byte symmetric key from the shared secret via HKDF-SHA256, with info string `"trueseal-sync addressed encryption v0"`.
+4. Encrypt `author_pub (32 bytes) || message_bytes` with ChaCha20-Poly1305 using the derived key and a zero nonce.
+5. Output: `ephemeral_pub || nonce || ciphertext+tag`.
+
+The zero nonce is fine here because the symmetric key is derived from an ephemeral DH — it's unique by construction. Nonce reuse only matters when the key is also reused, and the key never is.
+
+**Decryption (recipient side):**
+
+1. Pull `ephemeral_pub` from the first 32 bytes.
+2. X25519 DH between the recipient's static private key and `ephemeral_pub`. Same shared secret falls out.
+3. Derive the symmetric key with HKDF-SHA256 and the same info string.
+4. Decrypt with ChaCha20-Poly1305. Output: `author_pub || message_bytes`.
+5. Pull `author_pub` from the first 32 bytes of plaintext.
+
+## The hidden sender
+
+`author_pub` — the sender's Ed25519 signing key — is *inside* the encrypted payload, not in the cleartext Envelope header. This is on purpose.
+
+If `author_pub` were in the header, the relay would observe `(author_pub → recipient_pub)` pairs for every Envelope it routes. That's a full communication graph, served up for free. With `author_pub` inside the ciphertext, the relay sees only `recipient_pub`. It can't tell who sent anything.
+
+Recipients pull `author_pub` out after decryption, then verify the Envelope signature with that key. If the claimed `author_pub` doesn't match the actual signer, verification fails — devices can't impersonate each other.
+
+## Signature verification
+
+After decrypting and extracting `author_pub`, the recipient verifies the Envelope signature:
+
+1. Recompute the signing message: `sequence || parents || recipient_pub || ciphertext`.
+2. Verify the Ed25519 signature against the extracted `author_pub`.
+3. If that passes, check `author_pub` against the current Group Manifest. If the signer isn't a current member, drop it silently.
+
+That two-step — decrypt to learn the author, then verify using that author — is what prevents attribution forgery. Device B can't claim that device A sent something: if B encrypts a payload with `author_pub = A` but signs the Envelope with B's key, the signature check against A's key fails.
+
+## Message types
+
+Inside the encrypted payload, after the 32-byte `author_pub`, there's a 1-byte type tag followed by the message body. Four types:
+
+| Tag | Type | Body |
+|---|---|---|
+| `0x01` | `Pair` | sender's `noise_pub (32)` + `signing_pub (32)` |
+| `0x02` | `Sync` | opaque caller blob — a clipboard entry, a secret, whatever |
+| `0x03` | `Revoke` | empty — triggers Destroy Group on receipt |
+| `0x04` | `GroupManifest` | encoded manifest update |
+
+The relay never sees these tags. They're a private convention of trueseal-sync, decoded only by recipients after decryption.
+
+`Sync` is the only one the caller touches directly — those are the opaque bytes you pass to `send()` and receive in `on_message()`. The other three are handled internally.

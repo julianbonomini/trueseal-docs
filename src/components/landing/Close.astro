@@ -1,0 +1,47 @@
+---
+// The end of the Landing: the signature line, what "free" means and who built it.
+import Button from '../ui/Button.astro';
+---
+
+<section id="close" class="close">
+  <h2 class="close__signature">The best privacy feature is the one nobody had to build.</h2>
+  {/* TODO: brandbook section 10. "About ten lines" is unchecked (DOCS-9). */}
+  <p class="close__free">
+    Privacy comes with the sync, at no extra effort. Free to use, free to host, and about ten lines to add. Apache-2.0.
+  </p>
+  <Button href="/docs/integrate/integrating-trueseal-sync">Start integrating</Button>
+  <p class="close__byline">
+    Built by Julian Bonomini. <a href="/docs/overview/why-trueseal-exists">Why TrueSeal exists</a>
+  </p>
+</section>
+
+<style>
+  .close {
+    border-top: 1px solid var(--ink);
+    max-width: var(--layout-max-width);
+    margin: 0 auto;
+    padding: clamp(80px, 12vw, 136px) var(--landing-gutter) 112px;
+  }
+
+  .close__signature {
+    font-size: clamp(32px, 4.6vw, 64px);
+    line-height: 1.04;
+    letter-spacing: -0.035em;
+    font-weight: 600;
+    max-width: 20ch;
+  }
+
+  .close__free {
+    margin: 28px 0 36px;
+    font-size: 19px;
+    line-height: 1.55;
+    color: var(--ink-muted);
+    max-width: 54ch;
+  }
+
+  .close__byline {
+    margin-top: 56px;
+    font-size: 15px;
+    color: var(--ink-muted);
+  }
+</style>

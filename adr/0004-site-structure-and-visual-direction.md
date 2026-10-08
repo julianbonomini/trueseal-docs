@@ -1,6 +1,6 @@
 # Site structure and visual direction for the preview
 
-Status: accepted (decided 2026-09-30 in [trueseal-roadmap#17](https://github.com/julianbonomini/trueseal-roadmap/issues/17); not yet implemented). The chosen design is variant E on the throwaway branch [`prototype/docs-site-shape`](https://github.com/julianbonomini/trueseal-docs/tree/prototype/docs-site-shape/src/components/prototype/home) (`?variant=E` for the Landing, `?variant=E-DOCS` for a Human Docs page). Variants A to D on the same branch record what was tried and rejected.
+Status: accepted (decided 2026-09-30 in [trueseal-roadmap#17](https://github.com/julianbonomini/trueseal-roadmap/issues/17); partly implemented: Design tokens, layouts, Navbar, the Landing sections and the Seal Demo (DOCS-1), the mascot and the 404 page (DOCS-10), the Journey sidebar with redirects for every moved URL (structural half of DOCS-2)). The chosen design is variant E on the throwaway branch [`prototype/docs-site-shape`](https://github.com/julianbonomini/trueseal-docs/tree/prototype/docs-site-shape/src/components/prototype/home) (`?variant=E` for the Landing, `?variant=E-DOCS` for a Human Docs page). Variants A to D on the same branch record what was tried and rejected.
 
 The site applies the [brandbook](../brand/90_SYNTHESIS.md). The brandbook decides the purpose, voice and visual identity. This ADR decides how the site is organised and how the Landing and the docs pages use that identity.
 
@@ -60,4 +60,4 @@ It is product-first and ordered as the Journey:
 - The nav config (`src/config/nav.ts`) is restructured to the Journey. Existing content pages move or are rewritten under it, in the brand voice.
 - The Seal Demo is the one new Island. The code tabs need client-side JS too, or a CSS-only approach.
 - Copy on the Landing is limited by brandbook section 10. "About ten lines" and "one container" need evidence against the shipped SDKs and the self-hosting guide, and the comparison-table cells for the alternatives need checking before launch.
-- The seal mascot is not part of the Landing hero. It is drawn separately and appears where the brandbook allows.
+- The seal mascot is not part of the Landing hero. It is drawn in `brand/mascot/mascot.svg` and appears where the brandbook allows (the 404 page today).

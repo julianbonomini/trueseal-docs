@@ -1,0 +1,119 @@
+---
+// The Overview part of the Journey: why private sync gets dropped, what TrueSeal takes on, and how it compares.
+import LandingSection from './LandingSection.astro';
+
+interface ComparisonRow {
+  feature: string;
+  ownBackend: string;
+  libsodium: string;
+  cloudKit: string;
+  trueSeal: string;
+}
+
+const rows: ComparisonRow[] = [
+  // TODO: brandbook section 10. Check every cell in this row against the threat model and Apple's CloudKit encryption docs.
+  { feature: 'Server can read the data', ownBackend: 'Yes', libsodium: 'No', cloudKit: 'No, for those fields', trueSeal: 'No' },
+  // TODO: brandbook section 10. Check every cell in this row against trueseal-sync's pairing ADRs and Apple's CloudKit sharing docs.
+  { feature: 'Pairing and membership', ownBackend: 'You build it', libsodium: 'You build it', cloudKit: 'Apple ID', trueSeal: 'Included' },
+  // TODO: brandbook section 10. Check every cell in this row against trueseal-sync's outbox ADRs and Apple's CloudKit sync docs.
+  { feature: 'Offline outbox and ordering', ownBackend: 'You build it', libsodium: 'You build it', cloudKit: 'Included', trueSeal: 'Included' },
+  // TODO: brandbook section 10. Check every cell in this row against the shipped SDK repos.
+  { feature: 'Platforms', ownBackend: 'Any', libsodium: 'Any', cloudKit: 'Apple', trueSeal: 'Swift, Kotlin, TypeScript' },
+  // TODO: brandbook section 10. Check every cell in this row against the self-hosting guide (relay ADR-0012).
+  { feature: 'Runs on your own server', ownBackend: 'Yes', libsodium: 'Yes', cloudKit: 'No', trueSeal: 'Yes' },
+  // TODO: brandbook section 10. Check every cell in this row against the developer-preview release spec.
+  { feature: 'Ready for production', ownBackend: 'Yours to judge', libsodium: 'Yours to judge', cloudKit: 'Yes', trueSeal: "Not yet. It's a preview." },
+];
+---
+
+<LandingSection
+  id="overview"
+  heading="Private sync usually turns into a protocol project."
+  docs={{ href: '/docs/overview/introduction', label: 'Read the overview' }}
+>
+  <Fragment slot="aside">
+    <p>
+      You're building an app where a few devices share something personal, like a family's locations, passwords
+      between your own laptops or a clipboard. Making that private means pairing, key sharing, an offline outbox and
+      membership, so most apps ship it readable by whoever runs the server.
+    </p>
+    <p>TrueSeal does those parts for you. Your data model, your conflict rules and your pairing screens stay yours.</p>
+  </Fragment>
+
+  <div slot="wide" class="compare" role="region" aria-label="TrueSeal compared with the alternatives" tabindex="0">
+    <table class="compare__table">
+      <thead>
+        <tr>
+          <th scope="col"><span class="visually-hidden">Feature</span></th>
+          <th scope="col">Your own backend</th>
+          <th scope="col">libsodium and your own pairing</th>
+          <th scope="col">CloudKit encrypted fields</th>
+          <th scope="col" class="compare__us">TrueSeal</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.map(row => (
+            <tr>
+              <th scope="row">{row.feature}</th>
+              <td>{row.ownBackend}</td>
+              <td>{row.libsodium}</td>
+              <td>{row.cloudKit}</td>
+              <td class="compare__us">{row.trueSeal}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+</LandingSection>
+
+<style>
+  .compare {
+    overflow-x: auto;
+  }
+
+  .compare__table {
+    width: 100%;
+    min-width: 760px;
+    border-collapse: collapse;
+    font-size: 15px;
+  }
+
+  .compare__table th,
+  .compare__table td {
+    text-align: left;
+    padding: 15px 16px;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+
+  .compare__table thead th {
+    font-weight: 500;
+    color: var(--ink-muted);
+    border-bottom-color: var(--ink);
+  }
+
+  .compare__table tbody th {
+    font-weight: 500;
+  }
+
+  .compare__table td {
+    color: var(--ink-muted);
+  }
+
+  .compare__table .compare__us {
+    color: var(--ink);
+    font-weight: 600;
+    border-left: 1px solid var(--ink);
+    border-right: 1px solid var(--ink);
+  }
+
+  .compare__table thead .compare__us {
+    border-top: 1px solid var(--ink);
+  }
+
+  .compare__table tbody tr:last-child .compare__us {
+    border-bottom: 1px solid var(--ink);
+  }
+</style>
