@@ -2,11 +2,11 @@
 // Covers what the HTML can prove: Journey order, code tabs without JS, the Seal Demo's static render and
 // Island, brandbook wording and docs links.
 import { describe, expect, test } from 'bun:test';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { formatLocation, START_POINT } from '../src/components/landing/sealDemo.ts';
+import { builtPages, dist } from './dist.ts';
 
-const dist = join(import.meta.dir, '..', 'dist');
 const indexPath = join(dist, 'index.html');
 if (!existsSync(indexPath)) throw new Error('dist/index.html is missing. Run bun run build first.');
 const html = readFileSync(indexPath, 'utf8');
@@ -136,14 +136,8 @@ describe('Landing', () => {
 
 describe('Seal Demo outside the Landing', () => {
   test('no other built page loads the Seal Demo', () => {
-    function htmlFiles(dir: string): string[] {
-      return readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
-        const path = join(dir, entry.name);
-        if (entry.isDirectory()) return htmlFiles(path);
-        return entry.name.endsWith('.html') && path !== indexPath ? [path] : [];
-      });
-    }
-    expect(htmlFiles(dist).filter(path => readFileSync(path, 'utf8').includes('SealDemo'))).toEqual([]);
+    const others = builtPages().filter(path => path !== indexPath);
+    expect(others.filter(path => readFileSync(path, 'utf8').includes('SealDemo'))).toEqual([]);
   });
 
   test('the demo moves only when reduced motion is not requested', () => {

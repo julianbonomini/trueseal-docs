@@ -6,11 +6,14 @@ import '../styles/global.css';
 interface Props {
   title: string;
   description?: string;
+  /** False keeps the whole page out of the Pagefind search index. Defaults to true. */
+  searchable?: boolean;
 }
 
 const {
   title,
   description = 'End-to-end encrypted sync for Swift, Kotlin and TypeScript, with a relay you run yourself.',
+  searchable = true,
 } = Astro.props;
 
 const fullTitle = title === 'trueseal' ? 'trueseal' : `${title} — trueseal`;
@@ -46,7 +49,8 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? 'https://trueseal
       document.documentElement.setAttribute('data-theme', stored ?? preferred);
     </script>
   </head>
-  <body>
+  {/* Pagefind drops a whole page only when its ignore sits on <body>, not on <main>. */}
+  <body data-pagefind-ignore={searchable ? undefined : 'all'}>
     <slot />
   </body>
 </html>

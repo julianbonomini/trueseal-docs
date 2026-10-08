@@ -8,7 +8,8 @@
     "build": "ASTRO_TELEMETRY_DISABLED=1 astro build && pagefind --site dist",
     "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",
     "check": "ASTRO_TELEMETRY_DISABLED=1 astro check && bun run build && bun test --pass-with-no-tests",
-    "screenshot": "bun scripts/screenshot.ts"
+    "screenshot": "bun scripts/screenshot.ts",
+    "export-mascot": "bun scripts/export-mascot.ts"
   },
   "dependencies": {
     "@astrojs/mdx": "^4.0.0",

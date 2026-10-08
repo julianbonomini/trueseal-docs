@@ -218,7 +218,7 @@ These are brand claims today. Each needs a test or a check before it appears in 
 ## 11. Open items handed off
 
 - **Visual rendering:** Prototype: docs site structure, home page, and visual direction (trueseal-roadmap#17) applies this brandbook to the site.
-- **Mascot artwork:** to be drawn from the spec in section 8. This is execution work, filed in trueseal-docs.
+- **Mascot artwork:** drawn in `brand/mascot/` (`mascot.svg` plus the avatar and README-header PNGs), trueseal-docs#15.
 - **Relay IP visibility:** decided in Decision: should the relay be unable to see client IPs in the preview? (trueseal-roadmap#26). The relay never logs, stores or uses IPs in any mode. Hiding IPs from the host is deferred past the preview.
 - **Browser support:** not in the preview. Revisit as a future scope decision.
 

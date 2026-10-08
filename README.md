@@ -1,3 +1,5 @@
+<p align="center"><img src="brand/mascot/mascot-readme-header.png" alt="The TrueSeal seal mascot" width="640"></p>
+
 # trueseal-docs
 
 Documentation and landing site for the [TrueSeal](https://github.com/buenomini/TrueSeal) E2EE sync ecosystem. Built with Astro 5 + React islands, deployed on Cloudflare Pages.
@@ -43,6 +45,8 @@ To screenshot built pages in both themes at desktop and phone width (run `bunx p
 bun run screenshot /tmp/shots / /docs/introduction
 ```
 
+The mascot artwork is `brand/mascot/mascot.svg`. After changing it, run `bun run export-mascot` to regenerate the PNG exports beside it.
+
 ---
 
 ## Deployment
@@ -80,13 +84,15 @@ Use `.mdx` when a page needs custom components (flow diagrams, phase breakdowns,
 ## Project Structure
 
 ```
+brand/
+  mascot/         # Mascot SVG and its PNG exports
 src/
   components/
     landing/      # Landing page sections
     docs/         # Sidebar
     layout/       # Navbar, Wordmark, Footer
     mdx/          # Reusable MDX components
-    ui/           # Buttons, badges, theme toggle
+    ui/           # Buttons, badges, theme toggle, mascot
   config/         # nav.ts (sidebar), site.ts (version label)
   content/
     docs/         # All documentation markdown
@@ -95,4 +101,4 @@ src/
   styles/         # tokens.css, global.css
 ```
 
-`tests/` holds the brand checks on the source and the Landing checks on the built site, run by `bun test`.
+`tests/` holds the brand checks on the source and the Landing checks and the mascot and 404 checks on the built site, run by `bun test`.
