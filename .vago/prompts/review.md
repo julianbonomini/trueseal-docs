@@ -21,7 +21,7 @@ Done when every changed file has a verdict on each check: passes, or the finding
 
 ## 3. Fix
 
-Fix every finding and commit. A claim you can neither trace nor cut without breaking the Ticket stays as a visible `TODO:`, and goes under **Concerns**. When the diff changes code, run `bun install` and `bun run build`, and fix what fails.
+Fix every finding and commit. A claim you can neither trace nor cut without breaking the Ticket stays as a visible `TODO:`, and goes under **Concerns**. When the diff changes code, run `bun install` and `bun run check`, and fix what fails.
 
 Done when every finding is fixed or listed under **Concerns**, and the tree is clean.
 
@@ -33,7 +33,7 @@ Your final message goes in the Goal report, which becomes part of the Goal's PR.
 2. **Findings**: each finding, where it was and how you fixed it. "None" when there were none.
 3. **Sources**: each claim about TrueSeal's behaviour in the diff, and the file and line it traces to.
 4. **Skills**: each skill you ran, and what it found.
-5. **Build**: the result of `bun run build`, or "no code changed".
+5. **Check**: the summary of `bun run check`, or "no code changed".
 
 # Ticket
 

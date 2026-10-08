@@ -1,8 +1,8 @@
-# The only Workflow in this repo. trueseal-docs is mostly prose, with no test
-# suite or check script, so each Ticket goes through a writer and a fresh
-# reviewer, both held to CONTEXT.md, the brandbook and the no-ai-writing
-# skill, and both checking every claim about TrueSeal against the code in the
-# sibling repos. Setup and use are in .vago/README.md. Prompt paths resolve
+# The Workflow for Tickets that change prose: Human Docs, Agent Docs, the
+# glossary, ADRs and other Markdown. Tickets that change the site's code go
+# through code. Each Ticket goes through a writer and a fresh reviewer, both
+# held to CONTEXT.md, the brandbook and the no-ai-writing skill, and both
+# checking every claim about TrueSeal against the code in the sibling repos. Setup and use are in .vago/README.md. Prompt paths resolve
 # from .vago/, include paths from the repo root, and shell commands run in the
 # Goal's worktree.
 #

@@ -10,7 +10,7 @@ Done when you have read every hunk of the Goal's diff.
 
 ## 2. Write
 
-Run the `vago-pr` skill and write the body to its template, for the whole Goal's diff, then run the `no-ai-writing` skill on it. For **Evidence**, use the sources each review Step checked and the `TODO:`s it left, as its report in the Runs gives them; run nothing to produce new evidence.
+Run the `vago-pr` skill and write the body to its template, for the whole Goal's diff, then run the `no-ai-writing` skill on it. For **Evidence**, use what each review Step reported in the Runs: the sources it checked and the `TODO:`s it left, or its check summary and screen verdicts; run nothing to produce new evidence.
 
 Then end the body with the `## Runs` section of `vago goal report {{goal_name}}`, from that heading to the end, unchanged. It holds what Steps with `goal_report` wrote, collapsed under each Ticket.
 

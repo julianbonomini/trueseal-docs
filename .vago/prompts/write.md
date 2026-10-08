@@ -29,7 +29,7 @@ Done when you can point each claim you will write to a file and line in a TrueSe
 
 ## 3. Write
 
-Write the change, then audit it with `no-ai-writing`'s smells list, line by line, and fix every hit. When the Ticket changes code, run `bun install` and `bun run build`, and fix what fails.
+Write the change, then audit it with `no-ai-writing`'s smells list, line by line, and fix every hit. When the Ticket changes code, run `bun install` and `bun run check`, and fix what fails.
 
 Commit on this branch with short imperative messages. The Workflow's shell Steps switch branches, merge and push.
 
@@ -44,7 +44,7 @@ Your final message is all the review Step reads from you. Keep it short:
 - **TODOs**: each claim you could not trace. "None" when there are none.
 - **Choices**: each question the Ticket left open, and what you picked.
 - **Skills**: each skill you ran, and what it found or fixed.
-- **Build**: the result of `bun run build`, or "no code changed".
+- **Check**: the summary of `bun run check`, or "no code changed".
 
 # Goal
 
