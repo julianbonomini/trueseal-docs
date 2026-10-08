@@ -1,25 +1,30 @@
 ---
+// Previous and next links at the foot of a docs page. Renders nothing when given neither.
+import type { DocLink } from '../../config/nav';
+
 interface Props {
-  href: string;
-  label: string;
-  prevHref?: string;
-  prevLabel?: string;
+  prev?: DocLink;
+  next?: DocLink;
 }
-const { href, label, prevHref, prevLabel } = Astro.props;
+const { prev, next } = Astro.props;
 ---
 
-<nav class="next-page">
-  {prevHref && prevLabel && (
-    <a href={prevHref} class="next-page__link">
-      <span class="next-page__hint">Previous</span>
-      <span class="next-page__label">{prevLabel}</span>
-    </a>
-  )}
-  <a href={href} class:list={['next-page__link', 'next-page__link--next', { 'next-page__link--solo': !prevHref }]}>
-    <span class="next-page__hint">Next</span>
-    <span class="next-page__label">{label}</span>
-  </a>
-</nav>
+{(prev || next) && (
+  <nav class="next-page">
+    {prev && (
+      <a href={prev.href} class:list={['next-page__link', { 'next-page__link--solo': !next }]}>
+        <span class="next-page__hint">Previous</span>
+        <span class="next-page__label">{prev.title}</span>
+      </a>
+    )}
+    {next && (
+      <a href={next.href} class:list={['next-page__link', 'next-page__link--next', { 'next-page__link--solo': !prev }]}>
+        <span class="next-page__hint">Next</span>
+        <span class="next-page__label">{next.title}</span>
+      </a>
+    )}
+  </nav>
+)}
 
 <style>
   .next-page {

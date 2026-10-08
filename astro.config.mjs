@@ -3,9 +3,11 @@ import react from '@astrojs/react';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import { createCssVariablesTheme } from 'shiki';
+import { redirects } from './src/config/redirects.ts';
 
 export default defineConfig({
   site: 'https://trueseal.dev',
+  redirects,
   integrations: [
     react(),
     mdx(),

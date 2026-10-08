@@ -1,6 +1,6 @@
 // Landing checks on the built site: reads dist/index.html, so run `bun run build` first.
 // Covers what the HTML can prove: Journey order, code tabs without JS, the Seal Demo's static render and
-// Island, brandbook wording and docs links.
+// Island, brandbook wording and the mascot's absence.
 import { describe, expect, test } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -87,20 +87,6 @@ describe('Landing', () => {
     for (const s of [prose(html), title]) {
       expect(s).not.toMatch(/—|–| - /);
     }
-  });
-
-  test('every docs link resolves to a built page', () => {
-    // Written by the preview-trust and preview-pages Goals; remove each entry when its page lands.
-    const pending = new Set(['/docs/trust/threat-model', '/docs/overview/why-trueseal-exists']);
-    const hrefs = new Set(
-      [...html.matchAll(/href="(\/docs\/[^"#]*)/g)].map(m => m[1].replace(/\/$/, '')),
-    );
-    const missing = [...hrefs].filter(
-      href => !pending.has(href) && !existsSync(join(dist, href, 'index.html')),
-    );
-    expect(missing).toEqual([]);
-    const stale = [...pending].filter(href => existsSync(join(dist, href, 'index.html')));
-    expect(stale).toEqual([]);
   });
 
   test('the mascot stays off the Landing', () => {

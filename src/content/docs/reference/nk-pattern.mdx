@@ -1,0 +1,29 @@
+---
+title: NK Pattern
+description: The Noise NK two-message anonymous-initiator handshake — used by trueseal for short-lived Push Sessions where the sender stays unlinkable.
+---
+
+# NK Pattern
+
+`Noise_NK_25519_ChaChaPoly_BLAKE2s` — a two-message handshake where the Initiator already knows the Responder's static key. The Responder never learns the Initiator's static key, so the Initiator stays anonymous.
+
+trueseal uses NK for **Push Sessions** — the short-lived anonymous connections a device opens to push blobs to the relay. A fresh ephemeral keypair is generated per push, which keeps the sender unlinkable across pushes.
+
+For the full pattern spec, see the [Noise Protocol spec](https://noiseprotocol.org/noise.html) and the [official test vectors](https://github.com/noiseprotocol/noise_wiki/wiki/Test-vectors).
+
+## API
+
+```rust
+// Initiator — must supply the Responder's known static public key
+let session = session_nk::dial(conn, keypair, remote_static)?;
+
+// Responder
+let session = session_nk::accept(conn, keypair)?;
+
+// Both sides
+session.send(b"hello")?;
+let msg = session.receive()?;
+session.close()?;
+```
+
+`remote_public_key()` isn't exposed on `session_nk::Session` on purpose. The Initiator already knew the Responder's key before dialling, and the Responder has no Initiator static key to read — that's the whole point of NK.

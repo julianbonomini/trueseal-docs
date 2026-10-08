@@ -49,8 +49,9 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? 'https://trueseal
       document.documentElement.setAttribute('data-theme', stored ?? preferred);
     </script>
   </head>
-  {/* Pagefind drops a whole page only when its ignore sits on <body>, not on <main>. */}
-  <body data-pagefind-ignore={searchable ? undefined : 'all'}>
+  {/* Once any page carries data-pagefind-body, Pagefind indexes only the pages that carry it.
+      That keeps Astro's redirect pages, which have no layout, and the 404 page out of the index. */}
+  <body data-pagefind-body={searchable ? '' : undefined}>
     <slot />
   </body>
 </html>

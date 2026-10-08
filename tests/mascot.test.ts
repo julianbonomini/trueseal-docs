@@ -1,9 +1,9 @@
 // Mascot checks: the artwork in brand/mascot/ and where the built site shows it. Reads dist/, so run
 // `bun run build` first. How the seal looks can only be checked by screenshot.
 import { describe, expect, test } from 'bun:test';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { builtPages, dist } from './dist.ts';
+import { builtPages, dist, indexedUrls } from './dist.ts';
 
 const root = join(import.meta.dir, '..');
 const mascotDir = join(root, 'brand', 'mascot');
@@ -45,17 +45,12 @@ describe('404 page', () => {
     expect(mascots[0]).not.toContain('<style');
     expect(mascots[0]).not.toMatch(hexPattern);
     expect(html).toContain('href="/"');
-    expect(html).toContain('href="/docs/introduction"');
+    expect(html).toContain('href="/docs/overview/introduction"');
   });
 
   test('is left out of the search index', () => {
-    // Each Pagefind fragment is one indexed page, gzipped, holding its URL.
-    const fragmentDir = join(dist, 'pagefind', 'fragment');
-    const urls = readdirSync(fragmentDir).map(name => {
-      const fragment = new TextDecoder().decode(Bun.gunzipSync(readFileSync(join(fragmentDir, name))));
-      return fragment.match(/"url":"([^"]*)"/)?.[1];
-    });
-    expect(urls).toContain('/docs/introduction/');
+    const urls = indexedUrls();
+    expect(urls).toContain('/docs/overview/introduction/');
     expect(urls).not.toContain('/404.html');
   });
 });
