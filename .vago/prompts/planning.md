@@ -28,7 +28,7 @@ Take the human's answers in. Once every decision that changes the Goal is settle
 
 End your message with the whole proposal block whenever the proposal changed: the first one and every revision after it. Vago saves the last block you wrote in the session, and the human sees it beside the chat. A revision is a new whole block, never a diff. A message that changed nothing needs no block.
 
-- Recommend one Workflow from `.vago/workflows/` by its name without `.toml`, and give the reason in `workflow_reason`.
+- Recommend one Workflow from `.vago/workflows/` by its name without `.toml`, and give the reason in `workflow_reason`: `small` when every Ticket changes prose only, `code` when any Ticket changes the site's code (UI, layouts, Islands, build-time generation, CI or scripts). A Goal that needs both goes through `code`.
 - Order the Tickets so blockers come first. A Ticket's number is its place in the list, from 1, and `blocked_by` names only earlier Tickets.
 - Each Ticket's `body` is its title as a `# ` heading and then its text, as `vago-to-tickets` writes one. The `goal` is the Goal's title as a `# ` heading and then its text, as `vago-to-goal` writes one.
 
@@ -36,7 +36,7 @@ The block is TOML between `<vago-plan>` and `</vago-plan>`:
 
 <vago-plan>
 workflow = "small"
-workflow_reason = '''The only Workflow in this repo.'''
+workflow_reason = '''Every Ticket changes prose only.'''
 open_decisions = ["Should ties break by name?"]
 goal = '''
 # Search ranks by relevance

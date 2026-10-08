@@ -16,8 +16,9 @@ Hold the whole Goal's diff against four checks:
 - **One statement per fact.** A fact the Goal states on two pages reads the same on both. Search the unchanged pages too: a Goal that restates a limit next to an older, different statement of it contradicts the site as surely as one that writes both.
 - **Links and navigation.** Every link the Goal added or moved resolves to a page or heading that exists, and every new page is in the sidebar config at `src/config/nav.ts` when the Ticket meant it to be.
 - **Voice.** The Goal reads as one author: run the `no-ai-writing` skill on the whole diff and keep the findings that need two Tickets in view, such as two pages that explain one idea in different words.
+- **Code.** When the Goal changed code, run the `vago-check-red-flags` skill on the code in the whole diff and keep the red flags that need two Tickets in view: Information Leakage between modules two Tickets wrote, a Design token or component one Ticket added and a later one duplicated.
 
-Each Ticket's scope, its fact checks and the writing inside one Ticket's hunks belong to the Ticket reviews, which already ran.
+Each Ticket's scope, its fact checks, its screenshots and the findings inside one Ticket's hunks belong to the Ticket reviews, which already ran.
 
 Done when every file the Goal changed has a verdict for each check: passes, or the finding and where.
 
@@ -26,7 +27,7 @@ Done when every file the Goal changed has a verdict for each check: passes, or t
 Sort each finding into one of two kinds:
 
 - **Fix**: a change that keeps every page's subject and structure: a rename to the glossary's word, a fact brought in line with its source, a broken link repaired.
-- **Ticket**: a change that needs a decision: a page split or merged, a fact whose source is unclear, a new glossary term.
+- **Ticket**: a change that needs a decision: a page split or merged, a fact whose source is unclear, a new glossary term, an exported interface changed, or knowledge moved from one module to another.
 
 `vago goal report` lists the Goal's Tickets. When one of them is named `goal-review-…`, an earlier Goal review already added Tickets, and this is the last round: record each Ticket finding under **Concerns** for the human instead.
 
@@ -34,9 +35,9 @@ Done when every finding is a Fix, a Ticket, or a Concern.
 
 ## 4. Fix
 
-Make every Fix and commit. When the Goal changed code, run `bun install` and `bun run build`, and fix what fails.
+Make every Fix and commit. When the Goal changed code, run `bun install` and `bun run check`; it is a gate, so fix what fails and run it again.
 
-Done when every Fix is committed and the tree is clean.
+Done when every Fix is committed, `bun run check` exits zero when the Goal changed code, and the tree is clean.
 
 ## 5. Add Tickets
 
@@ -73,7 +74,8 @@ Your final message is this Step's output. No Step reads it; the human reads it i
 2. **Fixed**: each Fix, where it was and what you changed. "None" when there were none.
 3. **Tickets**: each Ticket you added, its name and the findings it carries. "None" when there were none.
 4. **Skills**: each skill you ran, and what it found.
-5. **Commits**: the `git log --oneline` of every commit since this Ticket's branch was cut from `vago/{{goal_name}}`.
+5. **Check**: the summary of the final `bun run check`, or "no code changed".
+6. **Commits**: the `git log --oneline` of every commit since this Ticket's branch was cut from `vago/{{goal_name}}`.
 
 # Goal
 

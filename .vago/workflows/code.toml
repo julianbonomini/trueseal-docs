@@ -1,0 +1,74 @@
+# The Workflow for Tickets that change the site's code: UI, layouts, Islands,
+# build-time generation, CI checks and scripts. Tickets that only change
+# prose go through small. Setup and use are in .vago/README.md.
+#
+# A plan Step decides the design, the build Step follows it test-first, and
+# `bun run check` (type check, tests, build) gates the work before a fresh
+# review Step reads the diff and screenshots every changed page in both
+# Themes at desktop and phone width.
+#
+# Git, Steps and Goal Steps work as small.toml describes: each Ticket is built
+# on <goal>/<ticket>, cut from vago/<goal>, and squash-merged back as one
+# commit, and the human merges the Goal's PR.
+
+harness = "claude-code"
+model   = "claude-opus-5-5"
+idle_timeout = "10m"  # how long the Harness may print nothing before the Run fails
+
+[[steps]]
+id   = "branch"
+name = "New branch"
+type = "shell"
+run  = "sh .vago/scripts/branch.sh"
+
+[[steps]]
+id          = "plan"
+name        = "Plan"
+type        = "agent"
+prompt      = "prompts/plan.md"
+goal_report = true   # the design goes in the PR
+
+[[steps]]
+id     = "build"
+name   = "Build"
+type   = "agent"
+prompt = "prompts/build.md"
+
+[[steps]]
+id      = "check"
+name    = "Checks"
+type    = "shell"
+run     = "bun install && bun run check"
+on_fail = "continue"   # review reads a failed check and fixes it
+
+[[steps]]
+id          = "review"
+name        = "Review"
+type        = "agent"
+prompt      = "prompts/review-code.md"
+goal_report = true   # its findings and screen verdicts go in the PR
+
+[[steps]]
+id     = "goal-review"
+name   = "Goal review"
+type   = "agent"
+prompt = "prompts/goal-review.md"
+when   = "last-ticket"   # skipped on every other Ticket
+
+[[steps]]
+id   = "merge"
+name = "Squash merge"
+type = "shell"
+run  = "sh .vago/scripts/merge.sh"
+
+[[after_all]]
+id     = "describe"
+name   = "PR description"
+type   = "agent"
+prompt = "prompts/describe.md"
+
+[[after_all]]
+id   = "ready"
+name = "Ready for review"
+type = "shell"
+run  = "sh .vago/scripts/ready.sh"

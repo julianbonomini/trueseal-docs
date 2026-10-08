@@ -29,6 +29,20 @@ bun run build
 
 Output goes to `dist/`. Static site, no adapter needed.
 
+## Check
+
+```bash
+bun run check
+```
+
+Type-checks with `astro check`, runs `bun test`, then builds.
+
+To screenshot built pages in both themes at desktop and phone width (run `bunx playwright install chromium` once first):
+
+```bash
+bun run screenshot /tmp/shots / /docs/introduction
+```
+
 ---
 
 ## Deployment
