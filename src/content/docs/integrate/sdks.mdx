@@ -1,41 +1,32 @@
 ---
 title: SDKs
-description: Available SDKs for trueseal-sync — Swift, Kotlin, and TypeScript. Per-SDK API reference lives in each repo.
+description: The Swift, Kotlin and TypeScript SDKs in the Developer Preview, the platforms each targets, where to install them, and how they're versioned.
 ---
 
 # SDKs
 
-trueseal-sync is written in Rust. The SDKs below wrap that one Rust core through native bindings, so each language gets an idiomatic, statically-typed API without anyone having to re-implement the protocol three times and pray the implementations agree.
+You pick the SDK for the platform your app runs on. All three wrap the same Rust core, [trueseal-sync](/docs/reference/trueseal-sync), and expose the same `TrueSeal` object with the same operations, events and errors, so a message sent from a Swift app arrives in a Kotlin app exactly as it would in another Swift app.
 
-API reference, install instructions and integration examples live in each repo's README. This page is just the entry point — pick a platform, follow the link.
+| SDK | Platforms | Install from | Package | Repo |
+|---|---|---|---|---|
+| Swift | iOS 16 and macOS 13 or later | Swift Package Manager, a binary target on GitHub Releases | `trueseal-sync-swift` | [trueseal-sync-swift](https://github.com/julianbonomini/trueseal-sync-swift) |
+| Kotlin | Android, API level 24 or later | Maven Central | `dev.trueseal:trueseal-sync` | [trueseal-sync-kotlin](https://github.com/julianbonomini/trueseal-sync-kotlin) |
+| TypeScript | Node.js 20 or later | npm | `@trueseal/sync` | [trueseal-sync-ts](https://github.com/julianbonomini/trueseal-sync-ts) |
 
-All SDKs expose a stable opaque Message ID with each received blob. The library uses it to drop a message it has already handled, as [Sending and receiving](/docs/integrate/sending-and-receiving) explains. Payloads remain opaque to TrueSeal.
+The TypeScript SDK ships native binaries for macOS on arm64 and x64, Linux on x64 and arm64 with glibc, and Windows on x64. It doesn't run in a browser, because devices talk to the relay over raw TCP, which browsers can't open.
 
-## Available
+Kotlin is published for Android only. Kotlin on a plain JVM isn't a published target in the preview.
 
-| SDK | Status | Repo |
-|---|---|---|
-| **Swift** | Production-ready | [github.com/julianbonomini/trueseal-sync-swift](https://github.com/julianbonomini/trueseal-sync-swift) |
-| **Kotlin** | Available | [github.com/julianbonomini/trueseal-sync-kotlin](https://github.com/julianbonomini/trueseal-sync-kotlin) |
-| **TypeScript** | Available | [github.com/julianbonomini/trueseal-sync-ts](https://github.com/julianbonomini/trueseal-sync-ts) |
+## Versions
 
-### Swift
+The three SDKs and the core release together as one TrueSeal Release, starting at 0.6.0. They always share a version number, even when one of them hasn't changed, so use the same version of each SDK across your apps. `TrueSeal.info` reports the SDK version and the two protocol versions it speaks.
 
-iOS and macOS, distributed via Swift Package Manager. Wraps the Rust xcframework through UniFFI. This is the most mature SDK — it's what trueseal-clip ships on both platforms.
-
-### Kotlin
-
-Android and JVM, distributed via Gradle. Same UniFFI bindings against the same Rust core.
-
-### TypeScript
-
-Node.js and Electron, with native bindings — not WASM. Browser is **not** a target. The protocol speaks raw TCP to the relay, and browsers can't open raw TCP sockets.
-
-## Rust
-
-If you're already on Rust, skip the wrappers and use [`trueseal-sync`](https://github.com/julianbonomini/trueseal-sync) directly. There's no "Rust SDK" because there's nothing left to wrap.
+Every SDK is `0.x` during the preview, and any release may break the API, the wire format or stored data. [Developer preview](/docs/overview/developer-preview) has the rules, and [Upgrade Notes](/docs/operate/upgrade-notes) lists each breaking release.
 
 ## Other languages
 
-- **Go** — planned, post-launch. The relay is already Go, so a Go sync SDK is the natural next thing.
-- **Anything else** — implement [trueseal-protocol](/docs/reference/protocol). The wire spec is the only contract that matters; if your client speaks it, any conforming relay will talk back.
+There is no Go SDK and no plain Rust SDK in the preview. A Rust app can depend on the core through its git tags, without a stability promise. Writing a client in another language means implementing the [Protocol](/docs/reference/protocol) and passing the Sync-level test vectors.
+
+## Where the API is documented
+
+The guides under Integrate explain each part of the API. The Agent Docs hold the complete reference, and each SDK's README is a quickstart.

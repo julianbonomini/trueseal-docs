@@ -42,13 +42,16 @@ export const redirects: Record<string, string> = {
 
   '/docs/protocol/overview':                                 '/docs/reference/protocol',
   '/docs/protocol/wire-format':                              '/docs/reference/wire-format',
-  '/docs/components/trueseal-relay/sessions':                '/docs/reference/sessions',
+  '/docs/components/trueseal-relay/sessions':                '/docs/reference/protocol',
   '/docs/components/trueseal-sync/overview':                 '/docs/reference/trueseal-sync',
   '/docs/components/trueseal-sync/envelopes-and-blobs':      '/docs/reference/envelopes-and-blobs',
   '/docs/components/trueseal-sync/group-manifest':           '/docs/reference/group-manifest',
-  '/docs/components/trueseal-sync/operation-log-and-outbox': '/docs/reference/operation-log-and-outbox',
+  '/docs/components/trueseal-sync/operation-log-and-outbox': '/docs/reference/session-state',
   '/docs/components/trueseal-noise/overview':                '/docs/reference/trueseal-noise',
   '/docs/components/trueseal-noise/noise-protocol-primer':   '/docs/reference/noise-protocol-primer',
   '/docs/components/trueseal-noise/xx-pattern':              '/docs/reference/xx-pattern',
   '/docs/components/trueseal-noise/nk-pattern':              '/docs/reference/nk-pattern',
+
+  '/docs/reference/sessions':                 '/docs/reference/protocol',
+  '/docs/reference/operation-log-and-outbox': '/docs/reference/session-state',
 };

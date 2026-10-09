@@ -67,16 +67,15 @@ export const docsNav: NavSection[] = [
   {
     title: 'Reference',
     items: [
-      { title: 'trueseal-protocol', slug: 'reference/protocol' },
-      { title: 'Wire Format',       slug: 'reference/wire-format' },
-      { title: 'Sessions',          slug: 'reference/sessions' },
+      { title: 'Protocol',    slug: 'reference/protocol' },
+      { title: 'Wire Format', slug: 'reference/wire-format' },
       {
         title: 'trueseal-sync',
         slug: 'reference/trueseal-sync',
         children: [
-          { title: 'Envelopes & Blobs',      slug: 'reference/envelopes-and-blobs' },
-          { title: 'Group Manifest',         slug: 'reference/group-manifest' },
-          { title: 'Operation Log & Outbox', slug: 'reference/operation-log-and-outbox' },
+          { title: 'Envelopes and Blobs', slug: 'reference/envelopes-and-blobs' },
+          { title: 'Group Manifest',      slug: 'reference/group-manifest' },
+          { title: 'Session State',       slug: 'reference/session-state' },
         ],
       },
       {

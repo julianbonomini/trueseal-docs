@@ -1,46 +1,33 @@
 ---
 title: Roadmap & Research
-description: Where trueseal is going — near-term roadmap and the research direction toward fine-grained selective replication as a primitive.
+description: What has to be true before TrueSeal 1.0, what 1.0 won't include, and the research question behind where TrueSeal goes after it.
 ---
 
 # Roadmap & Research
 
-trueseal today is a sync primitive: zero-trust, end-to-end encrypted blob delivery between a group of devices. The direction is bigger. We want a composable foundation for **encrypted, capability-based replication** — something any application can drop in without trusting a server, modelling identity, or rebuilding infrastructure from scratch.
+TrueSeal is a Developer Preview. It delivers end-to-end encrypted messages between the devices of a group, through a relay that can't read or forge them. What 1.0 needs is a commitment. The research direction after it is only an intent, and I'd rather keep the two apart.
 
-This page has two halves. The first is a near-term roadmap, with concrete, scoped work. The second is a research direction: an unsolved problem we're working toward. They're separated on purpose. One is commitment, the other is intent, and I'd rather not blur them.
+## Before 1.0
 
----
+The preview ends when these four things are true, and not before. There is no target date.
 
-## Near-term
+1. Identity keys are stored in the Keychain on Apple platforms and the Keystore on Android, and Session State is encrypted at rest. Today both rely on file permissions and, where there is one, the app sandbox.
+2. The SDK APIs follow semver, so a breaking change needs a new major version. A CI check of each SDK's API enforces it.
+3. Stored data, on devices and on the relay, migrates forward within a major version, with no Store Reset.
+4. Each major version speaks exactly one Transport Version and one End-to-End Version. A protocol change is a new major version.
 
-What gets trueseal from v0 to something bigger ecosystems can adopt:
+## Not planned for 1.0
 
-- **More SDKs.** A first-class Go SDK first, then whatever demand pulls next. Adding a language is cheap thanks to the Rust core and UniFFI.
-- **Reference apps.** More integrations beyond trueseal-clip. Apps that exercise real conflict-resolution patterns (CRDTs, append-only logs, custom merge), real bootstrapping flows, real failure modes. These are the docs that prose can't replace.
-- **A public hosted relay.** Free, anonymous, for development and prototyping and low-stakes apps. Self-hosting is still the production default — the hosted relay is just the on-ramp.
+- **An external security audit.** None is planned. Each public claim names the tests that prove it, and "not independently audited" stays a listed limitation.
+- **End-to-end forward secrecy.** Messages are sealed to each device's long-lived key, so someone who steals a device's key can read the messages to it that they recorded. A ratchet that fixes this is a candidate for 2.0, because it changes the protocol.
+- **Hiding a device's IP address from the relay's host.** It can come later without a protocol change. Until then, a user who needs it can use a VPN or Tor.
+- **A hosted relay.** Whether to run one is a business decision, and 1.0 doesn't wait for it. You run your own relay.
+- **Rust crates on crates.io.** That needs a separate decision to keep the Rust API stable.
 
----
+## Research direction
 
-## Research: selective replication
+Today every member of a group receives every message. The direction I want to explore is a device receiving only the messages it holds a capability for.
 
-The next architectural step beyond v0. Today every group member receives every blob — full fan-out, no exceptions. The next primitive: a device receives only the blobs it holds a capability for.
+The addressed encryption TrueSeal already uses points at how. A message is sealed to a public key, and only the holder of the private key can open it. If a message could be sealed to a key for one object or one topic instead of a device, holding that key would be the permission to read it, and no server would decide who gets what.
 
-The mechanism falls out of the existing addressed-encryption scheme: **the recipient key *is* the capability**. Hold the key, decrypt the blob. Don't, and the blob is noise. No identity system, no ACL, no central authority.
-
-What's still missing:
-
-- **Object capabilities** — a blob addressed to a sub-key rather than a device key. Composes trivially with what's already there.
-- **Topic capabilities** — a key that unlocks a whole class of blobs. A namespace, a type, an event stream.
-- **Sub-key distribution** — how does a device acquire a new capability without a full pairing ceremony and without a central issuer? This is the hard one.
-
-That last bullet is the actual research question. Pairing solves key distribution at a coarse grain. Doing it at a fine grain — without identity, without a central authority, without breaking anonymity — isn't a solved problem. Every existing approach trips on one of those three:
-
-- **UCAN, Macaroons.** Introduce a central issuer.
-- **Signal Sender Keys.** Break anonymity at the group layer.
-- **Application-layer ACL.** Punts the problem to the caller, who then re-implements it differently every time.
-
-Fine-grained capability distribution, zero-trust relay, and anonymity — all three at once, in a working primitive — doesn't exist today as far as I can tell.
-
-If trueseal cracks that, it stops being a library and becomes the encrypted replication layer under everything else. Databases, event systems, collaborative editors, agent coordination — anything that has to move state between parties who shouldn't have to trust each other.
-
-That's the direction. Build the primitive, prove it with real apps, then go after the hard one.
+Sealing to such a key is the easy part. The open question is how a device gets a new key of that kind without a full pairing and without someone in the middle handing keys out, while the relay still learns nothing new. Pairing hands out keys for a whole device. I don't know yet how to do it per object or per topic, and I'm not promising that it will ship.

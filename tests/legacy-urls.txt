@@ -43,3 +43,5 @@
 /docs/operate/deploying
 /docs/operate/trueseal-relay
 /docs/operate/inbox-and-ttl
+/docs/reference/sessions
+/docs/reference/operation-log-and-outbox

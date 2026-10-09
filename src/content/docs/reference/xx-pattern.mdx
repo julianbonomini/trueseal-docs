@@ -1,26 +1,31 @@
 ---
 title: XX Pattern
-description: The Noise XX three-message mutual-authentication handshake — used by trueseal for long-lived Receive Sessions to the relay.
+description: The Noise XX handshake, in which both sides prove their static keys in three messages, and how TrueSeal uses it for the Receive Session.
 ---
 
 # XX Pattern
 
-`Noise_XX_25519_ChaChaPoly_BLAKE2s` — a three-message mutual-authentication handshake. Neither peer knows the other's static key going in. Both end up authenticated and share a pair of forward-secret session keys.
+`Noise_XX_25519_ChaChaPoly_BLAKE2s` is a three-message handshake in which neither side knows the other's static key in advance, and both prove their keys before it ends. TrueSeal uses it for the Receive Session, the long-lived connection a device keeps open to take messages from its Inbox.
 
-trueseal uses XX for **Receive Sessions** — the long-lived authenticated connections between devices and the relay.
+## In TrueSeal
 
-For the full pattern spec, see the [Noise Protocol spec](https://noiseprotocol.org/noise.html) and the [official test vectors](https://github.com/noiseprotocol/noise_wiki/wiki/Test-vectors).
+The device is the initiator and the relay the responder. After the handshake:
+
+- the device checks that the relay's static key matches the key in its Relay Address, and closes the connection if it doesn't;
+- the relay learns the device's static X25519 key and serves the Inbox addressed to that key.
+
+The relay therefore knows which device is online and when. That is the price of delivering messages to a device without it polling, and it is listed on [How it works](/docs/overview/how-it-works#what-the-relay-sees).
 
 ## API
 
 ```rust
 // Initiator
 let session = session_xx::dial(conn, keypair)?;
-let remote_pub = session.remote_public_key();
+let relay_key = session.remote_public_key();
 
 // Responder
 let session = session_xx::accept(conn, keypair)?;
-let remote_pub = session.remote_public_key();
+let device_key = session.remote_public_key();
 
 // Both sides
 session.send(b"hello")?;
@@ -28,4 +33,8 @@ let msg = session.receive()?;
 session.close()?;
 ```
 
-`remote_public_key()` is always available — mutual authentication is a property of XX itself. What you do with that key (trust it, reject it, look it up in a manifest) is your call.
+`remote_public_key()` returns the other side's static key, which XX always proves. trueseal-noise doesn't decide whether to trust that key. trueseal-sync compares it with the Relay Address, and the relay uses it to pick the Inbox.
+
+{/* TODO: the prologue argument that trueseal-noise#25 adds to dial and accept. */}
+
+The pattern itself is defined in the [Noise specification](https://noiseprotocol.org/noise.html), and trueseal-noise's tests check this cipher suite against one XX vector from the [cacophony set](https://github.com/noiseprotocol/noise_wiki/wiki/Test-vectors).

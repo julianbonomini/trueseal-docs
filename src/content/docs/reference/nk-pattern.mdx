@@ -1,20 +1,22 @@
 ---
 title: NK Pattern
-description: The Noise NK two-message anonymous-initiator handshake — used by trueseal for short-lived Push Sessions where the sender stays unlinkable.
+description: The Noise NK handshake, in which the initiator already knows the responder's key and sends none of its own, and how TrueSeal uses it for Push Sessions.
 ---
 
 # NK Pattern
 
-`Noise_NK_25519_ChaChaPoly_BLAKE2s` — a two-message handshake where the Initiator already knows the Responder's static key. The Responder never learns the Initiator's static key, so the Initiator stays anonymous.
+`Noise_NK_25519_ChaChaPoly_BLAKE2s` is a two-message handshake in which the initiator already knows the responder's static key and sends no static key of its own. TrueSeal uses it for Push Sessions, the short connections a device opens to hand messages to the relay.
 
-trueseal uses NK for **Push Sessions** — the short-lived anonymous connections a device opens to push blobs to the relay. A fresh ephemeral keypair is generated per push, which keeps the sender unlinkable across pushes.
+## In TrueSeal
 
-For the full pattern spec, see the [Noise Protocol spec](https://noiseprotocol.org/noise.html) and the [official test vectors](https://github.com/noiseprotocol/noise_wiki/wiki/Test-vectors).
+The device is the initiator. It takes the relay's static key from its Relay Address, so the handshake completes only with that relay. The device sends only a fresh ephemeral key, made for this session and thrown away after it.
+
+The handshake therefore gives the relay no key that belongs to the device, and no key that links one Push Session to another or to the device's Receive Session. The relay can still often link them by the timing of the connections, and the server it runs on also sees their IP addresses. The messages themselves carry no sender key in plaintext either. [Envelopes and Blobs](/docs/reference/envelopes-and-blobs#what-the-relay-can-read) lists what the relay can read.
 
 ## API
 
 ```rust
-// Initiator — must supply the Responder's known static public key
+// Initiator: must already hold the responder's static public key
 let session = session_nk::dial(conn, keypair, remote_static)?;
 
 // Responder
@@ -26,4 +28,8 @@ let msg = session.receive()?;
 session.close()?;
 ```
 
-`remote_public_key()` isn't exposed on `session_nk::Session` on purpose. The Initiator already knew the Responder's key before dialling, and the Responder has no Initiator static key to read — that's the whole point of NK.
+`session_nk::Session` has no `remote_public_key()`. The initiator passed the responder's key in, and the responder never receives one from the initiator, so there is nothing to return. The method is missing from the type, so a caller can't call it by mistake.
+
+{/* TODO: the prologue argument that trueseal-noise#25 adds to dial and accept. */}
+
+The pattern itself is defined in the [Noise specification](https://noiseprotocol.org/noise.html), and trueseal-noise's tests check this cipher suite against one NK vector from the [cacophony set](https://github.com/noiseprotocol/noise_wiki/wiki/Test-vectors).

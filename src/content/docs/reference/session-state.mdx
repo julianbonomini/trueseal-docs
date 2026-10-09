@@ -1,0 +1,65 @@
+---
+title: Session State
+description: What trueseal-sync stores on each device in the Developer Preview, including the identity, the outbox, the handled Message IDs and the membership state, and how it survives crashes, wipes and upgrades.
+---
+
+# Session State
+
+Session State is everything trueseal-sync keeps on a device between runs: its identity, its group, the messages it hasn't sent yet, and the messages it has already handled. The app kills the process mid-send, the phone reboots, the user installs an update, and the library picks up where it was. The app never reads or writes Session State itself.
+
+## Where it lives
+
+Session State is an embedded SQLite database that the library owns. The app passes a storage location and a namespace to `open()`, and each namespace gets its own database, identity and group. One namespace holds at most one Sync Group, so an app that needs several groups on one device opens one `TrueSeal` object per namespace.
+
+Every change that spans several records is written in one database transaction, so a crash leaves either the old state or the new one, never a mix.
+
+## What's in it
+
+| Record | What it holds | Cleared when |
+|---|---|---|
+| Identity | The device's X25519 and Ed25519 keypairs | The device is removed, leaves, destroys the group or receives a Destroy Group, or its store is reset |
+| Group Manifest | The current manifest, and the manifests held before it for this group | The same |
+| Join state | `notJoined`, `pendingJoin`, `member`, `leaving` or `destroying`, and the Pending Join's token keys and Pairing Secret | It moves on |
+| Pending Membership Changes | Admissions, removals and leaves this device issued and still has to see through | Each one is satisfied, superseded or dropped |
+| Outbox | One entry per message per recipient, in sequence order | The relay acknowledges the push, or the message fails |
+| Sequence | The device's send counter | With the identity |
+| Handled Message IDs | Each handled Message ID and when it expires | 60 days after the later of handling and the Sender Timestamp |
+| Store Version | The format version of this database | Never; a migration updates it |
+
+The device keeps old manifests because a `Revoke` is honoured from any device that appears in any manifest it has held for the group. [Destroy Group](/docs/integrate/destroy-group) explains why.
+
+## The outbox
+
+`send()` writes one outbox entry per recipient before it returns, so a message that `send()` returned for survives a crash. The library pushes entries for each recipient in sequence order and never lets a later one go before an earlier one that's waiting for a retry. An entry leaves the outbox when the relay acknowledges it, when the relay refuses it for good, or 30 days{/* TODO: Shared Fact outboxExpiry */} after `send()` for a `Sync` message. `Pair`, Group Manifest and `Revoke` entries never expire.
+
+The outbox keeps the plaintext body of a `Sync` message until the relay has accepted it, so the library can seal it again after an End-to-End Version bump. [Sending and receiving](/docs/integrate/sending-and-receiving) has the retry rules and the delivery promise.
+
+## Handled Message IDs
+
+The library records a message's ID after the app's handler finishes and before it acknowledges the message to the relay. A message the relay delivers again finds its ID here and is acknowledged without reaching the handler. A crash after the handler but before the record means the handler runs again. Apart from the retries after a handler throws, that is the only way an app sees a message twice.
+
+## Wipes
+
+Removal, leaving and Destroy Group all end in the same wipe. The library deletes the namespace's group state, outbox and handled Message IDs, generates a new identity, and reports `statusChanged(notJoined, reason)`. The same `TrueSeal` object can pair again. The identity is replaced last, so a crash during the wipe restarts it and never runs it against a fresh identity.
+
+## Upgrades
+
+Session State records the Store Version that wrote it. The first preview release, 0.6.0, writes Store Version 1. Each later release migrates any older preview store forward, in one transaction, the first time it opens it.
+
+| Store found by `open()` | What happens |
+|---|---|
+| Older, and migratable | Migrated in one transaction. A crash leaves the old store, and the next start retries. |
+| Older than the migration floor, or from a development build | Wiped. The device gets a new identity and reports `statusChanged(notJoined, storeReset)`. |
+| Written by a newer release | `open()` fails with `storeTooNew` and leaves the store unchanged |
+
+A migration that bumps the End-to-End Version re-seals every outbox entry under the new version in the same transaction. A `Sync` entry keeps its Message ID and Sender Timestamp. [Upgrading](/docs/operate/upgrades) covers what an app does in each case.
+
+## At rest
+
+Session State, private keys included, is protected only by file permissions and, where the platform has one, the app sandbox. The preview doesn't store keys in the Keychain or Keystore and doesn't encrypt the database. Both are required before 1.0. Anyone who can read the app's files can read the device's keys and its unsent message bodies.
+
+The library keeps no copy of the old store during a migration, so the keys are never in two files at once.
+
+## Where today's code differs
+
+Today's store has three tables: identity, the current manifest, and an outbox that marks entries delivered instead of deleting them. It has no Store Version, no handled Message IDs, no join state and no held manifests. The rest of this page is decided in sync ADR-0023, ADR-0026, ADR-0027, ADR-0029, ADR-0032 and ADR-0034, and isn't built yet.
