@@ -21,7 +21,7 @@ The `.md` file the build writes beside every Human Docs and Agent Docs page, at 
 _Avoid_: twin, raw page
 
 **Agent Snippet**
-The short block an app developer pastes into their own project's `AGENTS.md`: the integration pitfalls and a pointer to the Agent Docs. It lives in the developer's repo, not in TrueSeal's.
+The short block an app developer pastes into their own project's `AGENTS.md`: the integration pitfalls and a pointer to the Agent Docs. It lives in the developer's repo, not in TrueSeal's. TrueSeal keeps its text in `src/agent-snippet/agent-snippet.ts`. It is the first Agent Docs page, at `/agents/`, and the Landing's Integrate section renders the same text. Besides the pitfalls, it names the Agent Docs `llms.txt` and the TrueSeal Skills install commands, and states no Shared Fact.
 _Avoid_: rules file, prompt
 
 **TrueSeal Skills**

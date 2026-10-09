@@ -9,9 +9,11 @@ interface Props {
   tabs?: Tab[];
   lang?: string;
   code?: string;
+  /** Wraps long lines instead of scrolling, for prose such as Markdown. */
+  wrap?: boolean;
 }
 
-export default function CodeBlock({ tabs, lang, code }: Props) {
+export default function CodeBlock({ tabs, lang, code, wrap }: Props) {
   const allTabs: Tab[] = tabs ?? [{ lang: lang ?? '', code: code ?? '' }];
   const [activeIdx, setActiveIdx] = useState(0);
   const [copied, setCopied] = useState(false);
@@ -45,7 +47,7 @@ export default function CodeBlock({ tabs, lang, code }: Props) {
           {copied ? 'Copied' : 'Copy'}
         </button>
       </div>
-      <pre className="code-block__pre"><code>{active.code.trim()}</code></pre>
+      <pre className={`code-block__pre${wrap ? ' code-block__pre--wrap' : ''}`}><code>{active.code.trim()}</code></pre>
     </div>
   );
 }

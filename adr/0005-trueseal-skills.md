@@ -1,6 +1,6 @@
 # TrueSeal Skills: three workflow skills in a lockstep repo
 
-Status: accepted (decided 2026-09-30 in [trueseal-roadmap#24](https://github.com/julianbonomini/trueseal-roadmap/issues/24); not yet implemented). Builds on ADR-0003, which settled that skills exist, live in a dedicated repo and teach from the Agent Docs. Research: [agent-ready onboarding findings](https://github.com/julianbonomini/trueseal-roadmap/blob/research/agent-onboarding/research/agent-onboarding.md) §1.3 and §3.
+Status: accepted (decided 2026-09-30 in [trueseal-roadmap#24](https://github.com/julianbonomini/trueseal-roadmap/issues/24); partly implemented: the Agent Snippet's skills line). Builds on ADR-0003, which settled that skills exist, live in a dedicated repo and teach from the Agent Docs. Research: [agent-ready onboarding findings](https://github.com/julianbonomini/trueseal-roadmap/blob/research/agent-onboarding/research/agent-onboarding.md) §1.3 and §3.
 
 Skills help agents most with multi-step workflows, and least with general API knowledge, which the Agent Snippet carries. They are also often left unused unless something points at them. So TrueSeal ships a few sharp workflow skills, points at them from the Agent Snippet, and proves with evals that they trigger.
 

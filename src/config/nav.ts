@@ -49,11 +49,11 @@ const docsNav: NavSection<DocsNavItem>[] = [
   {
     title: 'Overview',
     items: [
-      { title: 'Introduction',            slug: 'overview/introduction',              agents: '' },
+      { title: 'Introduction',            slug: 'overview/introduction',              agents: 'what-trueseal-is' },
       { title: 'Architecture',            slug: 'overview/architecture',              agents: 'protocol' },
-      { title: 'Principles & Boundaries', slug: 'overview/principles-and-boundaries', agents: '' },
-      { title: 'Roadmap & Research',      slug: 'overview/roadmap',                   agents: '' },
-      { title: 'License',                 slug: 'overview/license',                   agents: '' },
+      { title: 'Principles & Boundaries', slug: 'overview/principles-and-boundaries', agents: 'what-trueseal-is' },
+      { title: 'Roadmap & Research',      slug: 'overview/roadmap',                   agents: 'what-trueseal-is' },
+      { title: 'License',                 slug: 'overview/license',                   agents: 'what-trueseal-is' },
     ],
   },
   {
@@ -79,8 +79,8 @@ const docsNav: NavSection<DocsNavItem>[] = [
   {
     title: 'Trust',
     items: [
-      { title: 'Zero Trust & Encryption', slug: 'trust/zero-trust-and-encryption', agents: '' },
-      { title: 'The Dumb Relay',          slug: 'trust/the-dumb-relay',            agents: '' },
+      { title: 'Zero Trust & Encryption', slug: 'trust/zero-trust-and-encryption', agents: 'what-trueseal-is' },
+      { title: 'The Dumb Relay',          slug: 'trust/the-dumb-relay',            agents: 'what-trueseal-is' },
     ],
   },
   {
@@ -113,9 +113,9 @@ const docsNav: NavSection<DocsNavItem>[] = [
   },
 ];
 
-// The Agent Docs sections. The Agent Snippet goes first in Start once it exists.
+// The Agent Docs sections.
 const agentsNav: NavSection[] = [
-  { title: 'Start',     items: [{ title: 'What TrueSeal is', slug: '' }] },
+  { title: 'Start',     items: [{ title: 'Agent Snippet', slug: '' }, { title: 'What TrueSeal is', slug: 'what-trueseal-is' }] },
   {
     title: 'Reference',
     items: [

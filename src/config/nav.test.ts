@@ -79,12 +79,12 @@ test('the Agent Docs index starts its sidebar', () => {
   const place = placeOf('/agents/');
   expect(place?.section).toBe('Start');
   expect(place?.prev).toBeUndefined();
-  expect(place?.next?.href).toBe('/agents/api');
+  expect(place?.next?.href).toBe('/agents/what-trueseal-is');
   expect(placeOf('/agents/api')?.next?.href).toBe('/agents/protocol');
 });
 
 test('sidebarPaths lists a surface in reading order', () => {
-  expect(sidebarPaths('agents')).toEqual(['/agents/', '/agents/api', '/agents/protocol', '/agents/versions-and-relay-address', '/agents/limits', '/agents/errors-and-events']);
+  expect(sidebarPaths('agents')).toEqual(['/agents/', '/agents/what-trueseal-is', '/agents/api', '/agents/protocol', '/agents/versions-and-relay-address', '/agents/limits', '/agents/errors-and-events']);
   expect(sidebarPaths('docs')[0]).toBe('/docs/overview/introduction');
 });
 
@@ -102,7 +102,7 @@ test('markdownPathOf drops a trailing slash and adds .md', () => {
 });
 
 test('agentsVersionOf links a Human Docs page to its closest Agent Docs page', () => {
-  expect(agentsVersionOf('/docs/overview/introduction')).toEqual({ title: 'What TrueSeal is', href: '/agents/' });
+  expect(agentsVersionOf('/docs/overview/introduction')).toEqual({ title: 'What TrueSeal is', href: '/agents/what-trueseal-is' });
   expect(agentsVersionOf('/docs/reference/wire-format')?.href).toBe('/agents/protocol');
   expect(agentsVersionOf('/docs/integrate/pairing/')?.href).toBe('/agents/api');
   expect(agentsVersionOf('/docs/kitchen-sink')?.href).toBe('/agents/');

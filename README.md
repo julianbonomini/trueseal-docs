@@ -68,6 +68,8 @@ The Human Docs live in `src/content/docs/`. Files can be `.md` or `.mdx`.
 
 The Agent Docs live in `src/content/agents/` and are served at `/agents/...`. They are written for coding agents: literal, with no humour. Every Shared Fact (limits, versions, Relay Address, error and event cases) lives in `src/facts/shared-facts.ts` with its source; pages show one with `<Fact id="…" />` or `<FactTable group="…" />` and never type the value. A test fails on a typed value. The SDK API reference renders from `src/api/api-reference.ts`; pages place `<ApiEntries>` and never list API names. Their sidebar is in `src/config/nav.ts`, beside the Human Docs one.
 
+The Agent Snippet, the first Agent Docs page, renders `src/agent-snippet/agent-snippet.ts`. The Landing's Integrate section renders the same text, so edit it only there.
+
 Use `.mdx` when a page needs custom components (flow diagrams, phase breakdowns, code blocks with tabs, callouts, etc.). Plain prose pages can stay as `.md`.
 
 After `astro build`, `src/markdown/markdown.ts` writes a Markdown version of every Human Docs and Agent Docs page at its URL plus `.md` (`/docs/integrate/pairing.md`, `/agents.md`), and `llms.txt` and `llms-full.txt` over the Agent Docs sidebar. It converts each page's `<article>` HTML, so a Shared Fact reads the same in the page and its Markdown. A component whose HTML doesn't read as Markdown sets `data-markdown` on its root `div` to the Markdown it stands for. These files exist only after `bun run build`, so Copy as Markdown works in `bun run preview` and not in `bun run dev`.
@@ -98,6 +100,7 @@ After `astro build`, `src/markdown/markdown.ts` writes a Markdown version of eve
 brand/
   mascot/         # Mascot SVG and its PNG exports
 src/
+  agent-snippet/  # agent-snippet.ts (the Agent Snippet text both surfaces render)
   api/            # api-reference.ts (every public API name and its platform spelling), api.ts (sections, case spelling rule, apiNames())
   components/
     landing/      # Landing page sections
@@ -116,4 +119,4 @@ src/
   styles/         # tokens.css, global.css
 ```
 
-`tests/` holds the brand checks on the source and the Landing checks, the mascot and 404 checks, the redirect, link and docs-sidebar checks on the built site, the Agent Docs and header-switch checks, the SDK API reference checks, the Shared Facts checks, including a build of a copy with a changed fact, the Markdown version, `llms.txt` and Copy as Markdown checks, and the CI workflow check, run by `bun test`.
+`tests/` holds the brand checks on the source and the Landing checks, the mascot and 404 checks, the redirect, link and docs-sidebar checks on the built site, the Agent Docs and header-switch checks, the Agent Snippet checks, the SDK API reference checks, the Shared Facts checks, including a build of a copy with a changed fact, the Markdown version, `llms.txt` and Copy as Markdown checks, and the CI workflow check, run by `bun test`.

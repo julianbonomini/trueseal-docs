@@ -272,6 +272,11 @@ code, kbd, samp, pre {
   border: none;
 }
 
+.code-block .code-block__pre--wrap {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 /* ─── ThemeToggle and CopyMarkdown (React Islands) ─────── */
 .theme-toggle,
 .copy-markdown {
