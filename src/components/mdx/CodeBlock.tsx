@@ -24,8 +24,11 @@ export default function CodeBlock({ tabs, lang, code }: Props) {
     setTimeout(() => setCopied(false), 1500);
   }
 
+  // The page's Markdown version reads every tab from here, not only the active one.
+  const markdown = allTabs.map(tab => `\`\`\`${tab.lang}\n${tab.code.trim()}\n\`\`\``).join('\n\n');
+
   return (
-    <div className="code-block">
+    <div className="code-block" data-markdown={markdown}>
       <div className="code-block__header">
         <div className="code-block__tabs">
           {allTabs.map((tab, i) => (

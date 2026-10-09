@@ -2,6 +2,7 @@
 // Imported here, not with @import in a <style> block, so Vite bundles the @fontsource font files.
 import '../styles/tokens.css';
 import '../styles/global.css';
+import { siteDescription, siteUrl } from '../config/site';
 
 interface Props {
   title: string;
@@ -12,12 +13,12 @@ interface Props {
 
 const {
   title,
-  description = 'End-to-end encrypted sync for Swift, Kotlin and TypeScript, with a relay you run yourself.',
+  description = siteDescription,
   searchable = true,
 } = Astro.props;
 
 const fullTitle = title === 'trueseal' ? 'trueseal' : `${title} · trueseal`;
-const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? 'https://trueseal.dev');
+const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? siteUrl);
 ---
 
 <!doctype html>

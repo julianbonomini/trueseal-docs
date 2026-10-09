@@ -1,14 +1,16 @@
 ---
 // A documentation page on either surface: header, a persistent sidebar (a "Menu" disclosure below 900px),
 // the page with its section crumb and previous/next links in sidebar order, and an
-// "On this page" list of its h2 headings. It ships no JS of its own.
+// "On this page" list of its h2 headings. A Human Docs page also links to its Agent Docs version and
+// offers Copy as Markdown, the one Island this layout adds.
 import type { MarkdownHeading } from 'astro';
 import BaseLayout from './BaseLayout.astro';
 import Navbar from '../components/layout/Navbar.astro';
 import Footer from '../components/layout/Footer.astro';
 import DocsSidebar from '../components/docs/DocsSidebar.astro';
 import NextPage from '../components/mdx/NextPage.astro';
-import { placeOf } from '../config/nav';
+import CopyMarkdown from '../components/mdx/CopyMarkdown';
+import { agentsVersionOf, markdownPathOf, placeOf } from '../config/nav';
 import { versionLabel } from '../config/site';
 
 interface Props {
@@ -20,6 +22,7 @@ interface Props {
 const { title, description, headings } = Astro.props;
 
 const place = placeOf(Astro.url.pathname);
+const agentsVersion = agentsVersionOf(Astro.url.pathname);
 const toc = headings.filter(h => h.depth === 2);
 ---
 
@@ -36,7 +39,17 @@ const toc = headings.filter(h => h.depth === 2);
         <summary>Menu <span class="docs__menu-version">{versionLabel}</span></summary>
         <DocsSidebar />
       </details>
-      {place && <p class="docs__crumb">{place.section}</p>}
+      {(place || agentsVersion) && (
+        <div class="docs__meta" data-pagefind-ignore>
+          {place && <p class="docs__crumb">{place.section}</p>}
+          {agentsVersion && (
+            <div class="docs__versions">
+              <a href={agentsVersion.href}>Agent Docs: {agentsVersion.title}</a>
+              <CopyMarkdown client:idle href={markdownPathOf(Astro.url.pathname)} />
+            </div>
+          )}
+        </div>
+      )}
       <article class="prose">
         <slot />
         {place && <NextPage prev={place.prev} next={place.next} />}
@@ -94,11 +107,29 @@ const toc = headings.filter(h => h.depth === 2);
     color: var(--ink-muted);
   }
 
+  .docs__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 24px;
+    margin-bottom: 16px;
+  }
+
   .docs__crumb {
     font-family: var(--font-mono);
     font-size: var(--text-label);
     color: var(--ink-muted);
-    margin-bottom: 12px;
+  }
+
+  /* Right-aligned even on a page with no crumb. */
+  .docs__versions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-family: var(--font-mono);
+    font-size: var(--text-label);
   }
 
   .docs__toc {

@@ -1,5 +1,6 @@
 // Shared Facts on the built site and in source: no page types a value by hand, both surfaces show the
-// same value, and a value changed in the data file changes both. Reads dist/, so run `bun run build` first.
+// same value, and a value changed in the data file changes both, Markdown versions included.
+// Reads dist/, so run `bun run build` first.
 import { describe, expect, test } from 'bun:test';
 import { cpSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -79,6 +80,10 @@ describe('Shared Facts', () => {
       for (const page of ['docs/reference/wire-format', 'agents/limits']) {
         const built = text(readFileSync(join(tmp, 'dist', page, 'index.html'), 'utf8'));
         expect({ page, changed: built.includes('51,200 bytes (50 KiB)'), old: built.includes('61,440') }).toEqual({ page, changed: true, old: false });
+      }
+      for (const file of ['docs/reference/wire-format.md', 'agents/limits.md']) {
+        const markdown = readFileSync(join(tmp, 'dist', file), 'utf8');
+        expect({ file, changed: markdown.includes('51,200 bytes (50 KiB)'), old: markdown.includes('61,440') }).toEqual({ file, changed: true, old: false });
       }
     } finally {
       rmSync(tmp, { recursive: true, force: true });

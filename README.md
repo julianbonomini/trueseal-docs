@@ -70,6 +70,8 @@ The Agent Docs live in `src/content/agents/` and are served at `/agents/...`. Th
 
 Use `.mdx` when a page needs custom components (flow diagrams, phase breakdowns, code blocks with tabs, callouts, etc.). Plain prose pages can stay as `.md`.
 
+After `astro build`, `src/markdown/markdown.ts` writes a Markdown version of every Human Docs and Agent Docs page at its URL plus `.md` (`/docs/integrate/pairing.md`, `/agents.md`), and `llms.txt` and `llms-full.txt` over the Agent Docs sidebar. It converts each page's `<article>` HTML, so a Shared Fact reads the same in the page and its Markdown. A component whose HTML doesn't read as Markdown sets `data-markdown` on its root `div` to the Markdown it stands for. These files exist only after `bun run build`, so Copy as Markdown works in `bun run preview` and not in `bun run dev`.
+
 ### Kitchen Sink
 
 `/docs/kitchen-sink` is the component reference page — every available MDX component rendered in one place. Check it before writing new doc pages to see what's available.
@@ -103,14 +105,15 @@ src/
     layout/       # Navbar, Wordmark, Footer
     mdx/          # Reusable MDX components
     ui/           # Buttons, theme toggle, mascot
-  config/         # nav.ts (both sidebars, reading order and which path belongs to which surface), redirects.ts (moved URLs), shiki.ts (code theme), site.ts (version label)
+  config/         # nav.ts (both sidebars, reading order and which path belongs to which surface), redirects.ts (moved URLs), shiki.ts (code theme), site.ts (site URL, description, version label)
   content/
     docs/         # Human Docs
     agents/       # Agent Docs
   facts/          # shared-facts.ts (every Shared Fact and its source), facts.ts (lookup and formatting)
   layouts/        # BaseLayout, DocsLayout, LandingLayout
+  markdown/       # markdown.ts (Markdown versions of built pages, llms.txt, llms-full.txt)
   pages/          # Astro routes
   styles/         # tokens.css, global.css
 ```
 
-`tests/` holds the brand checks on the source and the Landing checks, the mascot and 404 checks, the redirect, link and docs-sidebar checks on the built site, the Agent Docs and header-switch checks, the SDK API reference checks, the Shared Facts checks, including a build of a copy with a changed fact, and the CI workflow check, run by `bun test`.
+`tests/` holds the brand checks on the source and the Landing checks, the mascot and 404 checks, the redirect, link and docs-sidebar checks on the built site, the Agent Docs and header-switch checks, the SDK API reference checks, the Shared Facts checks, including a build of a copy with a changed fact, the Markdown version, `llms.txt` and Copy as Markdown checks, and the CI workflow check, run by `bun test`.

@@ -22,9 +22,17 @@ interface Props {
 }
 
 const { left, center, right } = Astro.props;
+
+const nodeLine = (node: NodePanel) => `- **${node.id}** (${node.role}): ${node.steps.map(step => step.label).join('; ')}`;
+// The page's Markdown version reads this in place of the panels.
+const markdown = [
+  nodeLine(left),
+  `- **${center.title}** (${center.subtitle}): ${center.meta.map(m => `${m.label}: ${m.value}`).join('; ')}`,
+  nodeLine(right),
+].join('\n');
 ---
 
-<div class="flow-diagram">
+<div class="flow-diagram" data-markdown={markdown}>
   <div class="flow-node">
     <div class="flow-node__header">
       <span class="flow-node__id">{left.id}</span>

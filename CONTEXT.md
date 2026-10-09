@@ -13,8 +13,12 @@ The developer documentation surface at `/docs/...`, written for people: short pa
 _Avoid_: documentation site, wiki, reference, Docs (on its own, now ambiguous)
 
 **Agent Docs**
-The documentation surface written for AI coding agents: dense, exhaustive pages that say exactly what TrueSeal is and what it is not, including the full SDK API reference. It is authored separately from the Human Docs, has its own `llms.txt`, and is the canonical reference when the two differ (ADR-0003). The SDK API reference renders from one data file, `src/api/api-reference.ts`, which also lists the API names the reference-existence check reads.
+The documentation surface written for AI coding agents: dense, exhaustive pages that say exactly what TrueSeal is and what it is not, including the full SDK API reference. It is authored separately from the Human Docs, has its own `llms.txt` and `llms-full.txt`, generated from the Agent Docs sidebar, and is the canonical reference when the two differ (ADR-0003). The SDK API reference renders from one data file, `src/api/api-reference.ts`, which also lists the API names the reference-existence check reads.
 _Avoid_: LLM docs, AI docs, llms.txt (that is one file within the Agent Docs)
+
+**Markdown version**
+The `.md` file the build writes beside every Human Docs and Agent Docs page, at the page URL plus `.md`; what Copy as Markdown copies and what `llms.txt` links to.
+_Avoid_: twin, raw page
 
 **Agent Snippet**
 The short block an app developer pastes into their own project's `AGENTS.md`: the integration pitfalls and a pointer to the Agent Docs. It lives in the developer's repo, not in TrueSeal's.

@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { placeOf, sidebarOf, sidebarPaths, surfaceOf, surfaces } from './nav';
+import { agentsVersionOf, markdownPathOf, placeOf, sidebarOf, sidebarPages, sidebarPaths, surfaceOf, surfaces } from './nav';
 
 test('surfaceOf maps each path prefix to its surface and nothing else', () => {
   expect(surfaceOf('/docs/integrate/pairing')).toBe('docs');
@@ -86,4 +86,31 @@ test('the Agent Docs index starts its sidebar', () => {
 test('sidebarPaths lists a surface in reading order', () => {
   expect(sidebarPaths('agents')).toEqual(['/agents/', '/agents/api', '/agents/protocol', '/agents/versions-and-relay-address', '/agents/limits', '/agents/errors-and-events']);
   expect(sidebarPaths('docs')[0]).toBe('/docs/overview/introduction');
+});
+
+test('sidebarPages gives each sidebar page its section, in sidebarPaths order', () => {
+  const pages = sidebarPages('agents');
+  expect(pages.map(page => page.link.href)).toEqual(sidebarPaths('agents'));
+  expect([...new Set(pages.map(page => page.section))]).toEqual(['Start', 'Reference']);
+});
+
+test('markdownPathOf drops a trailing slash and adds .md', () => {
+  expect(markdownPathOf('/docs/integrate/pairing')).toBe('/docs/integrate/pairing.md');
+  expect(markdownPathOf('/docs/integrate/pairing/')).toBe('/docs/integrate/pairing.md');
+  expect(markdownPathOf('/agents/')).toBe('/agents.md');
+  expect(markdownPathOf('/agents')).toBe('/agents.md');
+});
+
+test('agentsVersionOf links a Human Docs page to its closest Agent Docs page', () => {
+  expect(agentsVersionOf('/docs/overview/introduction')).toEqual({ title: 'What TrueSeal is', href: '/agents/' });
+  expect(agentsVersionOf('/docs/reference/wire-format')?.href).toBe('/agents/protocol');
+  expect(agentsVersionOf('/docs/integrate/pairing/')?.href).toBe('/agents/api');
+  expect(agentsVersionOf('/docs/kitchen-sink')?.href).toBe('/agents/');
+  expect(agentsVersionOf('/agents/api')).toBeUndefined();
+  expect(agentsVersionOf('/')).toBeUndefined();
+});
+
+test('every Human Docs sidebar page links to an Agent Docs sidebar page', () => {
+  const agents = sidebarPaths('agents');
+  expect(sidebarPaths('docs').filter(path => !agents.includes(agentsVersionOf(path)!.href))).toEqual([]);
 });

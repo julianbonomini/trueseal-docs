@@ -272,8 +272,9 @@ code, kbd, samp, pre {
   border: none;
 }
 
-/* ─── ThemeToggle (React Island) ────────────────────────── */
-.theme-toggle {
+/* ─── ThemeToggle and CopyMarkdown (React Islands) ─────── */
+.theme-toggle,
+.copy-markdown {
   font-family: var(--font-mono);
   font-size: var(--text-label);
   height: 32px;
@@ -284,9 +285,14 @@ code, kbd, samp, pre {
   cursor: pointer;
 }
 
-.theme-toggle:hover {
+.theme-toggle:hover,
+.copy-markdown:hover {
   border-color: var(--ink);
   color: var(--ink);
+}
+
+.copy-markdown {
+  white-space: nowrap;
 }
 
 /* Hidden on screen, still read by screen readers and still focusable. */

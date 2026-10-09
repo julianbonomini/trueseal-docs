@@ -1,6 +1,6 @@
 # Agent Docs as a separate, canonical surface
 
-Status: accepted (decided 2026-09-29 in [trueseal-roadmap#19](https://github.com/julianbonomini/trueseal-roadmap/issues/19); partly implemented: the `/agents/` tree, the header switch, the Shared Facts source and the SDK API reference). Research: [agent-ready onboarding findings](https://github.com/julianbonomini/trueseal-roadmap/blob/research/agent-onboarding/research/agent-onboarding.md).
+Status: accepted (decided 2026-09-29 in [trueseal-roadmap#19](https://github.com/julianbonomini/trueseal-roadmap/issues/19); partly implemented: the `/agents/` tree, the header switch, the Shared Facts source, the SDK API reference, and `llms.txt`, `llms-full.txt` and per-page Markdown). Research: [agent-ready onboarding findings](https://github.com/julianbonomini/trueseal-roadmap/blob/research/agent-onboarding/research/agent-onboarding.md).
 
 Many developers will add TrueSeal by asking a coding agent to do it. Agent onboarding is therefore a first-class part of the docs, but it is not mixed with the human docs, because the two audiences need different writing. Human readers need short, plain-language pages. Agents need dense, exhaustive pages that say exactly what TrueSeal is and what it is not.
 
