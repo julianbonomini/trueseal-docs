@@ -1,5 +1,5 @@
 ---
-// The Human Docs page: header, a persistent sidebar (a "Menu" disclosure below 900px),
+// A documentation page on either surface: header, a persistent sidebar (a "Menu" disclosure below 900px),
 // the page with its section crumb and previous/next links in sidebar order, and an
 // "On this page" list of its h2 headings. It ships no JS of its own.
 import type { MarkdownHeading } from 'astro';
@@ -8,7 +8,7 @@ import Navbar from '../components/layout/Navbar.astro';
 import Footer from '../components/layout/Footer.astro';
 import DocsSidebar from '../components/docs/DocsSidebar.astro';
 import NextPage from '../components/mdx/NextPage.astro';
-import { placeOf, slugOf } from '../config/nav';
+import { placeOf } from '../config/nav';
 import { versionLabel } from '../config/site';
 
 interface Props {
@@ -19,7 +19,7 @@ interface Props {
 
 const { title, description, headings } = Astro.props;
 
-const place = placeOf(slugOf(Astro.url.pathname));
+const place = placeOf(Astro.url.pathname);
 const toc = headings.filter(h => h.depth === 2);
 ---
 

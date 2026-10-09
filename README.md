@@ -64,7 +64,9 @@ Build settings (already configured in Cloudflare):
 
 ## Content
 
-Documentation lives in `src/content/docs/`. Files can be `.md` or `.mdx`.
+The Human Docs live in `src/content/docs/`. Files can be `.md` or `.mdx`.
+
+The Agent Docs live in `src/content/agents/` and are served at `/agents/...`. They are written for coding agents: literal, with no humour. Every value they state comes from Shared Facts. Their sidebar is in `src/config/nav.ts`, beside the Human Docs one.
 
 Use `.mdx` when a page needs custom components (flow diagrams, phase breakdowns, code blocks with tabs, callouts, etc.). Plain prose pages can stay as `.md`.
 
@@ -97,12 +99,13 @@ src/
     layout/       # Navbar, Wordmark, Footer
     mdx/          # Reusable MDX components
     ui/           # Buttons, theme toggle, mascot
-  config/         # nav.ts (sidebar and reading order), redirects.ts (moved URLs), site.ts (version label)
+  config/         # nav.ts (both sidebars, reading order and which path belongs to which surface), redirects.ts (moved URLs), site.ts (version label)
   content/
-    docs/         # All documentation markdown
+    docs/         # Human Docs
+    agents/       # Agent Docs
   layouts/        # BaseLayout, DocsLayout, LandingLayout
   pages/          # Astro routes
   styles/         # tokens.css, global.css
 ```
 
-`tests/` holds the brand checks on the source and the Landing checks, the mascot and 404 checks, the redirect, link and docs-sidebar checks on the built site, and the CI workflow check, run by `bun test`.
+`tests/` holds the brand checks on the source and the Landing checks, the mascot and 404 checks, the redirect, link and docs-sidebar checks on the built site, the Agent Docs and header-switch checks, and the CI workflow check, run by `bun test`.

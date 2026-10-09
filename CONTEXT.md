@@ -53,7 +53,7 @@ A static `.astro` file — no client-side JS, no hydration. Used for layouts, na
 _Avoid_: component (use Astro component vs Island to be explicit)
 
 **Content collection**
-Astro's typed system for organizing and querying markdown/MDX content files. The existing docs markdown files map into a single content collection.
+Astro's typed system for organizing and querying markdown/MDX content files. The Human Docs map to the `docs` collection (`src/content/docs/`) and the Agent Docs to the `agents` collection (`src/content/agents/`).
 _Avoid_: pages, content folder
 
 **Theme**

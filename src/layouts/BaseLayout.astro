@@ -16,7 +16,7 @@ const {
   searchable = true,
 } = Astro.props;
 
-const fullTitle = title === 'trueseal' ? 'trueseal' : `${title} — trueseal`;
+const fullTitle = title === 'trueseal' ? 'trueseal' : `${title} · trueseal`;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? 'https://trueseal.dev');
 ---
 

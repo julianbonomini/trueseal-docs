@@ -6,33 +6,14 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { formatLocation, START_POINT } from '../src/components/landing/sealDemo.ts';
 import { builtPages, dist } from './dist.ts';
+import { bannedTermsIn, descriptionOf, prose, text, titleOf, voiceProblems } from './html.ts';
 
 const indexPath = join(dist, 'index.html');
 if (!existsSync(indexPath)) throw new Error('dist/index.html is missing. Run bun run build first.');
 const html = readFileSync(indexPath, 'utf8');
 
-function decode(s: string): string {
-  return s
-    .replace(/&#39;|&#x27;/g, "'")
-    .replace(/&quot;/g, '"')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&');
-}
-
-/** The visible text: no scripts, styles or tags, entities decoded. */
-function text(source: string): string {
-  return decode(source.replace(/<(script|style)[\s\S]*?<\/\1>/g, ' ').replace(/<[^>]+>/g, ' '));
-}
-
-/** The visible text outside code blocks. */
-function prose(source: string): string {
-  return text(source.replace(/<pre[\s\S]*?<\/pre>/g, ' '));
-}
-
-const title = decode(html.match(/<title>([\s\S]*?)<\/title>/)?.[1] ?? '');
-const description = decode(html.match(/<meta name="description" content="([^"]*)"/)?.[1] ?? '');
+const title = titleOf(html);
+const description = descriptionOf(html);
 
 describe('Landing', () => {
   test('the sections follow the Journey', () => {
@@ -66,27 +47,11 @@ describe('Landing', () => {
   });
 
   test('no banned term appears in the text, title or meta description', () => {
-    const all = [text(html), title, description].join(' ').toLowerCase().replace(/’/g, "'");
-    const banned = [
-      'zero-trust',
-      'zero trust',
-      'zero-knowledge',
-      'no communication graph',
-      'structurally unknowable',
-      'cryptographic guarantee',
-      "can't see your ip",
-      'anonymous',
-      'military-grade',
-      'fully private',
-      'completely private',
-    ];
-    expect(banned.filter(term => all.includes(term))).toEqual([]);
+    expect([text(html), title, description].flatMap(bannedTermsIn)).toEqual([]);
   });
 
-  test('prose and title have no dashes', () => {
-    for (const s of [prose(html), title]) {
-      expect(s).not.toMatch(/—|–| - /);
-    }
+  test('prose and title have no dashes or banned terms', () => {
+    expect([prose(html), title].flatMap(voiceProblems)).toEqual([]);
   });
 
   test('the mascot stays off the Landing', () => {

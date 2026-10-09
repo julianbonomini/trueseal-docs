@@ -1,0 +1,145 @@
+---
+title: Protocol and wire format
+description: Protocol versions, the two Noise sessions, frame layouts, refusals, the sealed Envelope, the receive steps, the Replay Window and the size rule.
+---
+
+# Protocol and wire format
+
+This page states the protocol of the Developer Preview as the accepted trueseal-sync ADRs decide it. Where they overlap, this page follows ADR-0034 over ADR-0031 over ADR-0026 over ADR-0022, and ADR-0026 over trueseal-relay ADR-0008.
+
+## Parties and terms
+
+- **Device**: one installation of an SDK, identified by its static X25519 public key.
+- **Relay**: the server that stores and forwards Blobs. It routes by recipient key and never decrypts.
+- **Inbox**: the relay's queue of Blobs for one recipient device key.
+- **Blob**: one stored Envelope, addressed to one recipient.
+- **Envelope**: the protobuf message a device seals for one recipient. It carries one of four message types: `Pair`, `Sync`, `GroupManifest` or `Revoke`. A leave is a `GroupManifest`.
+- **Message ID**: the identifier of a message, derived from its author key and sequence. Apps treat it as an opaque string and never parse or rebuild it (trueseal-sync ADR-0020).
+
+## Protocol versions
+
+TrueSeal carries two independent protocol versions (trueseal-sync ADR-0022). The Transport Version{/* TODO: Shared Fact transportVersion */} covers Device to Relay: the Noise handshake and frames. The End-to-End Version{/* TODO: Shared Fact endToEndVersion */} covers Device to Device: the Envelope, signatures and Addressed Encryption. Each SDK reports both in `TrueSeal.info`.
+
+Both versions are bound into the cryptography.
+
+- The Transport Version goes into the Noise prologue through a short plaintext version prefix sent before the handshake. {/* TODO: the version-prefix byte layout; no ADR fixes it. */}
+- The End-to-End Version goes into HKDF info, AEAD associated data and the domain-separated signing inputs, and is also carried as a signed plaintext field.
+
+A component speaks exactly one version of each and negotiates nothing. The unversioned format of earlier releases is refused, with no compatibility decoder.
+
+- The relay answers an unsupported Transport Version with the plaintext `unsupported min..max` and closes the connection. The SDK reports connection `relayVersionUnsupported{min, max}`, and queued messages stay in the outbox until the library is upgraded.
+- A Blob in a newer End-to-End Version stays unacked on the relay, up to the held-Blob cap{/* TODO: Shared Fact heldBlobCap */} per device, and is reported as `heldForUpgrade(version)`. After an upgrade those Blobs are handled, out of order. When the cap overflows, the oldest held Blob is acked and dropped as `unreadable(droppedWhileHeld)`.
+- A Blob in an older End-to-End Version is acked and dropped as `unreadable(senderOutdated)`.
+- Unknown protobuf fields carry no meaning. Every semantic change bumps a version.
+
+## Sessions
+
+The relay has two TCP listeners, a receive port and a push port. Both ports are part of the Relay Address{/* TODO: Shared Fact relayAddressFormat */}, together with the relay's public key and host (trueseal-sync ADR-0028). Both sessions run over TCP with the Noise patterns trueseal-relay ADR-0002 chooses, as implemented by trueseal-noise.
+
+- The Receive Session uses `Noise_XX_25519_ChaChaPoly_BLAKE2s`. Both sides authenticate, and the relay learns the device key. It is long-lived.
+- The Push Session uses `Noise_NK_25519_ChaChaPoly_BLAKE2s`. Only the relay authenticates, and the client presents no static key. It is short-lived.
+
+One `send()` fans out as one Push frame per recipient inside a single Push Session (trueseal-sync ADR-0024).
+
+The relay enforces a handshake deadline{/* TODO: Shared Fact handshakeDeadline */} on both listeners and a total Push Session deadline{/* TODO: Shared Fact pushSessionDeadline */} from accept to close. On a Receive Session the client sends a Heartbeat at the heartbeat interval{/* TODO: Shared Fact heartbeatInterval */}, the relay echoes it, and the relay closes a Receive Session after the idle timeout{/* TODO: Shared Fact receiveIdleTimeout */} with no frame received (trueseal-relay ADR-0012).
+
+## Framing
+
+Every frame has the same layout and travels in one Noise transport message:
+
+```
+[type: u8][len: u32 BE][body: len bytes]
+```
+
+The Noise specification caps a transport message at 65,535 bytes. Every message fits in one frame (trueseal-sync ADR-0025), so this cap sets the ceiling on message size.
+
+A frame shorter than 5 bytes, or with an unknown type tag, is malformed. The relay refuses it with a generic Error code and echoes no bytes.
+
+## Frame types
+
+| Tag | Name | Direction | Body |
+|---|---|---|---|
+| `0x01` | Push | client to relay | `[recipient_pub: 32 bytes][envelope: bytes]` |
+| `0x02` | Deliver | relay to client | `[blob_id: 8 bytes u64 BE][envelope: bytes]` |
+| `0x03` | Heartbeat | client to relay, echoed by the relay | empty |
+| `0x04` | Ack | relay to client | empty |
+| `0x05` | Error | relay to client | reason code |
+| `0x06` | DeliverAck | client to relay | `[blob_id: 8 bytes u64 BE]` |
+
+## Push, Deliver and DeliverAck bodies
+
+`recipient_pub` in a Push is the recipient's 32-byte X25519 public key. The relay routes by these first 32 bytes and never decodes the Envelope. A Push body shorter than 32 bytes is malformed.
+
+An Ack has an empty body. It means the relay persisted the Blob durably (fsync) to the recipient's Inbox. It does not mean the recipient received it. The sender marks the outbox entry delivered only when the Ack arrives.
+
+`blob_id` in a Deliver is an opaque identifier the relay assigns. The client echoes it in DeliverAck and never uses it for dedupe; dedupe uses the Message ID.
+
+The client sends DeliverAck only after the message handler finishes, or after the library records a rejection (trueseal-sync ADR-0026, which supersedes the ack-on-receipt timing of trueseal-relay ADR-0008). The ack carries no outcome: a Blob the library can't use is acked too.
+
+The relay:
+
+- deletes a Blob on DeliverAck only if the Blob is in the acking device's Inbox;
+- delivers each Inbox in arrival order;
+- sends each Blob once per Receive Session;
+- re-sends unacked Blobs only on a new Receive Session.
+
+## Refusals
+
+The relay refuses a Push with a typed code in the Error frame (trueseal-sync ADR-0025, ADR-0026). The codes carry no content. {/* TODO: the Error reason-code byte values; ADR-0025 and ADR-0026 name the codes without fixing them. */}
+
+| Code | Kind |
+|---|---|
+| too large | permanent |
+| malformed | permanent |
+| inbox full | temporary |
+| rate limited | temporary |
+| unavailable | temporary |
+| internal error | temporary |
+
+On the client, a permanent refusal removes the outbox entry and raises `sendFailed(messageId, tooLarge)` or `sendFailed(messageId, malformed)`. A temporary refusal or a network failure returns the entry to the queue, retried while connected with exponential backoff{/* TODO: Shared Fact retryBackoff */} and immediately on reconnect. Entries for one recipient go out in sequence order, and a later entry never goes out while an earlier one waits for a retry.
+
+## Envelope
+
+An Envelope carries three things outside the ciphertext (trueseal-sync ADR-0031). The relay stores and forwards the Envelope without decoding it.
+
+- the End-to-End Version, so a device can reject a version before decrypting;
+- the recipient public key;
+- the Addressed Encryption output: the ephemeral public key and the AEAD ciphertext.
+
+Sealed inside the ciphertext are `author_pub`, the sequence, the parent hashes, the Sender Timestamp (Unix milliseconds), the message tag and body, and the signature.
+
+The signature covers a domain-separated input with the End-to-End Version, the recipient public key, the ephemeral public key and every sealed field except the signature. A Blob can't be re-addressed or have its body swapped without the signature failing. HKDF info and AEAD associated data bind the End-to-End Version, the ephemeral public key and the recipient public key.
+
+{/* TODO: the Envelope byte layouts; ADR-0031 leaves them to the Sync-level test vectors, which are not yet published. */}
+
+The Message ID is derived from `author_pub` and the sequence, both read from inside the ciphertext.
+
+## Receiving a Blob
+
+A device handles Blobs one at a time, in these steps (trueseal-sync ADR-0026, ADR-0034):
+
+1. Nothing is pulled from the Inbox until the app registers a message handler with `onMessage`.
+2. Check the End-to-End Version. A newer one stays unacked as `heldForUpgrade(version)`. An older one is acked and dropped as `unreadable(senderOutdated)`.
+3. Decrypt, verify the signature, check the Replay Window, and apply the pairing and membership rules. On failure, ack and drop the Blob and raise `unreadable` with its reason, or `unauthorized`.
+4. Look up the Message ID in the dedup table. A duplicate is acked silently.
+5. Await the handler. If it throws, retry in memory with backoff, up to the handler attempt count{/* TODO: Shared Fact handlerAttempts */} in total. Then ack and drop the Blob and raise `handlerGaveUp(messageId, error)`.
+6. Record the Message ID in the dedup table.
+7. Send DeliverAck.
+
+Control messages follow the same steps, with the library as the handler. A crash before step 6 commits means the relay re-delivers the Blob and the handler runs again. A crash between steps 6 and 7 means the re-delivered Blob is recognised as a duplicate and acked.
+
+## Replay Window
+
+The receiver drops a message whose Sender Timestamp is older than the Replay Window{/* TODO: Shared Fact replayWindow */} by its own clock. It acks the Blob and raises `unreadable(expired)`. Future timestamps are accepted, so a sender whose clock runs fast still gets through.
+
+The receiver keeps each handled Message ID until the Replay Window has passed after the later of the handling time and the Sender Timestamp. A copy of a message can therefore never reach the handler after its dedup record has gone, whatever the relay does.
+
+A `Sync` message is stamped once, at `send()`, and keeps that Sender Timestamp through every re-seal: reconnect replays, retries and End-to-End Version upgrades. A control message is stamped at each seal, and replaying it changes no state.
+
+## Size
+
+The Protocol Size Limit{/* TODO: Shared Fact protocolSizeLimit */} applies to the `Sync` body the caller passes to `send()` (trueseal-sync ADR-0025). `send()` checks it synchronously and fails with `payloadTooLarge{max}`, and an oversize body never enters the outbox. A caller may pass a lower `maxPayloadBytes` to `TrueSeal.open`; a higher value is clamped to the Protocol Size Limit.
+
+An Operator may set a lower Relay Size Limit, never a higher one. A relay configured above the protocol ceiling refuses to start. A size refusal from the relay is permanent and reported as `sendFailed(messageId, tooLarge)`.
+
+Every message type must fit in one frame. For a `GroupManifest` that requires the maximum group size{/* TODO: Shared Fact maxGroupSize */}, and `accept(request)` fails with `groupFull{max}` beyond it.

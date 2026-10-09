@@ -33,6 +33,13 @@ export function servedAt(path: string):
   return { kind: 'redirect', to: to.replace(/\/$/, '') || '/' };
 }
 
+/** The HTML of the page dist/ serves at a site path. Throws when the path is not a built page. */
+export function pageHtml(path: string): string {
+  const served = servedAt(path);
+  if (served?.kind !== 'page') throw new Error(`${path} is not a built page`);
+  return served.html;
+}
+
 /** Every site path dist/ serves as a page, such as `/docs/integrate/pairing`, with `/` for the
  *  Landing. Redirects and 404.html are left out. */
 export function pagePaths(): string[] {
