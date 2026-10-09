@@ -1,13 +1,13 @@
 ---
 title: NK Pattern
-description: The Noise NK two-message anonymous-initiator handshake — used by trueseal for short-lived Push Sessions where the sender stays unlinkable.
+description: The Noise NK two-message handshake, used by trueseal for short-lived Push Sessions, where the handshake reveals no sender key.
 ---
 
 # NK Pattern
 
 `Noise_NK_25519_ChaChaPoly_BLAKE2s` — a two-message handshake where the Initiator already knows the Responder's static key. The Responder never learns the Initiator's static key, so the Initiator stays anonymous.
 
-trueseal uses NK for **Push Sessions** — the short-lived anonymous connections a device opens to push blobs to the relay. A fresh ephemeral keypair is generated per push, which keeps the sender unlinkable across pushes.
+trueseal uses NK for **Push Sessions** — the short-lived anonymous connections a device opens to push blobs to the relay. A fresh ephemeral keypair is generated per push, so no sender key links one push to the next. The relay can still often link pushes by IP address or timing.
 
 For the full pattern spec, see the [Noise Protocol spec](https://noiseprotocol.org/noise.html) and the [official test vectors](https://github.com/noiseprotocol/noise_wiki/wiki/Test-vectors).
 

@@ -32,7 +32,7 @@ trueseal-noise implements exactly two patterns from the Noise spec:
 
 **`Noise_XX_25519_ChaChaPoly_BLAKE2s`** — mutual authentication. Neither peer knows the other's static key beforehand. After the handshake, both sides have verified each other. This is what Receive Sessions use.
 
-**`Noise_NK_25519_ChaChaPoly_BLAKE2s`** — one-way authentication. The Initiator knows the Responder's static key going in. The Responder never learns the Initiator's static key — the Initiator stays anonymous. This is what Push Sessions use, so devices can send blobs to the relay without revealing who they are.
+**`Noise_NK_25519_ChaChaPoly_BLAKE2s`** — one-way authentication. The Initiator knows the Responder's static key going in. The Responder never learns the Initiator's static key — the Initiator stays anonymous. This is what Push Sessions use, so devices can send blobs to the relay without revealing their device key.
 
 ## Spec compliance
 

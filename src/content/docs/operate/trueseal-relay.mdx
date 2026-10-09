@@ -1,11 +1,11 @@
 ---
 title: trueseal-relay
-description: A zero-knowledge delivery buffer for encrypted blobs. Self-hostable Go binary that stores ciphertext for offline recipients and forwards on reconnect.
+description: A delivery buffer for encrypted blobs that can't read or forge what it carries. Self-hostable Go binary that stores ciphertext for offline recipients and forwards on reconnect.
 ---
 
 # trueseal-relay — Overview
 
-trueseal-relay is the infrastructure layer of the stack. It's a zero-knowledge delivery buffer that stores and forwards encrypted blobs between devices, and it implements [trueseal-protocol](/docs/reference/protocol) on the server side.
+trueseal-relay is the infrastructure layer of the stack. It's a delivery buffer that can't read or forge what it carries. It stores and forwards encrypted blobs between devices, and it implements [trueseal-protocol](/docs/reference/protocol) on the server side.
 
 ## What it does
 
@@ -18,13 +18,13 @@ Blobs for offline recipients sit in their Inbox until they reconnect. Delivered 
 
 ## What it doesn't do
 
-It never decrypts anything, never learns group membership, and never knows who sent what to whom. Routing is by recipient public key. Blob content is never parsed, logged, or examined.
+It never decrypts anything, and stored blobs carry no sender identity. It can still infer which devices likely share a group from how a send fans out, and it often sees which device pushed, by IP address or timing. The relay never logs, stores or uses your IP address. The server it runs on still sees the connection, as with any internet service. To hide your IP from the server too, use a VPN or Tor. Routing is by recipient public key. Blob content is never parsed, logged, or examined.
 
 It's not a durable log. It's not a database. It's a delivery buffer — data lives in it only until it reaches the recipient.
 
 ## Storage
 
-The relay persists accepted blobs durably across crashes and restarts until delivery or TTL expiry. The default backend is SQLite — zero external dependencies, good for single-node self-hosted setups. A Postgres backend is on the roadmap for clustered deployments.
+The relay persists accepted blobs durably across crashes and restarts until delivery or TTL expiry. The default backend is SQLite — zero external dependencies, good for single-node self-hosted setups. SQLite is the only supported backend in the preview (relay ADR-0012).
 
 ## Relay identity
 

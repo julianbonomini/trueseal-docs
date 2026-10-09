@@ -5,22 +5,22 @@ description: The relay is infrastructure, not a service — deliberately strippe
 
 # The Dumb Relay
 
-The relay is infrastructure, not a service. It moves encrypted blobs from one device to another. It doesn't know what's in them, who sent them, or why. That's the whole point.
+The relay is infrastructure, not a service. It moves encrypted blobs from one device to another. It can't read what's in them, and stored blobs carry no sender identity. That's the whole point.
 
 ## TL;DR
 
 - **It's a buffer, not a database.** Blobs are deleted on delivery.
 - **One thing per device:** an Inbox of undelivered blobs addressed to that device's public key.
-- **It barely knows anything.** Recipient keys, who's currently connected. Not senders, not groups, not content.
-- **Doesn't matter who runs it.** Self-host, public instance, someone else's — same security story.
+- **It knows little.** Recipient keys, who's connected, sizes and timing, and which devices receive the same messages. No content, and no sender identity on stored blobs.
+- **Who runs it doesn't change what it can read.** It does decide whether your messages arrive.
 
 ## What "dumb" means
 
 A traditional sync server is smart in the worst sense. It knows your account, your devices, your data model. It can enforce permissions, resolve conflicts, answer queries. It can also read your data, hand it to a third party, or get a subpoena and produce it.
 
-The trueseal relay had all of that taken out on purpose. No users, no groups, no idea which devices are related. It receives blobs addressed to a public key, holds them if the recipient is offline, delivers them when the recipient connects. Everything else, it doesn't do.
+The trueseal relay had all of that taken out on purpose. It has no users and no groups. It receives blobs addressed to a public key, holds them if the recipient is offline, delivers them when the recipient connects. Everything else, it doesn't do.
 
-This is zero-trust as a structural fact rather than a promise. The relay isn't trusted because there's nothing it could betray even if it wanted to.
+The relay is untrusted for confidentiality and integrity. It can't read or forge your messages, whoever runs it. You trust it only to deliver them.
 
 ## What the relay holds
 
@@ -30,18 +30,16 @@ Blobs that never get delivered — recipient permanently offline, lost, abandone
 
 ## What the relay knows
 
-Two things, both unavoidable:
+Two things it needs to do its job:
 
 - **Which noise keys have active connections.** Needed to deliver to online devices without polling.
 - **The recipient public key on each blob.** Needed to put the blob into the right inbox.
 
-Beyond that, nothing. It doesn't know who sent a blob (push sessions use throwaway ephemeral keypairs), it doesn't know which devices belong to the same group (no concept of groups exists), and it can't see content (everything is encrypted before it ever arrives).
-
-An operator can watch which public keys receive blobs and when. They can't watch contents, can't see senders, and can't tell which keys are talking to each other.
+It also sees each blob's size and time, and which devices receive the same messages. A single send fans out to every group member in one connection, with matching sizes and timing, from the sender's network address. A relay operator can therefore infer which devices likely share a group. TrueSeal does not hide group structure from the relay. It often sees which device pushed a blob, by IP address or timing, and which end-to-end protocol version each device runs. It can't read content, and stored blobs carry no sender identity.
 
 ## Self-hosting and operator trust
 
-Because the relay is zero-knowledge, the question of who's operating it stops mattering. Public instance, your own $5 VPS, a friend's box — the security guarantees are the same.
+Because the relay can't read or forge your messages, who operates it doesn't change what it can read. Your own $5 VPS or a friend's box sees the same metadata listed above. The operator does decide whether your messages arrive.
 
 The relay has its own long-term keypair. Connecting devices verify the relay's identity through the Noise XX handshake before sending anything. The relay's public key is distributed out-of-band by whoever runs it — baked into a client, posted on a landing page, shared as a QR. The relay doesn't discover itself.
 

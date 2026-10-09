@@ -2,6 +2,7 @@
 title: Wire Format
 description: Byte-level specification for every message exchanged over a trueseal-protocol connection — framing, types, push body layout, ack semantics.
 ---
+import { protocolSizeLimit } from '../../../config/sharedFacts.ts';
 
 # Wire Format
 
@@ -111,17 +112,17 @@ A client that receives an Error removes the blob from its retry queue. Retrying 
 
 ---
 
-## Envelope size limit
+## Size limit
 
-The protocol caps envelope size at **1 MiB (1,048,576 bytes)**. That cap applies to the `envelope` portion of the Push body, i.e. everything after the 32-byte `recipient_pub`.
+The Protocol Size Limit is **{protocolSizeLimit.text}** for the body of a `Sync` message, the bytes the caller passes to `send()`. Every message fits in one Noise frame. The envelope and frame limits are internal values derived from the Protocol Size Limit (sync ADR-0025).
 
 The check is enforced twice:
 
-**Client-side (trueseal-sync):** before any Push Session is opened. An oversized envelope is rejected immediately with a non-retryable error. No NK handshake happens, no bytes go to the relay.
+**Client-side (trueseal-sync):** `send()` checks the limit before anything is written to the Operation Log and fails with `payloadTooLarge{max}`. An oversized body never enters the Outbox, and no bytes go to the relay.
 
-**Relay-side (trueseal-relay):** on receipt, as a backstop. Rejects with an Error frame, doesn't Ack, doesn't store. This catches buggy clients and any future third-party implementation that skips the check on its end.
+**Relay-side (trueseal-relay):** on receipt, as a backstop. The relay refuses the blob as too large, doesn't Ack it and doesn't store it. The refusal is permanent, so the client never retries it. This catches buggy clients and any third-party implementation that skips the check.
 
-Relay operators can configure a stricter cap if they want. Either way, the relay signals rejection via the Error frame.
+Relay operators can set a lower Relay Size Limit, never a higher one. A relay configured above the protocol ceiling refuses to start.
 
 ---
 
@@ -129,7 +130,7 @@ Relay operators can configure a stricter cap if they want. Either way, the relay
 
 The protocol uses two distinct session types, each with its own Noise handshake pattern:
 
-**Push Session** — client opens, sends one or more Push frames, closes. Uses `Noise NK`: the relay authenticates itself, but the client never reveals an identity. The relay can't link a Push Session to any device. Short-lived on purpose.
+**Push Session** — client opens, sends one or more Push frames, closes. Uses `Noise NK`: the relay authenticates itself, but the client never reveals an identity. The handshake gives the relay no device key, though it can often link a push to a device by IP address or timing. Short-lived on purpose.
 
 **Receive Session** — client opens, stays connected. Uses `Noise XX` with mutual authentication. The relay learns the device's stable noise public key and uses it to deliver blobs as they arrive. Long-lived on purpose.
 

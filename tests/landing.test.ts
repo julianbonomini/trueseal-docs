@@ -5,6 +5,7 @@ import { describe, expect, test } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { formatLocation, START_POINT } from '../src/components/landing/sealDemo.ts';
+import { findBannedTerms } from './banned-terms.ts';
 import { builtPages, dist } from './dist.ts';
 
 const indexPath = join(dist, 'index.html');
@@ -66,21 +67,11 @@ describe('Landing', () => {
   });
 
   test('no banned term appears in the text, title or meta description', () => {
-    const all = [text(html), title, description].join(' ').toLowerCase().replace(/’/g, "'");
-    const banned = [
-      'zero-trust',
-      'zero trust',
-      'zero-knowledge',
-      'no communication graph',
-      'structurally unknowable',
-      'cryptographic guarantee',
-      "can't see your ip",
-      'anonymous',
-      'military-grade',
-      'fully private',
-      'completely private',
-    ];
-    expect(banned.filter(term => all.includes(term))).toEqual([]);
+    const all = [text(html), title, description].join(' ');
+    expect(findBannedTerms(all)).toEqual([]);
+    // Brandbook section 5 words the site-wide list leaves out, because the Reference still uses "Anonymous Push Session".
+    const lower = all.toLowerCase();
+    expect(['anonymous', 'military-grade', 'fully private', 'completely private'].filter(term => lower.includes(term))).toEqual([]);
   });
 
   test('prose and title have no dashes', () => {

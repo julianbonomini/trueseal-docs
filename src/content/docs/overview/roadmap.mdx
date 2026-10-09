@@ -5,7 +5,7 @@ description: Where trueseal is going — near-term roadmap and the research dire
 
 # Roadmap & Research
 
-trueseal today is a sync primitive: zero-trust, end-to-end encrypted blob delivery between a group of devices. The direction is bigger. We want a composable foundation for **encrypted, capability-based replication** — something any application can drop in without trusting a server, modelling identity, or rebuilding infrastructure from scratch.
+trueseal today is a sync primitive: end-to-end encrypted blob delivery between a group of devices, through a relay that can't read or forge it. The direction is bigger. We want a composable foundation for **encrypted, capability-based replication** — something any application can drop in without trusting a server, modelling identity, or rebuilding infrastructure from scratch.
 
 This page has two halves. The first is a near-term roadmap, with concrete, scoped work. The second is a research direction: an unsolved problem we're working toward. They're separated on purpose. One is commitment, the other is intent, and I'd rather not blur them.
 
@@ -16,7 +16,7 @@ This page has two halves. The first is a near-term roadmap, with concrete, scope
 What gets trueseal from v0 to something bigger ecosystems can adopt:
 
 - **More SDKs.** A first-class Go SDK first, then whatever demand pulls next. Adding a language is cheap thanks to the Rust core and UniFFI.
-- **Reference apps.** More integrations beyond trueseal-clip. Apps that exercise real conflict-resolution patterns (CRDTs, append-only logs, custom merge), real bootstrapping flows, real failure modes. These are the docs that prose can't replace.
+- **Reference apps.** More integrations beyond Hush. Apps that exercise real conflict-resolution patterns (CRDTs, append-only logs, custom merge), real bootstrapping flows, real failure modes. These are the docs that prose can't replace.
 - **A public hosted relay.** Free, anonymous, for development and prototyping and low-stakes apps. Self-hosting is still the production default — the hosted relay is just the on-ramp.
 
 ---
@@ -39,7 +39,7 @@ That last bullet is the actual research question. Pairing solves key distributio
 - **Signal Sender Keys.** Break anonymity at the group layer.
 - **Application-layer ACL.** Punts the problem to the caller, who then re-implements it differently every time.
 
-Fine-grained capability distribution, zero-trust relay, and anonymity — all three at once, in a working primitive — doesn't exist today as far as I can tell.
+Fine-grained capability distribution, a relay that can't read or forge what it carries, and anonymity — all three at once, in a working primitive — doesn't exist today as far as I can tell.
 
 If trueseal cracks that, it stops being a library and becomes the encrypted replication layer under everything else. Databases, event systems, collaborative editors, agent coordination — anything that has to move state between parties who shouldn't have to trust each other.
 

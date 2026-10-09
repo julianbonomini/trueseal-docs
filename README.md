@@ -93,7 +93,7 @@ src/
     layout/       # Navbar, Wordmark, Footer
     mdx/          # Reusable MDX components
     ui/           # Buttons, theme toggle, mascot
-  config/         # nav.ts (sidebar and reading order), redirects.ts (moved URLs), site.ts (version label)
+  config/         # nav.ts (sidebar and reading order), redirects.ts (moved URLs), site.ts (version label), sharedFacts.ts (Shared Facts)
   content/
     docs/         # All documentation markdown
   layouts/        # BaseLayout, DocsLayout, LandingLayout
@@ -101,4 +101,4 @@ src/
   styles/         # tokens.css, global.css
 ```
 
-`tests/` holds the brand checks on the source and the Landing checks, the mascot and 404 checks, and the redirect, link and docs-sidebar checks on the built site, run by `bun test`.
+`tests/` holds the brand checks on the source, the banned-terms check on every file under `src/`, the Landing checks, the mascot and 404 checks, the redirect, link and docs-sidebar checks and the Shared Facts check on the built site, run by `bun test`.

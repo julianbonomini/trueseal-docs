@@ -3,6 +3,7 @@ title: Architecture
 description: How the trueseal stack fits together — trueseal-noise, trueseal-sync, trueseal-relay, and the trueseal-protocol spec that binds them.
 ---
 import FlowDiagram from '../../../components/mdx/FlowDiagram.astro';
+import { protocolSizeLimit } from '../../../config/sharedFacts.ts';
 
 # Architecture
 
@@ -12,7 +13,7 @@ Three components and one spec. Each piece does one job, can be swapped out, and 
 
 - **trueseal-noise** — Noise Protocol channels (XX + NK). Knows nothing about sync.
 - **trueseal-sync** — the sync engine. Identity, pairing, group manifest, addressed encryption, outbox.
-- **trueseal-relay** — a zero-knowledge blob router. Holds ciphertext for offline recipients and delivers it when they come back. Self-hostable.
+- **trueseal-relay** — a blob router that can't read or forge what it carries. Holds ciphertext for offline recipients and delivers it when they come back. Self-hostable.
 - **trueseal-protocol** — the wire spec everyone speaks. Just docs, no library.
 
 ## Who owns what
@@ -32,14 +33,15 @@ Three components and one spec. Each piece does one job, can be swapped out, and 
 
 ## What the relay actually sees
 
-Two things, and that's it:
+The relay can't read or forge your messages. It routes each one by its recipient key, and it does see:
 
-- **Which noise keys have an active Receive Session.** Unavoidable. If you want online devices to get their messages immediately, the relay has to know who's online.
-- **The recipient public key on each envelope.** It needs that to route the blob to the right inbox.
+- each device's key, and when it is online;
+- who receives a message, its size (up to {protocolSizeLimit.text} of `Sync` body) and its time;
+- which devices receive the same messages. A single send fans out to every group member in one connection, with matching sizes and timing, from the sender's network address, so a relay operator can infer which devices likely share a group;
+- which end-to-end protocol version each device runs, from which messages it leaves unacknowledged;
+- often, which device sent a message, by IP address or timing.
 
-It doesn't see who sent a blob (push sessions use a throwaway keypair, so the sender is unlinkable), it has no concept of groups, and it can't read payloads because everything is encrypted to the recipient before it ever hits the wire.
-
-Compromise the relay completely — grab the binary, dump the database, sniff every packet — and you walk away with a list of public keys that received blobs. Nothing else.
+Stored messages carry no sender identity. The relay never logs, stores or uses your IP address. The server it runs on still sees the connection, as with any internet service. To hide your IP from the server too, use a VPN or Tor.
 
 ## Sending a blob
 
@@ -57,7 +59,7 @@ Compromise the relay completely — grab the binary, dump the database, sniff ev
     title: "RELAY",
     subtitle: "PUSH SESSION (NOISE NK)",
     meta: [
-      { label: "sender", value: "anonymous" },
+      { label: "sender", value: "no device key" },
       { label: "fan-out", value: "N envelopes" },
     ]
   }}
@@ -79,7 +81,7 @@ When a device calls `send()`:
 
    The result: a blob the relay can route (it sees `recipient_pub`) but can't read or tamper with undetected.
 
-3. **Open an anonymous Push Session.** A fresh ephemeral X25519 keypair is generated just for this push, and Noise NK is used to connect to the relay. NK authenticates the relay (the device verifies the relay's static public key) but transmits no stable client identity. From the relay's point of view it's an unlinkable peer, with no way to connect this push to any device or Receive Session.
+3. **Open an anonymous Push Session.** A fresh ephemeral X25519 keypair is generated just for this push, and Noise NK is used to connect to the relay. NK authenticates the relay (the device verifies the relay's static public key) but transmits no stable client identity. The handshake gives the relay no device key. It can still often tell which device pushed, by IP address or timing.
 
 4. **Send all N envelopes** over the same Push Session, then close it.
 
