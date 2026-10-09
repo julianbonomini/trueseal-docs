@@ -118,7 +118,7 @@ The Protocol Size Limit is <Fact id="protocolSizeLimit" /> of `Sync` body: the b
 
 The check is enforced twice:
 
-**Client-side (trueseal-sync):** before any Push Session is opened. An oversized envelope is rejected immediately with a non-retryable error. No NK handshake happens, no bytes go to the relay.
+**Client-side (trueseal-sync):** before any Push Session is opened. `send()` refuses a `Sync` body over the limit with `payloadTooLarge{max}`, and the body never enters the outbox. No NK handshake happens, no bytes go to the relay.
 
 **Relay-side (trueseal-relay):** on receipt, as a backstop. Rejects with an Error frame, doesn't Ack, doesn't store. This catches buggy clients and any future third-party implementation that skips the check on its end.
 

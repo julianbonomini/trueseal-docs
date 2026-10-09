@@ -36,8 +36,7 @@ const labels: Record<MissingReference['kind'], string> = {
   page: 'page', api: 'API name', error: 'error case', event: 'event case', fact: 'Shared Fact',
 };
 
-// The kind a missing anchor reports, by the prefix the API reference or FactTable writes. A missing case- row is a page miss,
-// since the id alone doesn't say whether it was an error or an event.
+// The kind a missing anchor reports, by the prefix the API reference or FactTable writes.
 const fragmentKinds: [string, MissingReference['kind']][] = [
   [entryAnchorPrefix, 'api'], [anchorPrefix.errors, 'error'], [anchorPrefix.events, 'event'], [anchorPrefix.deliveryIssues, 'event'],
   [rowAnchorPrefix.fact, 'fact'], [rowAnchorPrefix.set, 'fact'],

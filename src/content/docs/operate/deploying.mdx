@@ -76,7 +76,7 @@ sqlite_path = "/var/lib/trueseal-relay/inbox.db"
 | `relay.listen_receive` | `TRUESEAL_RELAY_LISTEN_RECEIVE` | <code>:<Fact id="defaultReceivePort" /></code> | Receive Session listener address. |
 | `relay.ttl` | `TRUESEAL_RELAY_TTL` | <Fact id="relayTtlDefault" /> | Blob TTL before reaping. Can only be lowered; the relay refuses to start above <Fact id="relayTtlMax" />. |
 | `relay.reap_interval` | `TRUESEAL_RELAY_REAP_INTERVAL` | `1h` | How often the reaper runs. |
-| `relay.max_envelope_bytes` | `TRUESEAL_RELAY_MAX_ENVELOPE_BYTES` | Protocol Size Limit | Max envelope size. Can only be lowered; the protocol allows <Fact id="protocolSizeLimit" /> of `Sync` body. Larger blobs are rejected with Error. |
+| `relay.max_envelope_bytes` | `TRUESEAL_RELAY_MAX_ENVELOPE_BYTES` | Protocol Size Limit | The Relay Size Limit, in Envelope bytes. Can only be lowered; the protocol allows <Fact id="protocolSizeLimit" /> of `Sync` body. Larger blobs are rejected with Error. |
 | `store.type` | `TRUESEAL_RELAY_STORE_TYPE` | `sqlite` | Storage backend: `sqlite` or `postgres`. |
 | `store.sqlite_path` | `TRUESEAL_RELAY_STORE_SQLITE_PATH` | — | SQLite database file path. Required when `store.type = sqlite`. |
 

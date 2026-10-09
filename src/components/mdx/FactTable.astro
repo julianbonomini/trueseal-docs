@@ -1,10 +1,10 @@
 ---
-// Every Shared Fact of one group as a table: name, value, meaning, source.
-import { factTable, type FactGroup, type FactPart } from '../../facts/facts';
+// Every Shared Fact of one value group, or every value set, as a table: name, value, meaning, source. Cases render through ApiEntries.
+import { factTable, type TableGroup, type FactPart } from '../../facts/facts';
 import FactParts from './FactParts.astro';
 
 interface Props {
-  group: FactGroup;
+  group: TableGroup;
 }
 const { columns, rows } = factTable(Astro.props.group);
 ---

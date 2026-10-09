@@ -123,7 +123,7 @@ After `astro build`, `src/markdown/markdown.ts` writes a Markdown version of eve
 | `<FlowDiagram left center right />` | 3-panel node flow diagram (device → relay → device); each step is `{ label }` |
 | `<NextPage prev next />` | Previous/next links; `DocsLayout` adds them from the sidebar order, so pages don't |
 | `<Fact id="..." />` | One Shared Fact's value, inline |
-| `<FactTable group="..." />` | Every Shared Fact of a group as a table |
+| `<FactTable group="..." />` | Every Shared Fact of a value group (`versions`, `relayAddress`, `clientLimits`, `relayLimits`), or every value set (`valueSets`), as a table. Cases render through `<ApiEntries>` |
 | `<ApiEntries section="..." />` | Every API entry of a section, or every error, event or delivery-issue case, with its signature, meaning and each platform's spelling |
 
 ---

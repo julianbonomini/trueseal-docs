@@ -186,8 +186,9 @@ export function apiSection(section: ApiSection, api: ApiReference = apiReference
 
 /** Every API name, sorted and unique: each entry name and each dotted segment of it, every alias,
  *  each field bare and as '<entry name>.<field>' ('sdkVersion', 'TrueSeal.info.sdkVersion'), every
- *  error/event/delivery-issue id, every value of the value sets (braces dropped: 'relayVersionUnsupported'), and every case's Kotlin and TS spelling head ('TrueSealException.GroupFull',
- *  'TrueSealEvent.StatusChanged', 'DeliveryIssue.Unreadable', 'GROUP_FULL'). The reference check reads this. */
+ *  error/event/delivery-issue id, every value of the value sets (braces dropped: 'relayVersionUnsupported'),
+ *  and every case's Kotlin and TS spelling head ('TrueSealException.GroupFull', 'TrueSealEvent.StatusChanged',
+ *  'DeliveryIssue.Unreadable', 'GROUP_FULL'). The reference check reads this. */
 export function apiNames(api: ApiReference = apiReference, facts: SharedFacts = sharedFacts): string[] {
   const entryNames = api.entries.flatMap(entry => [
     entry.name,

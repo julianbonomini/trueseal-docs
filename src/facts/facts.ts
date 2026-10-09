@@ -59,8 +59,6 @@ export interface SharedFacts {
   valueSets: ValueSet[];
 }
 
-export type FactGroup = keyof SharedFacts;
-
 /** A piece of displayed text; `code` means it shows as inline code. */
 export interface FactPart {
   text: string;
@@ -68,9 +66,10 @@ export interface FactPart {
 }
 
 const valueGroups = ['versions', 'relayAddress', 'clientLimits', 'relayLimits'] as const;
-const caseGroups = ['errors', 'events', 'deliveryIssues'] as const;
+/** The groups FactTable renders: the value groups and the value sets. Cases render through ApiEntries. */
+export type TableGroup = (typeof valueGroups)[number] | 'valueSets';
 /** The groups that hold error, event and delivery-issue cases. */
-export type CaseGroup = (typeof caseGroups)[number];
+export type CaseGroup = 'errors' | 'events' | 'deliveryIssues';
 const notFixed: FactPart = { text: 'Not fixed by an ADR yet.', code: false };
 
 const number = new Intl.NumberFormat('en-US');
@@ -144,30 +143,23 @@ export function caseSignature(group: CaseGroup, c: CaseFact): string {
   return group === 'errors' ? `${c.id}{${c.args.join(', ')}}` : `${c.id}(${c.args.join(', ')})`;
 }
 
-function isCaseGroup(group: FactGroup): group is CaseGroup {
-  return (caseGroups as readonly string[]).includes(group);
-}
-
 function codeParts(values: string[], todo: string | undefined): FactPart[] {
   return values.length === 0 && todo ? [notFixed] : values.map(text => ({ text, code: true }));
 }
 
-/** The HTML id prefix of a FactTable row: a value fact, a value set, or a case. */
-export const rowAnchorPrefix = { fact: 'fact-', set: 'set-', case: 'case-' } as const;
+/** The HTML id prefix of a FactTable row: a value fact or a value set. */
+export const rowAnchorPrefix = { fact: 'fact-', set: 'set-' } as const;
 
 /** Every fact of `group` as table rows, plus the four column labels:
  *  value groups → ['Fact', 'Value', 'Meaning', 'Source'];
- *  errors/events/deliveryIssues → ['Case', 'Reasons', 'When', 'Source'];
  *  valueSets → ['Set', 'Values', 'Meaning', 'Source'].
- *  A case name is its signature as code: errors with braces (`groupFull{max}`), events and
- *  issues with parentheses (`sendFailed(messageId, reason)`); its value is the values of its
- *  reasonSet as code parts, empty when it has none. A value-set row lists its values as code parts.
- *  A fact with no value and a todo shows the single part "Not fixed by an ADR yet."
- *  A meaning is split into parts, its backticked spans as code.
+ *  A value-set row lists its values as code parts. A fact or set with no value and a todo shows the single
+ *  part "Not fixed by an ADR yet." A meaning is split into parts, its backticked spans as code.
  *  Source reads "trueseal-sync ADR-0025, trueseal-sync ADR-0028; code: trueseal-relay internal/config/config.go".
- *  A row's anchor is its HTML id, the id lowercased after 'fact-', 'set-' or 'case-', so plain Markdown can link a
- *  fact as /agents/limits#fact-protocolsizelimit. 'case-' keeps clear of the API reference's 'error-' and 'event-' ids. */
-export function factTable(group: FactGroup, data: SharedFacts = sharedFacts): {
+ *  A row's anchor is its HTML id, the id lowercased after 'fact-' or 'set-', so plain Markdown can link a
+ *  fact as /agents/limits#fact-protocolsizelimit.
+ *  Throws on any other group, since cases render through ApiEntries and MDX doesn't type-check the prop. */
+export function factTable(group: TableGroup, data: SharedFacts = sharedFacts): {
   columns: [string, string, string, string];
   rows: { anchor: string; name: FactPart; value: FactPart[]; meaning: FactPart[]; source: string }[];
 } {
@@ -183,21 +175,8 @@ export function factTable(group: FactGroup, data: SharedFacts = sharedFacts): {
       })),
     };
   }
-  if (isCaseGroup(group)) {
-    const cases = data[group];
-    return {
-      columns: ['Case', 'Reasons', 'When', 'Source'],
-      rows: cases.map(c => {
-        const reasons = data.valueSets.find(set => set.id === c.reasonSet);
-        return {
-          anchor: `${rowAnchorPrefix.case}${c.id.toLowerCase()}`,
-          name: { text: caseSignature(group, c), code: true },
-          value: reasons ? codeParts(reasons.values, reasons.todo) : [],
-          meaning: meaningParts(c.meaning),
-          source: sourceText(c.source),
-        };
-      }),
-    };
+  if (!(valueGroups as readonly string[]).includes(group)) {
+    throw new Error(`FactTable renders the value groups and valueSets, not "${group}"; render cases with ApiEntries`);
   }
   return {
     columns: ['Fact', 'Value', 'Meaning', 'Source'],

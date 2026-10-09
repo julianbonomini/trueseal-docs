@@ -15,15 +15,12 @@ function withValue(value: FactValue): SharedFacts {
 }
 
 const fixture: SharedFacts = {
-  versions: [],
+  versions: [{ id: 'transport', name: 'Transport Version', meaning: 'Wire.', source: { adr: ['trueseal-sync ADR-0028', 'trueseal-sync ADR-0027'], code: ['trueseal-sync src/ffi.rs'] }, value: { kind: 'version', value: 1 } }],
   relayAddress: [{ id: 'address', name: 'Address', meaning: 'A format.', source, value: { kind: 'format', value: 'x://y' } }],
   clientLimits: [{ id: 'unset', name: 'Unset', meaning: 'Not fixed.', source, todo: 'TODO: no ADR fixes it.' }],
   relayLimits: [],
-  errors: [
-    { id: 'groupFull', args: ['max'], meaning: 'Full.', source: { adr: ['trueseal-sync ADR-0028', 'trueseal-sync ADR-0027'], code: ['trueseal-sync src/ffi.rs'] } },
-    { id: 'closed', meaning: 'Closed.', source },
-  ],
-  events: [{ id: 'statusChanged', args: ['status', 'reason'], reasonSet: 'statusReason', meaning: 'Changed.', source }],
+  errors: [{ id: 'closed', meaning: 'Closed.', source }],
+  events: [],
   deliveryIssues: [],
   valueSets: [
     { id: 'statusReason', values: ['created', 'joined'], meaning: 'Reasons.', source },
@@ -63,31 +60,22 @@ describe('factText', () => {
 });
 
 describe('factTable', () => {
-  test('errors show their signature with braces and their sources', () => {
-    const table = factTable('errors', fixture);
-    expect(table.columns).toEqual(['Case', 'Reasons', 'When', 'Source']);
+  test('a value fact shows its name, written value and sources', () => {
+    const table = factTable('versions', fixture);
+    expect(table.columns).toEqual(['Fact', 'Value', 'Meaning', 'Source']);
     expect(table.rows).toEqual([
-      { anchor: 'case-groupfull', name: { text: 'groupFull{max}', code: true }, value: [], meaning: [{ text: 'Full.', code: false }], source: 'trueseal-sync ADR-0028, trueseal-sync ADR-0027; code: trueseal-sync src/ffi.rs' },
-      { anchor: 'case-closed', name: { text: 'closed', code: true }, value: [], meaning: [{ text: 'Closed.', code: false }], source: 'trueseal-sync ADR-0028' },
+      { anchor: 'fact-transport', name: { text: 'Transport Version', code: false }, value: [{ text: '1', code: false }], meaning: [{ text: 'Wire.', code: false }], source: 'trueseal-sync ADR-0028, trueseal-sync ADR-0027; code: trueseal-sync src/ffi.rs' },
     ]);
   });
 
-  test('events show their signature with parentheses and the values of their reason set', () => {
-    expect(factTable('events', fixture).rows[0]).toMatchObject({
-      name: { text: 'statusChanged(status, reason)', code: true },
-      value: [{ text: 'created', code: true }, { text: 'joined', code: true }],
-    });
-  });
-
-  test('each row carries its anchor: fact-, set- or case- and the id lowercased', () => {
+  test('each row carries its anchor: fact- or set- and the id lowercased', () => {
     expect(factTable('clientLimits', fixture).rows[0].anchor).toBe('fact-unset');
     expect(factTable('valueSets', fixture).rows[0].anchor).toBe('set-statusreason');
-    expect(factTable('errors', fixture).rows[0].anchor).toBe('case-groupfull');
   });
 
   test('a meaning shows its backticked spans as code', () => {
-    const data = { ...fixture, errors: [{ id: 'closed', meaning: 'A call after `close()`.', source }] };
-    expect(factTable('errors', data).rows[0].meaning).toEqual([
+    const data: SharedFacts = { ...fixture, relayLimits: [{ id: 'r', name: 'R', meaning: 'A call after `close()`.', source, value: { kind: 'port', value: 1 } }] };
+    expect(factTable('relayLimits', data).rows[0].meaning).toEqual([
       { text: 'A call after ', code: false },
       { text: 'close()', code: true },
       { text: '.', code: false },
@@ -103,6 +91,10 @@ describe('factTable', () => {
     expect(sets.columns).toEqual(['Set', 'Values', 'Meaning', 'Source']);
     expect(sets.rows[1].value).toEqual([{ text: 'Not fixed by an ADR yet.', code: false }]);
     expect(sets.rows[0]).toMatchObject({ name: { text: 'statusReason', code: true } });
+  });
+
+  test.each(['errors', 'events', 'deliveryIssues'])('the case group %s fails, pointing at ApiEntries', group => {
+    expect(() => factTable(group as never, fixture)).toThrow('render cases with ApiEntries');
   });
 });
 
