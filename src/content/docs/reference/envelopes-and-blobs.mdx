@@ -1,93 +1,107 @@
 ---
-title: Envelopes & Blobs
-description: The Envelope format — anatomy, addressed encryption, the hidden sender, signature verification, and message types.
+title: Envelopes and Blobs
+description: The sealed Envelope of the Developer Preview, what the relay can read in it, how it's encrypted and signed, the four message types, the Message ID and the Replay Window.
 ---
+import Fact from '../../../components/mdx/Fact.astro';
 
-# Envelopes & Blobs
+# Envelopes and Blobs
 
-Everything moving through trueseal-sync travels as an **Envelope** — a self-contained unit the relay can route without reading and only the intended recipient can decrypt.
+Every message one device sends to another travels as an Envelope. The sender seals one Envelope per recipient device, and the relay stores and forwards it as an opaque Blob. The relay reads only what it needs to route the Envelope, and the recipient alone can open the rest.
 
-## Anatomy
+This page describes the sealed Envelope as the Developer Preview decides it. The Sync-level test vectors fix the exact byte layouts.
 
-An Envelope has five fields:
+## What the relay can read
 
-| Field | Type | Visible to relay |
-|---|---|---|
-| `sequence` | u64 | ✓ |
-| `parents` | `[[u8; 32]]` | ✓ |
-| `recipient_pub` | `[u8; 32]` | ✓ |
-| `signature` | `[u8; 64]` | ✓ |
-| `payload` | `Vec<u8>` | ✗ (encrypted) |
+An Envelope carries three things in plaintext:
 
-**`sequence`** — the sender's global per-device counter. Increments once per Envelope sent, across all objects. Not scoped per object. See [Operation Log & Outbox](/docs/reference/operation-log-and-outbox) for the reasoning.
+| Field | Why it's in plaintext |
+|---|---|
+| End-to-End Version | So the recipient can reject a version before decrypting |
+| Recipient public key | So the relay can put the Envelope in the right Inbox |
+| Sealed payload | The ephemeral public key and the AEAD ciphertext; opaque to the relay |
 
-**`parents`** — SHA-256 hashes of preceding Envelopes. In v0, every Envelope has exactly one parent (or zero, for the root). The field is already there now so v1 can introduce DAG merges with multiple parents without changing the wire format.
+Nothing else is in plaintext. Protobuf fields the recipient doesn't know are ignored and never carry meaning; a change that needs a new field bumps the End-to-End Version.
 
-**`recipient_pub`** — the recipient device's X25519 noise public key. The relay uses this to route the Envelope to the right Inbox. It's the only routing information the relay has.
+Two sends from the same device share no relay-readable value except the End-to-End Version, and the recipient key when both go to the same device. The relay can still link Envelopes by their size, their timing and which devices receive them together, and it can often tell which device pushed them from the timing of the connection, which the server it runs on can match to an IP address. Each of those is a documented limitation, listed on [How it works](/docs/overview/how-it-works#what-the-relay-sees).
 
-**`signature`** — an Ed25519 signature over the canonical signing message: `sequence (8 LE) || parent_hashes || recipient_pub || ciphertext`. Verified by the recipient after decryption. The relay never verifies it.
+## What's sealed inside
 
-**`payload`** — the encrypted blob. From the relay's perspective, opaque bytes. What's actually in there is described next.
+The sealed plaintext holds:
 
-Envelopes are Protobuf on the wire.
+- `author_pub`, the sender's Ed25519 signing key;
+- the sequence, the sender's counter, one higher for each `send()` and the same in every recipient's copy;
+- the parent hashes;
+- the Sender Timestamp, in Unix milliseconds;
+- the message type and its body;
+- the signature.
+
+Because the sequence, `author_pub` and the signature are sealed, the relay can't use them to link a sender's Envelopes or to test which device signed one.
 
 ## Addressed encryption
 
-The `payload` field is built by **addressed encryption** — encrypting a blob for a specific recipient using only their public key, with no prior session.
+The sender encrypts each Envelope for one recipient using only that recipient's public key, with no session between them.
 
-Wire layout of the encrypted payload:
+1. Generate a fresh X25519 keypair for this Envelope only.
+2. Run X25519 between the fresh private key and the recipient's X25519 public key.
+3. Derive a symmetric key from the result with HKDF-SHA256. The HKDF info binds the End-to-End Version, the fresh public key and the recipient's public key.
+4. Encrypt the sealed plaintext with ChaCha20-Poly1305. The associated data binds the same three values.
+5. Send the fresh public key and the ciphertext. Throw the fresh private key away.
 
-```
-[ephemeral_pub (32 bytes)] [nonce (12 bytes)] [ciphertext + tag]
-```
+The recipient runs X25519 between its own private key and the fresh public key, derives the same key, and decrypts. A relay that moves the ciphertext to another recipient, or swaps the fresh public key, makes decryption fail.
 
-**Encryption (sender side):**
+The recipient's key is long-lived, so this layer has no forward secrecy. Anyone who later steals a device's private key can decrypt every Envelope addressed to that device that they recorded. The Noise sessions to the relay do have forward secrecy, but it covers only the connection. An Envelope recorded on the relay or the network can still be opened later with the recipient's key.
 
-1. Generate a fresh ephemeral X25519 keypair, for this payload only.
-2. Do X25519 DH between the ephemeral private key and the recipient's static noise public key. Output: shared secret.
-3. Derive a 32-byte symmetric key from the shared secret via HKDF-SHA256, with info string `"trueseal-sync addressed encryption v0"`.
-4. Encrypt `author_pub (32 bytes) || message_bytes` with ChaCha20-Poly1305 using the derived key and a zero nonce.
-5. Output: `ephemeral_pub || nonce || ciphertext+tag`.
+## Signature
 
-The zero nonce is fine here because the symmetric key is derived from an ephemeral DH — it's unique by construction. Nonce reuse only matters when the key is also reused, and the key never is.
+The sender signs a domain-separated input with its Ed25519 key. The input covers the End-to-End Version, the recipient public key, the fresh public key and every sealed field except the signature itself.
 
-**Decryption (recipient side):**
+After decrypting, the recipient checks that:
 
-1. Pull `ephemeral_pub` from the first 32 bytes.
-2. X25519 DH between the recipient's static private key and `ephemeral_pub`. Same shared secret falls out.
-3. Derive the symmetric key with HKDF-SHA256 and the same info string.
-4. Decrypt with ChaCha20-Poly1305. Output: `author_pub || message_bytes`.
-5. Pull `author_pub` from the first 32 bytes of plaintext.
+1. The signature verifies against the `author_pub` found inside the payload.
+2. `author_pub` is allowed to send this message type. A `Sync` needs a current member. A `GroupManifest` needs a current member, or the token's key during a [Pending Join](/docs/integrate/pairing). A `Revoke` needs any device in any Group Manifest the recipient has held. A `Pair` comes from a device that isn't a member yet, so it needs proof of the Pairing Secret while the pairing window is open.
+3. The Sender Timestamp is inside the Replay Window.
+4. For a `Sync` message, the Message ID isn't one it has already handled.
 
-## The hidden sender
-
-`author_pub` — the sender's Ed25519 signing key — is *inside* the encrypted payload, not in the cleartext Envelope header. This is on purpose.
-
-If `author_pub` were in the header, the relay would observe `(author_pub → recipient_pub)` pairs for every Envelope it routes. That's a full communication graph, served up for free. With `author_pub` inside the ciphertext, the Envelope shows the relay only `recipient_pub`. The relay can still often tell which device pushed, by IP address or timing.
-
-Recipients pull `author_pub` out after decryption, then verify the Envelope signature with that key. If the claimed `author_pub` doesn't match the actual signer, verification fails — devices can't impersonate each other.
-
-## Signature verification
-
-After decrypting and extracting `author_pub`, the recipient verifies the Envelope signature:
-
-1. Recompute the signing message: `sequence || parents || recipient_pub || ciphertext`.
-2. Verify the Ed25519 signature against the extracted `author_pub`.
-3. If that passes, check `author_pub` against the current Group Manifest. If the signer isn't a current member, drop it silently.
-
-That two-step — decrypt to learn the author, then verify using that author — is what prevents attribution forgery. Device B can't claim that device A sent something: if B encrypts a payload with `author_pub = A` but signs the Envelope with B's key, the signature check against A's key fails.
+An Envelope that fails is acknowledged, dropped and reported on the recipient as a [delivery issue](/docs/integrate/delivery-issues). A group member who gets hold of an Envelope addressed to someone else can't tell who sent it, because the signature is sealed to the recipient.
 
 ## Message types
 
-Inside the encrypted payload, after the 32-byte `author_pub`, there's a 1-byte type tag followed by the message body. Four types:
+Inside the sealed plaintext, a message type says what the body is. The relay never sees it.
 
-| Tag | Type | Body |
+| Type | Body | Handled by |
 |---|---|---|
-| `0x01` | `Pair` | sender's `noise_pub (32)` + `signing_pub (32)` |
-| `0x02` | `Sync` | opaque caller blob — a clipboard entry, a secret, whatever |
-| `0x03` | `Revoke` | empty — triggers Destroy Group on receipt |
-| `0x04` | `GroupManifest` | encoded manifest update |
+| `Pair` | The joining device's keys and a proof that it knows the Pairing Secret | The library, on the admitting device |
+| `Sync` | The bytes the app passed to `send()` | The app's message handler |
+| `GroupManifest` | A signed [Group Manifest](/docs/reference/group-manifest) | The library |
+| `Revoke` | Ends the group, as [Destroy Group](/docs/integrate/destroy-group) describes | The library |
 
-The relay never sees these tags. They're a private convention of trueseal-sync, decoded only by recipients after decryption.
+A device leaving a group sends a `GroupManifest` that leaves it out. Every type, a Group Manifest at the Maximum Group Size included, has to fit in one frame.
 
-`Sync` is the only one the caller touches directly — those are the opaque bytes you pass to `send()` and receive in `on_message()`. The other three are handled internally.
+{/* TODO: the byte values of the message types in the preview format, and the exact Pair body. sync ADR-0031 leaves the byte layouts to the test vectors (trueseal-sync#94), and ADR-0023 doesn't fix the Pair body. */}
+
+## Message ID
+
+The Message ID identifies one message from one sender. Every delivery of it, and every copy re-sealed after a retry or an upgrade, has the same Message ID. It is derived from `author_pub` and the sequence, both read from inside the sealed payload:
+
+```
+"tsm1_" + base64url_nopad(SHA-256("trueseal-message-id-v1\0" || author_pub[32] || sequence_u64_be))
+```
+
+Apps treat it as an opaque string and never parse or rebuild it. The relay's `blob_id` is a different number and never reaches the app.
+
+## Replay Window
+
+A recipient drops any message whose Sender Timestamp is more than <Fact id="replayWindow" /> older than its own clock, acknowledges it so the relay deletes it, and reports `unreadable(expired)`. A timestamp in the future is accepted, so a sender whose clock runs fast still gets through.
+
+A recipient keeps each handled Message ID until <Fact id="replayWindow" /> after its Sender Timestamp or after the time it handled the message, whichever is later. A copy of a `Sync` message can't reach the handler after its Message ID has been forgotten, whatever the relay does with it.
+
+The Sender Timestamp is set differently by type:
+
+- A `Sync` message is stamped once, at `send()`. Every re-seal keeps that timestamp, so every copy ages out of the window together.
+- A control message (`Pair`, `GroupManifest`, `Revoke`) is stamped each time it's sealed, because it never expires from the outbox. Replaying an old control message changes nothing. An old manifest loses to the current one, a `Pair` for a closed pairing window is dropped, and a `Revoke` for a destroyed group finds a fresh identity.
+
+The window is <Fact id="replayWindow" /> because a `Sync` message can wait up to <Fact id="outboxExpiry" /> in the sender's outbox and then up to <Fact id="relayTtlMax" /> on the relay. That's why the relay refuses to start with a TTL over <Fact id="relayTtlMax" />.
+
+## Where today's code differs
+
+Today's Envelope has a plaintext sequence, parent hashes and signature, and the signature covers only the sequence, parents, recipient key and ciphertext. The format carries no End-to-End Version, the encryption binds neither key, there is no Sender Timestamp, and nothing enforces a Replay Window. The sealed format above is decided in sync ADR-0031 and isn't built yet.

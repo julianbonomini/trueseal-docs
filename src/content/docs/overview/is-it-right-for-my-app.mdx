@@ -1,0 +1,56 @@
+---
+title: Is it right for my app?
+description: When TrueSeal fits, when it is the wrong choice, and what the Developer Preview does and doesn't promise.
+---
+
+# Is it right for my app?
+
+You have an app idea and a weekend, and you want to know before you start whether TrueSeal will carry it or fight it. This page says when it fits and when it doesn't.
+
+## It fits when
+
+- A small, trusted circle of devices shares something personal. The flagship case is location sharing within a family. Others are secrets or passwords between your own devices, and clipboard or notes sync.
+- Your app runs on iOS or macOS (Swift), Android (Kotlin) or Node (TypeScript).
+- Each update is small, like a position, a note or a clipboard entry. Every message has to fit in one frame, so files and photos need another channel.
+- The devices can be offline for hours or days and catch up later.
+- You're happy to run a relay yourself in Docker.
+
+## It's the wrong choice when
+
+Each of these comes from how TrueSeal is built or from the scope of the Developer Preview. If one of them describes your app, pick something else for now.
+
+### Your app runs in a browser
+
+TrueSeal has no browser support in the preview. The TypeScript SDK runs on Node, and browsers can't open the plain TCP connections the relay listens on.
+
+### Anyone should be able to join
+
+Every member is admitted explicitly. One device shows a Pairing Token, and a user on that device accepts the request from the device in front of them. There is no invite link that admits whoever opens it, and no public group.
+
+### Your server has to read the data
+
+Search, analytics, moderation and server-side notifications that show content all need a server that can read the data. The relay can't, and no setting changes that. If your backend needs the content, TrueSeal is in the way.
+
+### You need roles or admins
+
+Every current member is fully trusted. Any member can admit a device, remove any other member, or destroy the whole group, and that includes a stolen phone that is still a member. A device that was removed from the group can still destroy it. TrueSeal has no admin role. If your app needs one, it has to enforce it above TrueSeal, and the protocol still won't stop a member who ignores it.
+
+### You need the server to keep history
+
+The relay holds a message only until the recipient's handler has finished with it, or until its TTL runs out. It is a delivery buffer, and it deletes what it delivers. A device added later gets nothing from before it joined unless your app sends it. If every device is lost, the data is gone, because nobody holds a copy or a key to recover it, including TrueSeal and whoever runs your relay.
+
+### You need to hide who talks to whom
+
+The relay can't read messages, but it sees when each device is online, who receives messages, their sizes and timing, and which devices receive messages together. TrueSeal adds no padding or cover traffic. The relay never logs, stores or uses your IP address. The server it runs on still sees the connection, as with any internet service. To hide your IP from the server too, use a VPN or Tor. [How it works](/docs/overview/how-it-works#what-the-relay-sees) has the full list.
+
+### You need forward secrecy end to end
+
+Each message is sealed to the recipient device's long-term key. If someone records sealed messages and later gets that key, they can read the messages addressed to that device. The connection to the relay has its own forward secrecy, but the sealed messages inside it don't.
+
+### You need SLAs, certifications or support
+
+TrueSeal is a Developer Preview built by one person. Any `0.x` release may break the API, the wire format or stored data without notice, and fixes land only in the next release. There is no support promise and no SLA, and TrueSeal has not been independently audited. On the device, its keys and data are protected only by file permissions and, where the platform has one, the app sandbox. Storing keys in Keychain and Keystore and encrypting the local store come before 1.0. [Developer preview](/docs/overview/developer-preview) has the full list.
+
+## What stays your app's job
+
+If TrueSeal fits, your app still owns its data model, conflict resolution, its pairing screens, and any history a new device needs. [What TrueSeal is](/docs/overview/what-trueseal-is#what-stays-your-apps-job) lists them.

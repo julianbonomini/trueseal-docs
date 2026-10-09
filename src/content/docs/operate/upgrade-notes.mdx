@@ -1,0 +1,23 @@
+---
+title: Upgrade Notes
+description: Every breaking TrueSeal release, newest first, with what broke and the steps to upgrade.
+---
+
+# Upgrade Notes
+
+Before you move your app or your relay to a new release, check here. Every release that breaks the API, the wire format or stored data has an entry, newest first, with the steps to upgrade. The same text is in the changelog and on the GitHub Release.
+
+Two breaks always carry a fixed label, so you can search this page for them:
+
+| Label | Means |
+|---|---|
+| "every device and the relay must upgrade together" | The release changes the Transport Version or the End-to-End Version. Across a Transport Version change, a device and a relay on different releases can't connect. Across an End-to-End Version change, devices on different releases can't read each other's new messages. |
+| "local data is wiped and every group must pair again" | The release is a Store Reset. A device that upgrades to it loses its group and its identity. See [Upgrading](/docs/operate/upgrades#store-reset). |
+
+A release without an entry here doesn't break anything. [Developer preview](/docs/overview/developer-preview) explains why breaking releases come without notice.
+
+## Breaking releases
+
+No breaking release has shipped yet.
+
+{/* TODO: each breaking release's "Breaking" section goes here, newest first, as a "### X.Y.Z" heading followed by the fixed labels that apply and the upgrade steps. Decide whether 0.6.0 gets an entry: ADR-0032 resets the unversioned stores that development builds before it wrote. */}

@@ -38,8 +38,8 @@ test('the Threat Model is the first page under Trust', () => {
   expect(sidebarPages('docs').find(page => page.section === 'Trust')?.link.href).toBe('/docs/trust/threat-model');
 });
 
-test('Architecture and The Dumb Relay link to the relay list instead of repeating it', () => {
-  for (const path of ['/docs/overview/architecture', '/docs/trust/the-dumb-relay']) {
+test('How it works and The Dumb Relay link to the relay list instead of repeating it', () => {
+  for (const path of ['/docs/overview/how-it-works', '/docs/trust/the-dumb-relay']) {
     const page = text(path);
     expect({ path, links: page.includes('href="/docs/trust/threat-model#what-the-relay-sees"') }).toEqual({ path, links: true });
     expect({ path, repeats: page.includes('fans out to every group member') }).toEqual({ path, repeats: false });

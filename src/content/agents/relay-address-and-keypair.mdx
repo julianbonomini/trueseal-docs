@@ -1,0 +1,54 @@
+---
+title: Relay Address and keypair
+description: The relay keypair, the pubkey command, bringing your own key, the Relay Address format and its port defaults, no key rotation, and what a leaked private key exposes.
+---
+import Fact from '../../components/mdx/Fact.astro';
+import { Code } from 'astro:components';
+import { codeTheme } from '../../config/shiki';
+import { factText } from '../../facts/facts';
+
+# Relay Address and keypair
+
+This page states the relay's identity in the Developer Preview as trueseal-relay ADR-0012 decides it, and the Relay Address as trueseal-sync ADR-0028 decides it.
+
+## Keypair
+
+- One long-term X25519 keypair. The private key is stored hex-encoded.
+- On first start the container generates `/data/keypair.hex` (mode 0600) and prints the public key.
+- `docker compose exec relay trueseal-relay pubkey` prints the hex public key.
+- `TRUESEAL_RELAY_KEYPAIR_HEX` supplies an Operator's own private key. The entrypoint writes it to the keypair path instead of generating one.
+- Devices verify the relay's static key in every handshake: Noise XX on Receive Sessions, Noise NK on Push Sessions (trueseal-relay ADR-0002).
+
+## Relay Address
+
+<Code lang="text" theme={codeTheme} code={factText('relayAddressFormat').text} />
+
+- The receive port defaults to <Fact id="defaultReceivePort" /> and the push port to <Fact id="defaultPushPort" />.
+- The typed form is `RelayAddress(host, publicKey, receivePort, pushPort)`. `open()` accepts either form.
+- `invalidRelayAddress` is the error case for a malformed Relay Address.{/* TODO: which call raises it; ADR-0028 lists the case without saying. */}
+- A port is never dropped silently.
+- The relay CLI prints the Relay Address.{/* TODO: the command's name; ADR-0028 doesn't name it. */}
+- Distribution to apps is out of band, for example a build-time constant (trueseal-relay ADR-0004).
+
+## Rotation
+
+- The preview does not support rotating the relay key.
+- Changing the key breaks every client configured with the old Relay Address.
+- Recovery from a changed or lost key is a new Relay Address shipped in a new app release.
+
+## A leaked private key
+
+An attacker holding the private key can impersonate the relay to devices that reach the attacker. Its effect on each property:
+
+| Property | Effect |
+|---|---|
+| Confidentiality | Unaffected. Payloads are sealed end to end (trueseal-sync ADR-0031). |
+| Integrity | Unaffected. Messages are signed inside the seal; a changed or re-addressed Blob fails the signature (trueseal-sync ADR-0031). |
+| Availability | Lost for affected devices. The attacker can withhold or drop messages. |
+| Metadata | Exposed as to the real relay: device keys, online times, recipients, sizes, timing, fan-out, End-to-End Version, and often which device pushed. |
+
+## Operator's job
+
+- Getting the Relay Address to the app developer.
+- Backing up `keypair.hex` once and keeping it private.
+- Never replacing the key on a relay devices depend on.

@@ -4,9 +4,9 @@ import LandingSection from './LandingSection.astro';
 import CodeTabs, { type CodeTab } from './CodeTabs.astro';
 import { agentSnippet } from '../../agent-snippet/agent-snippet';
 
-// TODO: brandbook section 10. "About ten lines" is unchecked against the shipped SDKs (DOCS-9).
-
-// TODO: brandbook section 10. Names follow trueseal-sync ADR-0028 and package names ADR-0030; the SDK repos still ship TruesealSyncClient, so check against the shipped 0.6 SDKs (DOCS-9).
+// The 0.6 API: names follow trueseal-sync ADR-0028 and package names ADR-0030. The SDK repos still ship
+// TruesealSyncClient, and the line counts in the copy below are for those (brand/91_EVIDENCE.md).
+// The accept step stays a comment because ADR-0028 doesn't settle how each language matches on an event.
 const snippets: CodeTab[] = [
   {
     label: 'Swift',
@@ -22,7 +22,9 @@ trueseal.onMessage { message in
   try await store.save(message.id, message.body)
 }
 
-let token = try await trueseal.startPairing() // the other device calls join(token)
+// Show the token as a QR code. The other device calls join(token),
+// and this one calls accept(request) on its joinRequest event.
+let token = try await trueseal.startPairing()
 try await trueseal.send(location)`,
   },
   {
@@ -40,7 +42,9 @@ trueseal.onMessage { message ->
   repository.save(message.id, message.body)
 }
 
-val token = trueseal.startPairing() // the other device calls join(token)
+// Show the token as a QR code. The other device calls join(token),
+// and this one calls accept(request) on its joinRequest event.
+val token = trueseal.startPairing()
 trueseal.send(location)`,
   },
   {
@@ -57,7 +61,9 @@ trueseal.onMessage(async (message) => {
   await db.put(message.id, message.body)
 })
 
-const token = await trueseal.startPairing() // the other device calls join(token)
+// Show the token as a QR code. The other device calls join(token),
+// and this one calls accept(request) on its joinRequest event.
+const token = await trueseal.startPairing()
 await trueseal.send(location)`,
   },
 ];
@@ -65,16 +71,20 @@ await trueseal.send(location)`,
 
 <LandingSection
   id="integrate"
-  heading="About ten lines."
+  heading="Open it, pair two devices, send."
   docs={{ href: '/docs/integrate/integrating-trueseal-sync', label: 'Read the integration guide' }}
 >
   <p>
-    Open a TrueSeal with your relay's address. Show the pairing token as a QR code on one device and join with it on
-    the other. Then send bytes, and every device in the group receives them.
+    Open a TrueSeal with your relay's address. Show the Pairing Token as a QR code on one device, join with it on the
+    other, and accept the join request on the first. Then send bytes, and every device in the group receives them.
   </p>
   <p>
     Your feature list gets a new line. <em class="integrate__line">Syncs across all your devices, and no one else can
     read it.</em>
+  </p>
+  <p>
+    The code here is the 0.6 API, which isn't released yet. With the SDKs on GitHub today, the same steps take 18 lines
+    of Swift, 16 of Kotlin and 10 of TypeScript.
   </p>
 
   <CodeTabs slot="aside" name="integrate-code" tabs={snippets} />

@@ -1,0 +1,89 @@
+---
+title: Pairing
+description: The pairing API on both sides, the Pairing Token and Pairing Secret, the Pending Join, every join state, and the failure, restart and crash transitions.
+---
+
+# Pairing
+
+This page states pairing in the Developer Preview as trueseal-sync ADR-0023 decides it, with the API names of ADR-0028.
+
+## Trust model
+
+- The Pairing Token carries the admitting device's public keys and a random, single-use Pairing Secret. It travels out-of-band, for example as a QR code, and the relay never sees it.
+- A `Pair` message must prove it knows the Pairing Secret. A relay that never saw the token can't raise a join request.
+- The joining device trusts exactly one key: the signing key in the token it was given. It accepts its first Group Manifest only if all of these hold:
+  - the manifest is signed by the token's signing key;
+  - the Envelope signer is that same key;
+  - the joining device's own keys are among the members.
+  The group ID and version can be anything. A device joining an existing group receives that group's ID at the next version.
+- A device with no manifest and no Pending Join never accepts a Group Manifest.
+- A device with no manifest drops every `Sync` and `Revoke`.
+
+## Admitting side
+
+| Call or event | Behaviour |
+|---|---|
+| `startPairing()` | Generates a fresh Pairing Secret, opens the pairing window, returns the Pairing Token as a string. |
+| `joinRequest(request)` event | Raised for each `Pair` with a valid secret proof. `JoinRequest` is `{id, name}`. Repeat `Pair`s from the same joiner keys deduplicate into one request. Several distinct requests can coexist; the user picks one. |
+| `accept(request)` | Single-use. Persists the new Group Manifest and queues it in the outbox before it returns, then closes the window. Fails with `pairingClosed` if the window is closed, or `groupFull{max}` if the group is at `maxGroupSize`. |
+| `cancelPairing()` | Closes the window and spends the secret. |
+
+- The window and its pending requests live in memory only. A restart closes the window and spends the secret.
+- Every new window gets a new secret, so an older token stops working.
+- `Pair`s that arrive under a spent secret are dropped.
+- The window has no timer (ADR-0021). It closes on a successful `accept(request)`, on `cancelPairing()`, or on restart.
+- There is no reject call and no decline message. An unaccepted request gets no reply and disappears when the window closes.
+- On a device with no group, the first `accept(request)` creates a group holding both devices.
+- The admitting device's pairing window is not part of `status`.
+
+## Joining side
+
+| Call | Behaviour |
+|---|---|
+| `join(token)` | Persists the Pending Join and queues `Pair` in the outbox, in one transaction. `status` becomes `pendingJoin`. Fails with `alreadyInGroup` if the device holds a manifest (one Sync Group per namespace), or `invalidPairingToken` if the token can't be decoded. |
+| `join(token)` while `pendingJoin` | Replaces the Pending Join. |
+| `cancelJoin()` | Clears the Pending Join. `status` becomes `notJoined`. |
+
+- A Pending Join has no timer and survives restarts.
+- `Pair` is not re-sent on restart. Retries follow the outbox, and `Pair` outbox entries never expire (ADR-0026).
+- A manifest that fails the checks is dropped, and the Pending Join is kept.
+- A valid manifest is stored and the Pending Join cleared in one transaction. Then `statusChanged(member, joined)` fires once.
+- An incoming `Revoke` is ignored in `pendingJoin` (ADR-0029).
+
+## Join states
+
+`status` is one of `notJoined | pendingJoin | member | leaving | destroying`. Pairing moves a device through the first three.
+
+| From | Trigger | To |
+|---|---|---|
+| `notJoined` | `join(token)` | `pendingJoin` |
+| `pendingJoin` | `join(token)` with another token | `pendingJoin`, Pending Join replaced |
+| `pendingJoin` | `cancelJoin()` | `notJoined` |
+| `pendingJoin` | Valid Group Manifest | `member`, `statusChanged(member, joined)` |
+| `pendingJoin` | Invalid Group Manifest | `pendingJoin`, manifest dropped |
+| `member`, `leaving`, `destroying` | `join(token)` | Unchanged, fails with `alreadyInGroup` |
+
+`leaving` is defined on [Membership](/agents/membership) and `destroying` on [Destroy Group](/agents/destroy-group).
+
+## Failure, restart and crash points
+
+| Situation | Outcome |
+|---|---|
+| Joiner crashes before the `join(token)` transaction commits | `notJoined`. The app calls `join(token)` again. |
+| Joiner crashes after it commits | `pendingJoin`. The outbox retries `Pair`. |
+| Joiner crashes after receiving a manifest, before storing it | `pendingJoin`. The relay redelivers the unacked manifest. |
+| Admitter crashes or restarts before `accept(request)` commits | The window is lost and nobody joined. The joiner stays `pendingJoin` until its app calls `cancelJoin()` or `join(token)` with a new token. |
+| Admitter crashes after `accept(request)` commits | The outbox re-sends the queued manifest. |
+| Admitter calls `cancelPairing()` or restarts while a joiner is pending | The admitter forgets the pending request and drops any later `Pair` under the spent secret. The joiner stays `pendingJoin` with no reply. |
+| Admitter never accepts | The joiner stays `pendingJoin` with no reply. |
+| A concurrent admission pushes the group past `maxGroupSize` | The re-applied admission is dropped, the admitting device raises `admissionDropped(name, reason)`, and the joiner stays `pendingJoin` (ADR-0027). |
+
+A Pending Join with no reply never resolves by itself. The app must offer `cancelJoin()`.
+
+## Limits
+
+- Anyone who sees the Pairing Token while the window is open can send a valid join request.
+- The `name` on a `JoinRequest` is a label chosen by the joining device. It is not authentication.
+- There is no short authentication string.
+- The app must have the admitting user confirm that a request comes from the device in front of them before calling `accept(request)`.
+- A new member receives only messages sent after other members accept the manifest that adds it. History is the app's job.

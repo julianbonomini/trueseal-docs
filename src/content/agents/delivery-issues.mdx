@@ -1,0 +1,69 @@
+---
+title: Delivery issues
+description: The delivery-issue stream and every case in it, the relay's typed push refusals, the errors send() throws, what is never reported, and the app's response to each.
+---
+import Fact from '../../components/mdx/Fact.astro';
+
+# Delivery issues
+
+This page states the delivery-issue stream in the Developer Preview as trueseal-sync ADR-0026 decides it, with the cases of ADR-0028 as amended by ADR-0034. The delivery promise and state machines are on [Sending and receiving](/agents/sending-and-receiving).
+
+## Stream
+
+- `onDeliveryIssue(listener)` registers a listener and returns a cancel handle. It is optional. Ignoring it is safe.
+- Each issue carries a Message ID where one exists, and a reason.
+- Issues are device-local. Nothing is sent to the sender or the relay.{/* TODO: whether delivery issues raised before the first listener is registered are buffered; ADR-0028 buffers events but says nothing of issues. */}
+
+## Cases
+
+{/* TODO: render from Shared Facts deliveryIssues, unreadableReason and sendFailedReason once the agent-docs Goal is merged. */}
+
+| Case | Cause | Library action | App response |
+|---|---|---|---|
+| `unreadable(malformed)` | Undecodable or unauthenticated bytes, an unknown frame type or an unknown message tag. | Acked and dropped. | None. Log it. |
+| `unreadable(senderOutdated)` | A Blob in an older End-to-End Version than this device supports. | Acked and dropped. | Tell the user another of their devices needs an update. |
+| `unreadable(expired)` | Sender Timestamp older than the Replay Window (<Fact id="replayWindow" />). | Acked and dropped. | None. If the data matters, ask a peer to resend its state. |
+| `unreadable(droppedWhileHeld)` | The held newer-version Blobs passed <Fact id="heldBlobCap" />. This is the oldest held Blob. | Acked and dropped. | Prompt the user to update now. |
+| `unauthorized` | The Blob failed the pairing or membership rules. | Acked and dropped. | None. Log it. |
+| `heldForUpgrade(version)` | A Blob in a newer End-to-End Version. | Left unacked on the relay. Handled after this device upgrades, out of order. | Prompt the user to update. |
+| `handlerGaveUp(messageId, error)` | The handler threw on all <Fact id="handlerAttempts" />. | Acked and dropped. | Report `error` as a handler bug. Ask the sender for the data again if it matters. |
+| `sendFailed(messageId, tooLarge)` | The relay refused the push permanently: over its Relay Size Limit, which may be below the Protocol Size Limit. | Outbox entry removed. | Tell the user the message wasn't delivered. Pass a matching lower `maxPayloadBytes` to `open()`. `maxPayloadBytes` counts the body; the Relay Size Limit counts the sealed envelope (see [Relay limits and quotas](/agents/relay-limits-and-quotas)). |
+| `sendFailed(messageId, malformed)` | The relay refused the push permanently as malformed. | Outbox entry removed. | Report it as a bug. |
+| `sendFailed(messageId, expired)` | A `Sync` entry still undelivered <Fact id="outboxExpiry" /> after `send()`. | Outbox entry removed. | Tell the user the message wasn't delivered; resend if it still matters. |
+
+{/* TODO: whether `sendFailed` is raised once per recipient entry or once per message; ADR-0026 defines the outbox per recipient but the event carries only the Message ID. */}
+
+`undeliverableAfterUpgrade` no longer exists (ADR-0034). An End-to-End Version upgrade re-seals every outbox entry and loses none.
+
+## Relay push refusals
+
+| Code | Kind | Client behaviour |
+|---|---|---|
+| too large | Permanent | `sendFailed(messageId, tooLarge)` |
+| malformed | Permanent | `sendFailed(messageId, malformed)` |
+| inbox full | Temporary | Retry with backoff; no issue |
+| rate limited | Temporary | Retry with backoff; no issue |
+| unavailable | Temporary | Retry with backoff; no issue |
+| internal error | Temporary | Retry with backoff; no issue |
+
+The codes carry no content.
+
+## Errors thrown by `send()`
+
+`send()` throws these before anything enters the outbox. They never appear on the stream.
+
+| Error | Cause | App response |
+|---|---|---|
+| `payloadTooLarge{max}` | Body over `max`, the Protocol Size Limit of <Fact id="protocolSizeLimit" /> or the lower `maxPayloadBytes` passed to `open()`. | Split the data or send a reference. |
+| `notMember{status}` | `status` is not `member`. | Send only while `status` is `member`. |
+| `closed` | `close()` was called on this object. | Open a new `TrueSeal` object. |
+
+## Connection state
+
+An unsupported Transport Version sets `connection` to `relayVersionUnsupported{min, max}`. No issue is raised and outbox entries stay queued until the library is upgraded.
+
+## Never reported
+
+- A Blob deleted by the relay after its TTL. The sender saw the push ack; the recipient never saw the Blob.
+- A duplicate, acked silently.
+- Pending `Sync` sends dropped on a deliberate removal or on entering `destroying`, on the initiating and the receiving devices (ADR-0027, ADR-0029).{/* TODO: whether `Sync` entries wiped at the end of `leave()` are reported; ADR-0027 doesn't say. */}

@@ -1,0 +1,100 @@
+---
+title: Sending and receiving
+description: The delivery promise, the sender's outbox state machine, the relay's push and ack rules, the recipient's serial handling with ack after the handler, dedup by Message ID, per-sender order, and crash points.
+---
+import Fact from '../../components/mdx/Fact.astro';
+
+# Sending and receiving
+
+This page states delivery in the Developer Preview as trueseal-sync ADR-0026 decides it, amended by ADR-0034, with the API names of ADR-0028. The delivery-issue and error cases are on [Delivery issues](/agents/delivery-issues).
+
+## Promise
+
+> Messages from one Device reach each recipient's handler in the order that Device sent them, at least once, within the TTL. A handler runs twice for the same message only if the app crashed while handling it. There is no ordering across different senders.
+
+Exceptions:
+
+- A Blob in a newer End-to-End Version is held unacked on the relay and handled out of order after this device upgrades (`heldForUpgrade(version)`).
+- A message the sender gave up on leaves a gap (`sendFailed(messageId, reason)`).
+
+## API
+
+| Call or type | Behaviour |
+|---|---|
+| `send(bytes)` | Returns the `MessageId` once the message is in the outbox. Works before the connection is up. Fails with `payloadTooLarge{max}` or `notMember{status}`, and with `closed` after `close()`. |
+| `onMessage(handler)` | Registers the single message handler. Registering it starts receiving. A second call fails with `messageHandlerAlreadySet`. Returns a cancel handle. |
+| handler | Async and awaited. Receives `Message{id, from: Member, body: bytes}`. `from.id` is the same identifier as in `members`. |
+| `maxPayloadBytes` | The Protocol Size Limit, <Fact id="protocolSizeLimit" />, a constant. `open(…, maxPayloadBytes?)` accepts a lower value. A higher value is clamped to the constant. |
+
+There is no text overload of `send()` and no `ack(messageId)` call.
+
+## Sender
+
+Per outbox entry, per recipient:
+
+`Queued → InFlight → Delivered (deleted) | Queued (retry) | Failed (deleted)`
+
+- `send()` checks the body against `maxPayloadBytes` before anything is written, and throws `payloadTooLarge{max}`. An oversize body never enters the outbox.
+- Otherwise `send()` writes one entry per recipient to the outbox before it returns.
+- An entry is `Delivered` only when the relay's persisted push ack arrives. Delivered rows are deleted.
+- Network failure or a temporary refusal: back to `Queued`. Retried while connected with exponential backoff <Fact id="retryBackoff" />, and immediately on reconnect. A success to that recipient resets the backoff for the entries behind it.
+- Head of line: entries for one recipient are pushed in Sequence order. A later entry never goes out while an earlier one is queued for retry.
+- Permanent refusal: `Failed`. The entry is removed and `sendFailed(messageId, tooLarge | malformed)` is raised.
+- Expiry: a `Sync` entry still undelivered <Fact id="outboxExpiry" /> after `send()` is removed with `sendFailed(messageId, expired)`. Pair, Group Manifest, Leave and Revoke entries never expire.
+- An unsupported Transport Version affects the whole connection: `connection` becomes `relayVersionUnsupported{min, max}` and entries stay queued until the library is upgraded. No `sendFailed` is raised.
+- A `Sync` message is stamped with its Sender Timestamp once, at `send()`. Every re-seal keeps it (ADR-0034).
+
+## Relay
+
+- Persists each push durably (fsync) before sending the push ack.
+- Delivers each inbox in arrival order and sends each Blob once per Receive Session. Un-acked Blobs are re-sent only on a new Receive Session.
+- On DeliverAck, deletes a Blob only if it belongs to the acking device's inbox.
+- Refuses a push with a typed code that carries no content.
+  - Permanent: too large, malformed.
+  - Temporary: inbox full, rate limited, unavailable, internal error.
+- Deletes a Blob still undelivered after the relay TTL, <Fact id="relayTtlDefault" /> by default and at most <Fact id="relayTtlMax" />. Neither device is told.
+
+## Recipient
+
+Per Blob, one at a time:
+
+1. Nothing is pulled from the inbox until `onMessage(handler)` is registered. Events raised before their listener exists are buffered.
+2. Check the End-to-End Version. A newer version stays unacked, up to <Fact id="heldBlobCap" />, and raises `heldForUpgrade(version)`. An older version is acked and dropped as `unreadable(senderOutdated)`.
+3. Decrypt, verify the signature, check the Replay Window, and apply the pairing and membership rules (ADR-0023, ADR-0027). Then look the Message ID up in the dedup table. On any failure, ack, drop and raise a delivery issue. A duplicate is acked with no issue.
+4. Run the handler and await it. If it throws, retry in memory with backoff, <Fact id="handlerAttempts" /> in total. Then ack, drop and raise `handlerGaveUp(messageId, error)`. The library sets no timeout. A handler that never finishes stalls delivery for that Receive Session.
+5. Record the Message ID in the dedup table, then send DeliverAck.
+
+Pair, Group Manifest, Leave and Revoke follow the same path with the library as the handler, without the dedup lookup (ADR-0034).
+
+## Dedup and the Replay Window
+
+- The dedup table lives in Session State and holds handled Message IDs.
+- A Message ID is kept until <Fact id="replayWindow" /> after the later of the handling time and the message's Sender Timestamp (ADR-0031).
+- A message whose Sender Timestamp is more than <Fact id="replayWindow" /> before the receiver's clock is acked, dropped and reported as `unreadable(expired)`. A future timestamp is accepted.
+- Together these mean no copy of a `Sync` message reaches the handler after its dedup record is gone, whatever the relay does.
+- Control messages are not in the dedup table. Replaying one changes no state (ADR-0034).
+- The Message ID is stable across re-delivery. Apps dedupe by `message.id`, never by body, because two sends can carry identical bytes.
+
+## Crash points
+
+| Point | Outcome |
+|---|---|
+| Sender, before the outbox write | `send()` never returned. The message was not sent. |
+| Sender, after the outbox write | The entry is replayed on the next start. |
+| Sender, after the relay persisted the Blob, before the push ack arrived | Duplicate push. Recipient dedup drops it. |
+| Recipient, before the dedup write commits | The Blob is re-delivered on the next Receive Session and the handler runs again. This is the only way an app sees a duplicate. |
+| Recipient, between the dedup write and DeliverAck | The Blob is re-delivered, recognised as a duplicate, and acked. |
+
+## Metadata
+
+- DeliverAck carries no outcome signal. Every Blob the library can't use is acked too.
+- The relay can observe handler latency, because DeliverAck waits for the handler.
+- The relay can infer a device's End-to-End Version from the Blobs it leaves unacked (ADR-0022).
+
+## What stays the app's job
+
+- Keeping bodies within `maxPayloadBytes`. Larger data is split or stored elsewhere.
+- Making the handler safe to re-run after a crash: store `message.id` in the same transaction as the handler's write and skip a stored ID, or make the write idempotent.
+- A timeout inside any handler that can hang.
+- Ordering across senders, and conflict resolution.
+- Sending history to a new member.

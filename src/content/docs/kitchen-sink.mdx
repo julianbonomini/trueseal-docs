@@ -35,17 +35,17 @@ Everything in one page. Use this to test components before wiring into real cont
 
 ---
 
-## Code Block — single language
+## Code Block, single language
 
-<CodeBlock client:load lang="rust" code={`let session = TrueSealSession::create("my-app", relay_url, relay_pub_key).await?;
-session.start_pairing(on_member_request).await?;`} />
+<CodeBlock client:load lang="ts" code={`const trueseal = await TrueSeal.open(relay, './trueseal-state')
+const token = await trueseal.startPairing()`} />
 
-## Code Block — multi language tabs
+## Code Block, multi language tabs
 
 <CodeBlock client:load tabs={[
-  { lang: 'rust', code: `let session = TrueSealSession::create("my-app", relay_url, relay_pub_key).await?;\nsession.start_pairing(on_member_request).await?;` },
-  { lang: 'go', code: `relay := truesealrelay.New(truesealrelay.Config{\n    ListenAddr: ":8080",\n    StorageDSN: "file:relay.db",\n})\nrelay.Start(ctx)` },
-  { lang: 'bash', code: `cargo add trueseal-sync\n# or\nbun add @trueseal/core` },
+  { lang: 'ts', code: `const trueseal = await TrueSeal.open(relay, './trueseal-state')\nconst token = await trueseal.startPairing()` },
+  { lang: 'swift', code: `let trueseal = try await TrueSeal.open(relay: relay, storage: .applicationSupport)\nlet token = try await trueseal.startPairing()` },
+  { lang: 'bash', code: `npm install @trueseal/sync` },
 ]} />
 
 ---
@@ -130,23 +130,23 @@ session.start_pairing(on_member_request).await?;`} />
 
 ## Typography scale
 
-# h1 — Display heading
+# h1, Display heading
 
-## h2 — Section heading
+## h2, Section heading
 
-### h3 — Subsection heading
+### h3, Subsection heading
 
-#### h4 — Label heading
+#### h4, Label heading
 
 Regular body paragraph. Just here to show what running text looks like at the
 default size, with normal line height and the body color from the theme.
 
 **Bold text.** _Italic text._ `inline code`. [Link text](#).
 
-> Blockquote — used for pull quotes or notable statements.
+> Blockquote, used for pull quotes or notable statements.
 
 ---
 
 ## Next page
 
-<NextPage next={{ title: 'Introduction', href: '/docs/overview/introduction' }} />
+<NextPage next={{ title: 'What TrueSeal is', href: '/docs/overview/what-trueseal-is' }} />

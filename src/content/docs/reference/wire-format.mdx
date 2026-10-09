@@ -1,139 +1,128 @@
 ---
 title: Wire Format
-description: Byte-level specification for every message exchanged over a trueseal-protocol connection — framing, types, push body layout, ack semantics.
+description: The bytes a device and a relay exchange in the Developer Preview, from the version prefix and Noise framing to every frame type, the refusal codes and the size limits.
 ---
 import Fact from '../../../components/mdx/Fact.astro';
 
 # Wire Format
 
-Every message on a trueseal-protocol connection shares the same framing:
+This page gives the byte layout of everything a device and a relay send each other, as the Developer Preview decides it. The [Protocol](/docs/reference/protocol) page explains the sessions these bytes travel in. The Sync-level test vectors are the final word on exact bytes; where this page and the vectors differ, the vectors win.
+
+## Connection start
+
+Before the Noise handshake, the device sends a short plaintext prefix with its Transport Version. The same prefix is bound into the Noise prologue, so a connection that tampers with it fails the handshake.
+
+A relay that doesn't speak that Transport Version replies with the plaintext `unsupported min..max`, naming the versions it speaks, and closes the connection. In the preview `min` equals `max`.
+
+{/* TODO: the byte layout of the version prefix and of the `unsupported` reply. sync ADR-0022 decides both exist and leaves the bytes to the test vectors (trueseal-sync#94). */}
+
+## Noise framing
+
+Every Noise message on the TCP connection, the handshake messages included, is a 2-byte big-endian length followed by that many bytes of ciphertext. A Noise message is at most 65,535 bytes. Its last 16 bytes are the authentication tag, so it carries at most 65,519 bytes of plaintext.
+
+Each Noise message carries exactly one TrueSeal frame. A frame is never split across Noise messages.
+
+## Frames
+
+Every frame has the same layout:
 
 ```
-[type: u8][len: u32 BE][body: bytes]
+[type: u8][len: u32 BE][body: len bytes]
 ```
 
-- **type** — 1-byte message type tag.
-- **len** — 4-byte big-endian unsigned integer, length of `body` in bytes.
-- **body** — zero or more bytes, contents depend on the type.
+A frame is at least 5 bytes, with an empty body. The relay answers a frame of unknown type with an `Error` frame and a generic code, and echoes none of the bytes it received.
 
-Minimum message size is 5 bytes (type + len, empty body). Anything shorter is malformed and a parser must treat it that way.
+| Type | Name | Sent by | Session | Body |
+|---|---|---|---|---|
+| `0x01` | Push | Device | Push | `[recipient_pub: 32][envelope]` |
+| `0x02` | Deliver | Relay | Receive | `[blob_id: u64 BE][envelope]` |
+| `0x03` | Heartbeat | Device, echoed by the relay | Receive | Empty |
+| `0x04` | Ack | Relay | Push | Empty |
+| `0x05` | Error | Relay | Push, or either for an unknown frame | A reason code |
+| `0x06` | DeliverAck | Device | Receive | `[blob_id: u64 BE]` |
 
-## Message types
+### Push
 
-| Tag | Name | Direction | Body |
-|---|---|---|---|
-| `0x01` | Push | client → relay | `[recipient_pub: 32 bytes][envelope: bytes]` |
-| `0x02` | Deliver | relay → client | `[blob_id: 8 bytes u64 BE][envelope: bytes]` |
-| `0x03` | Heartbeat | both | empty |
-| `0x04` | Ack | relay → client | empty |
-| `0x05` | Error | relay → client | empty |
-| `0x06` | DeliverAck | client → relay | `[blob_id: 8 bytes u64 BE]` |
-
-An unknown type tag is malformed. Close the connection.
-
----
-
-## Push (`0x01`)
-
-Sent by the client to deliver a blob to a recipient device.
-
-**Body layout:**
 ```
 [recipient_pub: 32 bytes][envelope: bytes]
 ```
 
-- `recipient_pub` — the recipient's X25519 noise public key. The relay uses this to route the blob into the right Inbox. It's the only routing information in the body.
-- `envelope` — the serialized protobuf Envelope bytes, defined by trueseal-sync. The relay treats this as opaque and never looks inside.
+`recipient_pub` is the recipient device's X25519 public key. The relay reads these 32 bytes to choose the Inbox and never parses the rest. `envelope` is the sealed [Envelope](/docs/reference/envelopes-and-blobs), stored and later delivered unchanged. A body shorter than 32 bytes is malformed.
 
-A Push body shorter than 32 bytes is malformed. The relay rejects it with an Error frame and does not Ack.
+### Ack
 
----
+The relay sends `Ack` once it has written the Envelope to the recipient's Inbox and synced it to disk. It tells the sender that the relay holds the message. The recipient may still be offline. A Push Session can carry several `Push` frames, and the relay answers each in order with one `Ack` or one `Error`.
 
-## Deliver (`0x02`)
+### Error
 
-Sent by the relay to hand a blob to a connected device.
+The relay sends `Error` instead of `Ack` when it refuses a `Push`. It stores nothing, and the session stays open for the next `Push`. The body is a reason code that says why and carries no content:
 
-**Body layout:**
+| Reason | Kind | What the device does |
+|---|---|---|
+| Too large | Permanent | Removes the message and reports `sendFailed(messageId, tooLarge)` |
+| Malformed | Permanent | Removes the message and reports `sendFailed(messageId, malformed)` |
+| Inbox full | Temporary | Keeps the message and retries with backoff |
+| Rate limited | Temporary | Keeps the message and retries with backoff |
+| Unavailable or internal error | Temporary | Keeps the message and retries with backoff |
+
+{/* TODO: the byte values of the reason codes. sync ADR-0025 and ADR-0026 add the codes and leave the encoding to the test vectors (trueseal-relay#42). */}
+
+### Deliver
+
 ```
-[blob_id: 8 bytes u64 BE][envelope: bytes]
-```
-
-- `blob_id` — an opaque 8-byte identifier the relay assigns. The client echoes it back in a DeliverAck immediately after receiving the frame bytes. The client must strip these 8 bytes before decoding the Envelope.
-- `envelope` — the serialized Envelope, forwarded verbatim.
-
-The relay doesn't delete the blob from its InboxStore at send time. Deletion only happens after a matching DeliverAck arrives. If the session drops first, the blob comes around again on the next Receive Session. Public SDKs expose a stable application Message ID derived from signed Envelope metadata; applications persist that ID to make processing idempotent.
-
----
-
-## Heartbeat (`0x03`)
-
-Either side can send one to keep the connection alive. The other side replies with its own Heartbeat. Body is always empty.
-
----
-
-## Ack (`0x04`)
-
-Sent by the relay after a Push has been durably persisted to the Inbox. Body is always empty.
-
-**Ack means:** the envelope is stored and will be delivered to the recipient when they connect.
-
-**Ack does *not* mean:** the recipient has received it. They might be offline and the blob is waiting.
-
-A client that gets an Ack for a Push can mark that blob delivered in its local outbox.
-
----
-
-## DeliverAck (`0x06`)
-
-Sent by the client once it has durably persisted a Deliver frame.
-
-**Body layout:**
-```
-[blob_id: 8 bytes u64 BE]
+[blob_id: u64 BE][envelope: bytes]
 ```
 
-- `blob_id` — the identifier from the matching Deliver frame, echoed back as-is.
+`blob_id` is a number the relay picks for this message. The device must not interpret it and only sends it back in `DeliverAck`. It is not the Message ID, and an app never sees it. `envelope` is the bytes from the `Push`, unchanged.
 
-When the relay receives it, the blob is deleted from the InboxStore. Anything that hasn't been DeliverAck'd survives session drops and gets re-delivered on the next Receive Session.
+The relay sends each message once per Receive Session, in the order it arrived in the Inbox.
 
----
+### DeliverAck
 
-## Error (`0x05`)
+```
+[blob_id: u64 BE]
+```
 
-Sent by the relay when a Push is permanently rejected. Body is always empty.
+The device sends `DeliverAck` after the app's handler has finished with the message, or once the library has decided it can't use the message. It doesn't send one for a message in a newer End-to-End Version, which waits on the relay until the app upgrades. Once <Fact id="heldBlobCap" /> are waiting, it acknowledges and drops the oldest. The relay deletes the message only if `blob_id` belongs to the Inbox of the device that sent the `DeliverAck`.
 
-**Error means:** the relay will not store this blob. Don't retry — same blob, same outcome.
+`DeliverAck` carries no outcome. The relay can't tell a handled message from a dropped one. It can see how long the handler took, because the ack waits for it.
 
-**Current rejection reasons:**
-- Push body shorter than 32 bytes (malformed).
-- Envelope larger than the Protocol Size Limit allows (see below).
+### Heartbeat
 
-A client that receives an Error removes the blob from its retry queue. Retrying won't help.
+The device sends `Heartbeat` on its Receive Session every 25 seconds, and the relay echoes it. The relay closes a Receive Session after 75 seconds with no frame from the device.
 
----
+## Size limits
 
-## Size limit
+Every message fits in one frame. The public number is the Protocol Size Limit: <Fact id="protocolSizeLimit" /> of `Sync` body, the bytes an app passes to `send()`. The other limits follow from the Noise framing:
 
-The Protocol Size Limit is <Fact id="protocolSizeLimit" /> of `Sync` body: the bytes the caller passes to `send()`. The Envelope that carries it, the `envelope` portion of the Push body after the 32-byte `recipient_pub`, is a little larger, so its fields can grow without changing the public limit.
+| Limit | Value | Where it comes from |
+|---|---|---|
+| Noise message | 65,535 bytes | The 2-byte length prefix |
+| Frame | 65,519 bytes | The Noise message minus its 16-byte tag |
+| Envelope | about 65,482 bytes | The frame minus the 5-byte header and the 32-byte `recipient_pub` |
+| `Sync` body | <Fact id="protocolSizeLimit" /> | Set below the Envelope limit, so Envelope fields can grow without changing it |
 
-The check is enforced twice:
+`send()` checks the Protocol Size Limit before anything is written to the outbox, and fails with `payloadTooLarge{max}`. The relay checks the Envelope size again on every `Push` and refuses an oversize one as too large. An Operator may set a lower Relay Size Limit but never a higher one, and a relay configured above the protocol ceiling refuses to start. Every message type, a full Group Manifest at the Maximum Group Size included, has to fit in one frame.
 
-**Client-side (trueseal-sync):** before any Push Session is opened. `send()` refuses a `Sync` body over the limit with `payloadTooLarge{max}`, and the body never enters the outbox. No NK handshake happens, no bytes go to the relay.
+## Test vectors
 
-**Relay-side (trueseal-relay):** on receipt, as a backstop. The relay refuses the blob as too large, doesn't Ack it and doesn't store it. The refusal is permanent, so the client never retries it. This catches buggy clients and any third-party implementation that skips the check.
+Two sets of test vectors fix the bytes.
 
-Relay operators can set a lower Relay Size Limit, never a higher one. A relay configured above the protocol ceiling refuses to start.
+- **Noise.** trueseal-noise checks one `Noise_XX_25519_ChaChaPoly_BLAKE2s` and one `Noise_NK_25519_ChaChaPoly_BLAKE2s` vector from the [cacophony](https://github.com/noiseprotocol/noise_wiki/wiki/Test-vectors) set, kept in `testdata/cacophony.json`, byte for byte, in `tests/cacophony.rs`.
+- **Sync.** JSON vectors cover the signing inputs, addressed encryption, the Message ID, every frame, the version prefix, and the rejection cases. The Rust core produces and checks them, the relay checks them in its Go tests, and each SDK checks them through its bindings. A release that fails them doesn't ship.
 
----
+{/* TODO: where the Sync JSON vectors are published, and a link to them. They are planned in trueseal-sync#94 and don't exist yet. */}
 
-## Session types
+## Where today's code differs
 
-The protocol uses two distinct session types, each with its own Noise handshake pattern:
+The code in the sibling repos still implements the format from before the preview decisions. The differences, each tracked by an open issue:
 
-**Push Session** — client opens, sends one or more Push frames, closes. Uses `Noise NK`: the relay authenticates itself, but the client never reveals an identity. The handshake gives the relay no device key, though it can often link a push to a device by IP address or timing. Short-lived on purpose.
-
-**Receive Session** — client opens, stays connected. Uses `Noise XX` with mutual authentication. The relay learns the device's stable noise public key and uses it to deliver blobs as they arrive. Long-lived on purpose.
-
-The two session types run on separate TCP listeners. Splitting them keeps the routing logic clean — Push is anonymous and stateless, Receive is identified and stateful, and the relay never has to guess which one it's holding.
-
-{/* TODO: diagram — Push Session flow (NK), Receive Session flow (XX), message exchange for each */}
+- There is no version prefix and no `unsupported` reply (trueseal-relay#42, trueseal-sync#93).
+- The `Error` body is empty, with no reason code, and the relay drops an unknown or malformed frame without replying (trueseal-relay#42).
+- `send()` checks a far larger envelope limit (`MAX_ENVELOPE_BYTES`) instead of the Protocol Size Limit, so it accepts a message the relay will refuse, and the device retries it forever (trueseal-sync#100). The relay accepts a configured size limit above the protocol ceiling (trueseal-relay#45).
+- The device echoes the relay's heartbeats but doesn't send its own every 25 seconds (trueseal-sync#108).
+- The device sends `DeliverAck` as soon as a `Deliver` frame arrives, before decrypting it (trueseal-sync#97).
+- The relay resends every message in the Inbox each time a new one arrives, instead of once per session (trueseal-relay#44).
+- The relay deletes a message on any `DeliverAck` with its `blob_id`, without checking which Inbox it belongs to (trueseal-relay#38).
+- The Envelope still carries the sequence, parent hashes and signature in plaintext (trueseal-sync#104). [Envelopes and Blobs](/docs/reference/envelopes-and-blobs) describes the sealed format that replaces it.
+- The Sync test vectors don't exist yet (trueseal-sync#94).

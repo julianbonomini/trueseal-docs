@@ -1,0 +1,71 @@
+---
+title: Relay limits and quotas
+description: The relay's default abuse limits and refusal codes, its deadlines and heartbeat, the TTL and reaping, which limits can only be lowered, the configuration variables, and the accepted quota attack.
+---
+import Fact from '../../components/mdx/Fact.astro';
+
+# Relay limits and quotas
+
+This page states the relay's limits in the Developer Preview as trueseal-relay ADR-0012 decides them, with the size limit of trueseal-sync ADR-0025 and the TTL ceiling of ADR-0034. The client's response to each refusal is on [Delivery issues](/agents/delivery-issues).
+
+## Keying
+
+- Push Sessions carry no sender identity, so no limit is keyed on a sender.
+- Every limit is keyed on the recipient Inbox, the Device key, or a global count.
+- No limit reads, stores or is keyed on an IP address. Per-IP limiting belongs at the Operator's firewall or reverse proxy.
+
+## Defaults
+
+{/* TODO: render from Shared Facts once the agent-docs Goal is merged. */}
+
+| Limit | Default | When exceeded | Kind |
+|---|---|---|---|
+| Blobs per Inbox | <Fact id="inboxMaxBlobs" /> | `inbox full` | Temporary |
+| Bytes per Inbox | <Fact id="inboxMaxBytes" /> | `inbox full` | Temporary |
+| Push rate per recipient | Token bucket, 20/s sustained, burst 500 | `rate limited` | Temporary |
+| Concurrent connections per listener | 1,000 | Connection closed | |
+| Concurrent Receive Sessions per Device key | 4 | New session refused | |
+| Envelope size | Derived from the Protocol Size Limit, <Fact id="protocolSizeLimit" /> of `send()` body | `too large` | Permanent |
+| TTL | <Fact id="relayTtlDefault" /> | Blob reaped | |
+
+- Refusal codes carry no content.
+- On a temporary refusal the client keeps the outbox entry and retries with backoff. No delivery issue is raised.
+- On `too large` the client removes the outbox entry and raises `sendFailed(messageId, tooLarge)`.
+
+## Deadlines and liveness
+
+| Item | Value |
+|---|---|
+| Noise handshake deadline, both listeners | <Fact id="handshakeDeadline" /> |
+| Push Session deadline, accept to close | <Fact id="pushSessionDeadline" /> |
+| Client heartbeat on a Receive Session | Every <Fact id="heartbeatInterval" />; the relay echoes it |
+| Receive Session idle close | <Fact id="receiveIdleTimeout" /> with no frame received |
+
+The client starts heartbeats. The relay does not.
+
+## Retention
+
+- A Blob stays in its Inbox until the recipient sends DeliverAck, which the client sends after its handler finishes (trueseal-sync ADR-0026), or until the TTL.
+- The reaper deletes expired Blobs every hour by default.
+- A reaped Blob is reported to neither device.
+
+## Changing limits
+
+- The Operator can change every value.
+- The envelope size limit (the Relay Size Limit) and the TTL can only be lowered.
+- The relay refuses to start with a size limit above the Protocol Size Limit.
+- The relay refuses to start with a TTL above <Fact id="relayTtlMax" />: the Replay Window (<Fact id="replayWindow" />) minus the client Outbox expiry (<Fact id="outboxExpiry" />), so a message pushed on its last outbox day still arrives inside the Replay Window.
+- An app using a relay with a lower Relay Size Limit passes a matching lower `maxPayloadBytes` to `open()`. `maxPayloadBytes` counts the body; the Relay Size Limit counts the sealed envelope.
+
+| Setting | Variable | Format |
+|---|---|---|
+| TTL | `TRUESEAL_RELAY_TTL` | Go duration, e.g. `720h` |
+| Reap interval | `TRUESEAL_RELAY_REAP_INTERVAL` | Go duration, e.g. `1h` |
+| Connections per listener | `TRUESEAL_RELAY_MAX_CONNECTIONS` | Integer |
+| Relay Size Limit | `TRUESEAL_RELAY_MAX_ENVELOPE_BYTES` | Integer bytes of the protobuf Envelope{/* TODO: the envelope overhead above the send() body; ADR-0025 publishes only the body limit. */} |
+
+{/* TODO: variable names for the Inbox quotas, the push rate and the Receive Session cap; ADR-0012 doesn't name them. */}
+
+## Accepted attack
+
+Anyone who knows a Device's public key can use up that Device's quota and delay its delivery. This is a targeted availability attack. The relay does not prevent it. Confidentiality and integrity of the queued Blobs are unaffected.

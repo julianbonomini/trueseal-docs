@@ -1,0 +1,47 @@
+---
+title: Developer preview
+description: Version scheme, the preview lifecycle rules for 0.x releases, the four 1.0 criteria, and what 1.0 does not require.
+---
+
+# Developer preview
+
+This page states the preview lifecycle as trueseal-sync ADR-0033 decides it, with the version scheme of ADR-0030.
+
+## Versions
+
+- TrueSeal Release: `trueseal-sync` and the Swift, Kotlin and TypeScript SDKs share one version and release together, even when a package is unchanged. It starts at 0.6.0.
+- `trueseal-relay` and `trueseal-noise` are versioned independently and restart at 0.2.0.
+- Tags are `vX.Y.Z` and immutable. A fix is a new patch version.
+- The preview is every `0.x` version.
+
+## Lifecycle rules (0.x)
+
+- **No notice period.** Any `0.x` release may break the API, the wire format or stored data without advance warning.
+- **Upgrade Notes are required.** Every breaking release has a "Breaking" section with upgrade steps, in the changelog, on the GitHub Release and on [Upgrade Notes](/agents/upgrade-notes). The pre-promotion metadata check fails a breaking release without one. Two breaks carry fixed labels:
+  - Transport Version or End-to-End Version bump: "every device and the relay must upgrade together".
+  - Store Reset: "local data is wiped and every group must pair again".
+- **No end date.** The preview ends only when the 1.0 criteria are met. No target date is published.
+- **Fixes are best effort, with no promise.** Fixes, security fixes included, land only in the next `0.x` release. Nothing is backported to an older `0.x`.
+
+## 1.0 criteria
+
+All four must hold:
+
+1. Identity keys are stored in Keychain (Apple) and Keystore (Android), and the local store is encrypted at rest.
+2. Public SDK APIs follow semver; a breaking change needs a new major version. A CI API-diff check enforces it in each SDK.
+3. Session State and the relay store migrate forward only within a major version. No Store Reset inside a major version.
+4. Each major version speaks exactly one Transport Version and one End-to-End Version. A protocol bump is a new major version.
+
+## Not required for 1.0
+
+- An external security audit. None is planned. "Not independently audited" stays a documented limitation at 1.0. Every public claim names the tests that prove it.
+- End-to-end forward secrecy (a ratchet). 1.x ships without one; it is a 2.0 candidate.
+- Network-level IP hiding (Tor, a proxy option).
+- A hosted relay.
+- Rust crates on crates.io.
+
+## Stating the preview
+
+- Describe TrueSeal as a Developer Preview with `0.x` versions that may break without notice.
+- Leave 1.0 undated, and give no support or fix timeline.
+- State that TrueSeal is not independently audited and that sealed messages have no end-to-end forward secrecy.

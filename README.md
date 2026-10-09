@@ -80,7 +80,7 @@ The `trueseal-skills` CI runs it from a trueseal-docs checkout at a release tag:
 To screenshot built pages in both themes at desktop and phone width (run `bunx playwright install chromium` once first):
 
 ```bash
-bun run screenshot /tmp/shots / /docs/overview/introduction
+bun run screenshot /tmp/shots / /docs/overview/what-trueseal-is
 ```
 
 The mascot artwork is `brand/mascot/mascot.svg`. After changing it, run `bun run export-mascot` to regenerate the PNG exports beside it.
@@ -148,6 +148,8 @@ After `astro build`, `src/markdown/markdown.ts` writes a Markdown version of eve
 .github/
   workflows/      # check.yml: CI runs bun run check
 brand/
+  90_SYNTHESIS.md # The brandbook
+  91_EVIDENCE.md  # Evidence for brandbook section 10 claims and the Landing comparison cells
   mascot/         # Mascot SVG and its PNG exports
 src/
   agent-snippet/  # agent-snippet.ts (the Agent Snippet text both surfaces render)

@@ -5,27 +5,37 @@
 /** Every URL that moved or was removed → its new home. Keys and values are root-relative paths with
  *  no trailing slash. Passed to Astro's `redirects`; a target is always a built page, never another key. */
 export const redirects: Record<string, string> = {
-  '/docs': '/docs/overview/introduction',
-  '/relay': '/docs/operate/deploying',
+  '/docs': '/docs/overview/what-trueseal-is',
+  '/relay': '/docs/operate/running-a-relay',
   '/showcase': '/',
 
-  '/docs/introduction':              '/docs/overview/introduction',
-  '/docs/architecture':              '/docs/overview/architecture',
-  '/docs/principles-and-boundaries': '/docs/overview/principles-and-boundaries',
+  '/docs/introduction':              '/docs/overview/what-trueseal-is',
+  '/docs/architecture':              '/docs/overview/how-it-works',
+  '/docs/principles-and-boundaries': '/docs/overview/is-it-right-for-my-app',
   '/docs/future':                    '/docs/overview/roadmap',
   '/docs/license':                   '/docs/overview/license',
+
+  '/docs/overview/introduction':              '/docs/overview/what-trueseal-is',
+  '/docs/overview/architecture':              '/docs/overview/how-it-works',
+  '/docs/overview/principles-and-boundaries': '/docs/overview/is-it-right-for-my-app',
 
   '/docs/sdks':                                         '/docs/integrate/sdks',
   '/docs/guides/integrating-trueseal-sync':             '/docs/integrate/integrating-trueseal-sync',
   '/docs/concepts/device-identity':                     '/docs/integrate/device-identity',
   '/docs/concepts/pairing':                             '/docs/integrate/pairing',
-  '/docs/concepts/sync-groups':                         '/docs/integrate/sync-groups',
-  '/docs/concepts/revocation':                          '/docs/integrate/revocation',
-  '/docs/components/trueseal-sync/delivery-guarantees': '/docs/integrate/delivery-guarantees',
+  '/docs/concepts/sync-groups':                         '/docs/integrate/membership',
+  '/docs/concepts/revocation':                          '/docs/integrate/destroy-group',
+  '/docs/integrate/sync-groups':                        '/docs/integrate/membership',
+  '/docs/integrate/revocation':                         '/docs/integrate/destroy-group',
+  '/docs/components/trueseal-sync/delivery-guarantees': '/docs/integrate/sending-and-receiving',
+  '/docs/integrate/delivery-guarantees':                '/docs/integrate/sending-and-receiving',
 
-  '/docs/components/trueseal-relay/deploying':     '/docs/operate/deploying',
-  '/docs/components/trueseal-relay/overview':      '/docs/operate/trueseal-relay',
-  '/docs/components/trueseal-relay/inbox-and-ttl': '/docs/operate/inbox-and-ttl',
+  '/docs/components/trueseal-relay/deploying':     '/docs/operate/running-a-relay',
+  '/docs/components/trueseal-relay/overview':      '/docs/operate/running-a-relay',
+  '/docs/components/trueseal-relay/inbox-and-ttl': '/docs/operate/limits-and-quotas',
+  '/docs/operate/deploying':                       '/docs/operate/running-a-relay',
+  '/docs/operate/trueseal-relay':                  '/docs/operate/running-a-relay',
+  '/docs/operate/inbox-and-ttl':                   '/docs/operate/limits-and-quotas',
 
   '/docs/concepts/zero-trust-and-encryption': '/docs/trust/encryption',
   '/docs/trust/zero-trust-and-encryption':    '/docs/trust/encryption',
@@ -33,13 +43,16 @@ export const redirects: Record<string, string> = {
 
   '/docs/protocol/overview':                                 '/docs/reference/protocol',
   '/docs/protocol/wire-format':                              '/docs/reference/wire-format',
-  '/docs/components/trueseal-relay/sessions':                '/docs/reference/sessions',
+  '/docs/components/trueseal-relay/sessions':                '/docs/reference/protocol',
   '/docs/components/trueseal-sync/overview':                 '/docs/reference/trueseal-sync',
   '/docs/components/trueseal-sync/envelopes-and-blobs':      '/docs/reference/envelopes-and-blobs',
   '/docs/components/trueseal-sync/group-manifest':           '/docs/reference/group-manifest',
-  '/docs/components/trueseal-sync/operation-log-and-outbox': '/docs/reference/operation-log-and-outbox',
+  '/docs/components/trueseal-sync/operation-log-and-outbox': '/docs/reference/session-state',
   '/docs/components/trueseal-noise/overview':                '/docs/reference/trueseal-noise',
   '/docs/components/trueseal-noise/noise-protocol-primer':   '/docs/reference/noise-protocol-primer',
   '/docs/components/trueseal-noise/xx-pattern':              '/docs/reference/xx-pattern',
   '/docs/components/trueseal-noise/nk-pattern':              '/docs/reference/nk-pattern',
+
+  '/docs/reference/sessions':                 '/docs/reference/protocol',
+  '/docs/reference/operation-log-and-outbox': '/docs/reference/session-state',
 };

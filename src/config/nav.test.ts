@@ -15,7 +15,7 @@ test('the switch lists the Human Docs then the Agent Docs', () => {
 });
 
 test('the Human Docs sidebar sections follow the Journey, none empty', () => {
-  const sidebar = sidebarOf('/docs/overview/introduction')!;
+  const sidebar = sidebarOf('/docs/overview/what-trueseal-is')!;
   expect(sidebar.label).toBe('Docs');
   expect(sidebar.sections.map(section => section.title)).toEqual(['Overview', 'Integrate', 'Operate', 'Trust', 'Reference']);
   expect(sidebar.sections.filter(section => section.links.length === 0)).toEqual([]);
@@ -24,7 +24,7 @@ test('the Human Docs sidebar sections follow the Journey, none empty', () => {
 test('the Agent Docs sidebar is its own', () => {
   const sidebar = sidebarOf('/agents/protocol')!;
   expect(sidebar.label).toBe('Agent Docs');
-  expect(sidebar.sections.map(section => section.title)).toEqual(['Start', 'Reference', 'Trust']);
+  expect(sidebar.sections.map(section => section.title)).toEqual(['Start', 'Integrate', 'Operate', 'Reference', 'Trust']);
   const links = sidebar.sections.flatMap(section => section.links);
   expect(links[0].href).toBe('/agents/');
   expect(links.filter(link => !link.href.startsWith('/agents'))).toEqual([]);
@@ -40,19 +40,19 @@ test('children show only while their page or one of them is current', () => {
     sidebarOf(pathname)!.sections.flatMap(section => section.links).find(link => link.href === '/docs/reference/trueseal-sync')!;
   expect(syncLink('/docs/reference/trueseal-sync').children).toHaveLength(3);
   expect(syncLink('/docs/reference/envelopes-and-blobs').children).toHaveLength(3);
-  expect(syncLink('/docs/overview/introduction').children).toEqual([]);
+  expect(syncLink('/docs/overview/what-trueseal-is').children).toEqual([]);
 });
 
 test('placeOf gives the first page its section and only a next link', () => {
-  const place = placeOf('/docs/overview/introduction');
+  const place = placeOf('/docs/overview/what-trueseal-is');
   expect(place?.section).toBe('Overview');
   expect(place?.prev).toBeUndefined();
-  expect(place?.next?.href).toBe('/docs/overview/architecture');
+  expect(place?.next?.href).toBe('/docs/overview/how-it-works');
 });
 
 test('previous and next cross section boundaries', () => {
   expect(placeOf('/docs/integrate/sdks')?.prev?.href).toBe('/docs/overview/license');
-  expect(placeOf('/docs/integrate/delivery-guarantees')?.next?.href).toBe('/docs/operate/deploying');
+  expect(placeOf('/docs/integrate/delivery-issues')?.next?.href).toBe('/docs/operate/running-a-relay');
 });
 
 test('children follow their parent in reading order, in its section', () => {
@@ -85,14 +85,14 @@ test('the Agent Docs index starts its sidebar', () => {
 });
 
 test('sidebarPaths lists a surface in reading order', () => {
-  expect(sidebarPaths('agents')).toEqual(['/agents/', '/agents/what-trueseal-is', '/agents/api', '/agents/protocol', '/agents/versions-and-relay-address', '/agents/limits', '/agents/errors-and-events', '/agents/compatibility-table', '/agents/threat-model', '/agents/reporting-a-vulnerability']);
-  expect(sidebarPaths('docs')[0]).toBe('/docs/overview/introduction');
+  expect(sidebarPaths('agents')).toEqual(['/agents/', '/agents/what-trueseal-is', '/agents/developer-preview', '/agents/pairing', '/agents/membership', '/agents/destroy-group', '/agents/sending-and-receiving', '/agents/delivery-issues', '/agents/running-a-relay', '/agents/relay-address-and-keypair', '/agents/relay-limits-and-quotas', '/agents/relay-backups', '/agents/upgrades', '/agents/upgrade-notes', '/agents/api', '/agents/protocol', '/agents/versions-and-relay-address', '/agents/limits', '/agents/errors-and-events', '/agents/compatibility-table', '/agents/threat-model', '/agents/reporting-a-vulnerability']);
+  expect(sidebarPaths('docs')[0]).toBe('/docs/overview/what-trueseal-is');
 });
 
 test('sidebarPages gives each sidebar page its section, in sidebarPaths order', () => {
   const pages = sidebarPages('agents');
   expect(pages.map(page => page.link.href)).toEqual(sidebarPaths('agents'));
-  expect([...new Set(pages.map(page => page.section))]).toEqual(['Start', 'Reference', 'Trust']);
+  expect([...new Set(pages.map(page => page.section))]).toEqual(['Start', 'Integrate', 'Operate', 'Reference', 'Trust']);
 });
 
 test('markdownPathOf drops a trailing slash and adds .md', () => {
@@ -103,9 +103,9 @@ test('markdownPathOf drops a trailing slash and adds .md', () => {
 });
 
 test('agentsVersionOf links a Human Docs page to its closest Agent Docs page', () => {
-  expect(agentsVersionOf('/docs/overview/introduction')).toEqual({ title: 'What TrueSeal is', href: '/agents/what-trueseal-is' });
+  expect(agentsVersionOf('/docs/overview/what-trueseal-is')).toEqual({ title: 'What TrueSeal is', href: '/agents/what-trueseal-is' });
   expect(agentsVersionOf('/docs/reference/wire-format')?.href).toBe('/agents/protocol');
-  expect(agentsVersionOf('/docs/integrate/pairing/')?.href).toBe('/agents/api');
+  expect(agentsVersionOf('/docs/integrate/pairing/')?.href).toBe('/agents/pairing');
   expect(agentsVersionOf('/docs/kitchen-sink')?.href).toBe('/agents/');
   expect(agentsVersionOf('/agents/api')).toBeUndefined();
   expect(agentsVersionOf('/')).toBeUndefined();

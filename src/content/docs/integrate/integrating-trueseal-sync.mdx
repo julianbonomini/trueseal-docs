@@ -1,314 +1,85 @@
 ---
 title: Integrating trueseal-sync
-description: A mental model for integrating trueseal-sync regardless of which SDK you use — sessions, pairing, publish/receive, member management, conflicts, revocation.
+description: How an app opens TrueSeal, points it at a relay, reads its state, registers its handlers and closes it, in the same shape for the Swift, Kotlin and TypeScript SDKs.
 ---
-import Callout from '../../../components/mdx/Callout.astro';
+import Fact from '../../../components/mdx/Fact.astro';
 
 # Integrating trueseal-sync
 
-This guide is the mental model for wiring trueseal-sync into an application: what you set up, what you listen to, what you decide. It's intentionally **SDK-agnostic** — every SDK exposes the same shape, the names just shift to fit each language.
+Your app starts, and before the first screen appears it needs to know whether this device is in a group, who else is in it, and whether the relay is reachable. Then it needs to hear about new messages and changes for as long as it runs. This page covers that wiring. Pairing, membership and messages each have their own page.
 
-<Callout variant="note">
-Code references use generic `camelCase` (`session.publish()`, `onMemberJoined`). Each SDK adapts these to its own idioms — check the SDK reference for exact signatures.
-</Callout>
+All three SDKs expose one object, `TrueSeal`, with the same operations, names, events and errors. Only the syntax differs. Swift uses `async throws`, Kotlin `suspend` functions and exceptions, and TypeScript promises. The examples here use neutral syntax.
 
-## TL;DR
-
-- **A session is the long-lived object.** Initialise once at app start, keep it around for the lifetime of the app.
-- **Streams come out, calls go in.** Listen to connection state, members, blobs, pairing requests. Call `publish`, `removeMember`, `destroyGroup`.
-- **Pairing is a three-step dance.** Generate a token, share it out-of-band, accept the request.
-- **trueseal provides durable, retrying transport.** It exposes Message IDs for duplicates but cannot commit application state for you.
-- **Two terminal events.** `onRemovedFromGroup` and `onGroupDestroyed` both mean: wipe local state, reinitialise.
-
-## What you actually get
-
-trueseal-sync gives you:
-
-- A stable **device identity** (X25519 + Ed25519 keypair, persisted locally).
-- Encrypted delivery of arbitrary binary blobs to every group member via the relay.
-- A **pairing ceremony** for adding devices to a group.
-- **Outbox replay** — messages sent while offline get delivered once the relay reconnects.
-- Deterministic, human-readable device names derived from public keys.
-
-It does **not** give you:
-
-- Knowledge of whether a peer device is online.
-- Message history (the relay is a buffer, not a log).
-- Multi-group management in a single session — see [Multiple groups](#multiple-groups-via-namespaces).
-- A "leave quietly" protocol message — see [Revocation in practice](#revocation-in-practice).
-- Conflict resolution, payload ordering beyond FIFO per sender, or storage of processed Message IDs.
-
-Shape of an integration: **construct a session → listen to its event streams → call methods on it → handle the terminal events.**
-
-## Device identity
-
-Every session has a permanent identity, generated locally on first run and persisted to disk. It survives restarts. The only ways to destroy it are calling `destroyGroup()` or deleting the storage directory. For the protocol-level picture, see [Device Identity](/docs/integrate/device-identity).
-
-For integration, three values matter:
-
-- **`session.localDeviceName`** — a stable, human-readable name (e.g. `FreeMap`, `SwiftHorizon`). Show it as "this device".
-- **`session.localNodeId`** — a stable opaque identifier. Use it as the key in your membership maps and as the target for `removeMember`.
-- **`session.members()`** — the current member list. **You're not in it.** The local device is excluded from this list on purpose — display it separately.
-
-Don't try to re-derive the name or ID in your app. Use what the SDK exposes so every client agrees on the same value.
-
-## Pointing at a relay
-
-The SDK takes two values at construction time: a **relay URL** and the **relay's public key** (32 bytes). Both come from whoever runs the relay — yourself, a friend, or the public hosted relay. {/* TODO: the preview-pages Goal links the Relay Address page here once it exists. */}
-
-The public key is a build-time constant. Bake it in. Don't make it user-configurable. The Noise XX handshake uses it to verify you're talking to the right relay before any data moves.
-
-**Relay being offline is a no-op for you.** If the relay is unreachable at launch or drops mid-session, the SDK queues outbound messages in the local outbox and reconnects on its own. **Don't write any reconnect logic.** Show a connection indicator and otherwise do nothing.
-
-For the operator-side view — deploying a relay, generating its keypair, configuring TTL — see [Deploying](/docs/operate/deploying).
-
-## Session lifecycle
-
-### Initialisation
-
-Construct one session per app lifecycle. Initialisation reads or generates the keypair from storage and starts connecting in the background. It returns immediately and doesn't block on relay connectivity.
-
-A throw at init time is a developer or deployment error — bad arguments, corrupt storage, missing entitlements. Treat it as fatal. There's no meaningful recovery path.
-
-### The session is a singleton
-
-Construct it once at app startup and keep it around. "Restart the session" isn't really a thing — the only path that resembles it is `destroyGroup()` followed by reinit.
-
-### Startup sequence
-
-On every boot, before the relay connection is established:
-
-1. Seed your member list from `session.members()` — devices already in the group from the last run.
-2. Start listening to member events.
-3. Start listening to connection state.
-4. Start listening to incoming blobs.
-5. Start listening to pairing requests (if your app exposes pairing).
-
-Seed first. Never show an empty member list when you already have members on disk.
-
-### Multiple groups via namespaces
-
-A device can be in more than one group at the same time by running multiple sessions with different namespaces. Each session is fully independent — its own keypair, storage, relay connection, manifest.
+## Opening it
 
 ```
-sessionA = Session(namespace: "work",     storage: .../work/)
-sessionB = Session(namespace: "personal", storage: .../personal/)
+trueseal = await TrueSeal.open(relay, storage, namespace = "default")
 ```
 
-The SDK doesn't manage switching between them — that's on you. If your app has a group switcher, keep an array of sessions and route `publish` calls and incoming blobs to whichever is active.
+- `relay` is the Relay Address, one string with the relay's host, ports and public key: <Fact id="relayAddressFormat" />. Ship it as a build-time constant. [Relay Address and keypair](/docs/operate/relay-address-and-keypair) explains where it comes from.
+- `storage` is the directory for [Session State](/docs/reference/session-state). Use a directory that belongs to your app, so no other app shares its identity. On Android, build the `Storage` from your app's context; the [API reference](/agents/api) has each platform's spelling.
+- `namespace` selects one independent identity and group inside that directory. One namespace holds one group, so an app that needs a device in two groups opens two objects with two namespaces.
+- `maxPayloadBytes` is optional. Pass a value lower than the Protocol Size Limit (<Fact id="protocolSizeLimit" />) if your relay's Operator set a lower Relay Size Limit.
 
-Namespace strings are arbitrary. If your app ships to end users who might run multiple copies, use something collision-resistant — your app's bundle ID is a good prefix.
+`open()` returns before the relay connection is up and connects in the background. Once the device is a member, `send()` works whether the relay is reachable or not, and messages wait in the outbox until it is. Don't write reconnect logic; the library retries on its own.
 
-## The pairing dance
+Open one object per namespace when the app starts and keep it for the life of the process. It survives removal, leaving and Destroy Group. After each, the library wipes the namespace, gives the device a new identity, and the same object can pair again.
 
-For the protocol picture, see [Pairing](/docs/integrate/pairing) and the [Architecture flow diagram](/docs/overview/architecture#pairing). This is the integrator's view.
+`open()` can fail with:
 
-### Two roles
-
-| Role | Action |
+| Error | Meaning |
 |---|---|
-| **Host (A)** | Generates and shares the token, accepts incoming requests. |
-| **Joiner (B)** | Receives the token out-of-band, calls `session.join(token)`. |
+| `invalidRelayAddress` | The Relay Address can't be parsed. Fix the constant you ship. |
+| `invalidNamespace` | The namespace isn't valid. |
+| `storage` | The library can't read or write the storage directory. |
+| `storeTooNew` | A newer build of your app wrote this store, and this build is older. The store is left unchanged, and shipping the newer build again fixes it. See [Upgrading](/docs/operate/upgrades). |
 
-If macOS shows a QR and iOS scans it: macOS is A, iOS is B. The relationship is symmetric — either side can play either role.
+## State
 
-### The token
+These values describe the device at any moment. Each SDK makes them observable in its usual way: `@Observable` in Swift, `StateFlow` in Kotlin, and getters with change events in TypeScript.
 
-The pairing token is an opaque string containing the device's permanent public keys. It's stable for the lifetime of the keypair. Generate it once, cache it, and display it freely — putting it in a QR code, showing it as text, copying it to the clipboard has no side effects.
-
-### The acceptance window
-
-The window is **caller-controlled** — there's no protocol-level timer or auto-expiry.
-
-- `session.pairingToken()` opens the window immediately.
-- The window stays open until `acceptRequest()` is called (single-use) or you call `session.cancelPairing()`.
-- Call `cancelPairing()` whenever the user dismisses the pairing UI.
-
-Design notes:
-
-- **Open on demand.** Put an explicit OPEN / CLOSE control in the UI. Don't auto-open without user intent.
-- **No timer auto-close.** Auto-expiry causes silent failures where the joiner knocks but the host's window has already closed. Let the user decide when to stop accepting.
-- **Single-use.** Once a request is accepted, call `cancelPairing()` right away. The next pairing requires a fresh token call.
-
-### What you actually handle
-
-trueseal-sync handles the cryptography, the relay communication, and the manifest update. You handle:
-
-- **Presenting the token** — encoding it as a QR, sharing via AirDrop, copying to a text field.
-- **Deciding when to accept** — `onMemberRequest` fires with a Member Request Token. You decide whether to show a confirmation UI or accept automatically.
-- **Bootstrapping the new member's history** — see [Bootstrapping a new member](#bootstrapping-a-new-member) below.
-
-## Publishing and receiving
-
-### Publishing
-
-```
-session.publish(blob)   // raw bytes
-session.publish(text)   // convenience: UTF-8 encode then publish
-```
-
-Publishing is **fire-and-forget**. If the relay is offline the message queues in the outbox and gets delivered automatically on reconnection. There's no per-message delivery confirmation exposed to the caller.
-
-### Receiving
-
-Incoming blobs arrive as events with:
-
-- `data` — the raw payload bytes.
-- `senderNoisePub` — the sender's X25519 public key (32 bytes).
-- `messageId` — a stable opaque identifier for this Envelope across re-delivery.
-
-Delivery is at least once. Persist `messageId` in the same transaction as the application update and ignore an ID already stored. Do not deduplicate by content: two deliberate sends can contain identical bytes.
-
-### Sync semantics: broadcast-each
-
-For single-value streams (clipboard, presence, settings), the pattern that works best:
-
-- On every new item, broadcast the full item immediately.
-- Don't diff — broadcast complete payloads.
-- Dedup at the receiver. If the Message ID already exists locally, drop it.
-- Outbox replay handles late or out-of-order delivery.
-
-This is simpler and more robust than delta-sync or last-write-wins schemes when payloads are small. It also doesn't fall over when devices drift apart for a while.
-
-## Handling conflicts
-
-trueseal-sync retries transport and exposes Message IDs for idempotent handling. **It does not guarantee** exactly-once application commits or convergence when two devices write conflicting data while offline.
-
-Conflict resolution is yours. A few common patterns:
-
-**Append-only log.** No conflicts possible. Each device's writes are independent records, the application reads the union. Works for chat, event feeds, audit logs.
-
-**Last-write-wins on a logical clock.** Embed a timestamp (or Lamport clock) in the payload. On receive, replace if the incoming version is newer, otherwise discard. Works for single-value sync — preferences, current selection, latest snapshot.
-
-**CRDTs.** Use a CRDT library on top of trueseal — Yjs, Automerge, etc. Send CRDT updates as opaque blobs, each peer applies them in arrival order, and the CRDT guarantees convergence regardless of order.
-
-**Application-defined merge.** Your data has a domain-specific merge function. Send updates, merge on receive.
-
-trueseal won't pick a winner. It has no opinion on your data model. Delivery and ordering are the contract.
-
-## Bootstrapping a new member
-
-When a device joins via pairing, it has the manifest but **no history**. The relay only forwards blobs sent *after* a device joined — it doesn't retroactively replay past blobs to new members.
-
-Catching the new member up is on your application. Listen for `onMemberJoined` and decide what to send. A few patterns:
-
-**Send everything.** Cheap if data is small (a few hundred items). Iterate your local store, publish each item, let the new member dedup on receipt.
-
-**Send a snapshot.** One consolidated blob containing the current state. Smaller than full history if you keep many small writes. The new member loads the snapshot, then catches up on subsequent live writes.
-
-**Send nothing.** For apps where joining late means starting from now — clipboard sync, presence, telemetry. The new device only sees what's sent after it joined.
-
-Trade-offs:
-
-| Pattern | Best when | Cost |
-|---|---|---|
-| Everything | Small datasets, every record matters | One push per record |
-| Snapshot | Long-lived state, many small writes | You maintain a snapshot |
-| Nothing | Stream-of-now apps | Nothing — but late-joiners miss past data |
-
-Your call. trueseal doesn't impose one.
-
-## Member management
-
-### The manifest
-
-`session.members()` returns a snapshot of current group membership. **You aren't in it.**
-
-On every member event, re-snapshot from `session.members()` instead of maintaining a local delta. Race conditions can otherwise leave you with a stale view.
-
-### Member events
-
-| Event | Meaning |
+| Value | Cases |
 |---|---|
-| `onMemberJoined(id, name)` | A new device joined the group. |
-| `onMemberLeft(id, name)` | A member was removed. |
-| `onRemovedFromGroup` | **You** were removed by another member. |
-| `onGroupDestroyed` | The group was destroyed — see [Revocation in practice](#revocation-in-practice). |
+| `status` | `notJoined`, `pendingJoin`, `member`, `leaving`, `destroying` |
+| `connection` | `connecting`, `connected`, `disconnected`, `relayVersionUnsupported{min, max}` |
+| `me`, `members` | This device, and every other member, each a `Member{id, name}` |
 
-`onRemovedFromGroup` and `onGroupDestroyed` are **terminal** — the session can't be used for the current group anymore. Wipe and reinit.
+Read `status` and `connection` separately. A device can be connected with no group yet, or in a group with the relay out of reach. Neither is an error. `relayVersionUnsupported` is the one connection state the user can't wait out. The relay speaks a different protocol version, and messages stay queued until your app's library and the relay speak the same version again.
 
-### Removing a member
-
-```
-session.removeMember(memberId)
-```
-
-The removed device receives an `onRemovedFromGroup` event. The removal is immediately reflected in `session.members()` on the calling device.
-
-## Connection vs group state
-
-Model these as **two independent signals**. Never conflate them.
-
-| Signal | Source | UI |
-|---|---|---|
-| Relay connectivity | Connection state stream | `RELAY: CONNECTED` / `RELAY: OFFLINE` |
-| Group membership | `members()` count | `GROUP: SOLO` / `GROUP: N DEVICES` |
-
-`RELAY: CONNECTED` + `GROUP: SOLO` is a perfectly valid steady state — the app is working, you just haven't paired with anyone yet.
-
-`RELAY: OFFLINE` + `GROUP: N DEVICES` is also valid — paired, relay temporarily unreachable, outbox will replay when it comes back.
-
-**Don't show "you cannot sync" based on relay state alone.** Relay outages are transient. The group relationship is persistent.
-
-## Revocation in practice
-
-For the protocol-level model see [Revocation](/docs/integrate/revocation). This is the integrator's view.
-
-trueseal exposes two operations. They're **not interchangeable** — they have very different costs and threat models.
-
-### Soft removal
-
-Routine: a teammate left, a phone was upgraded, a laptop got decommissioned.
+## Events and handlers
 
 ```
-session.removeMember(memberId)
+trueseal.onEvent(event => …)
+trueseal.onMessage(async message => …)
+trueseal.onDeliveryIssue(issue => …)
 ```
 
-That's the entire integration. The new manifest propagates and remaining members start filtering the removed device's blobs. Cooperative, not cryptographic — fine for routine use.
+- `onEvent` takes any number of listeners. The cases are `statusChanged(status, reason)`, `membersChanged(members)`, `joinRequest(request)`, `connectionChanged(connection)` and `admissionDropped(name, reason)`. Events raised before the first listener exists are kept and delivered to it.
+- `onMessage` registers the one message handler. The library takes no message from the relay until it exists, so register it once your app can store what arrives. A second call fails with `messageHandlerAlreadySet`.
+- `onDeliveryIssue` is optional. It reports messages the library couldn't deliver or handle.
 
-### Destroy group
+Every `on…` call returns a handle that cancels the registration.
 
-Security incident: a device was stolen, a key was compromised, you no longer trust a member.
+[Sending and receiving](/docs/integrate/sending-and-receiving) explains what the message handler must do, and [Delivery issues](/docs/integrate/delivery-issues) what each issue means.
 
-```
-session.destroyGroup()
-```
+## Closing it
 
-When `onGroupDestroyed` fires on **any** device:
+`close()` stops the connection and the handlers and keeps Session State. Every later call on that object fails with `closed`. Open a new object to start again.
 
-1. Stop all stream listeners.
-2. Delete the storage directory.
-3. Reinitialise the session — fresh keypair, new identity, solo mode.
-4. Talk to the legitimate members out-of-band and re-pair.
+## Conflicts are your app's to resolve
 
-Every member has to re-pair. That's the price of cryptographic exclusion, and it's intentional.
+TrueSeal hands each device's messages to your handler in the order that device sent them, and doesn't order messages from different devices. When two devices change the same data while apart, your app decides which change wins. Common patterns:
 
-### Leave quietly (no protocol primitive)
+- **Append-only records.** Each change is a new record, and the app shows all of them. Nothing conflicts. Fits chat, activity feeds and logs.
+- **Last writer wins.** Put a timestamp or a counter in each message and keep the newest. Fits single values such as a setting or a location.
+- **CRDTs.** Send the updates of a CRDT library such as Yjs or Automerge as message bodies. The library merges them in any order.
 
-There's no "leave quietly" operation that removes you without notifying the group. To leave:
+## A new member starts empty
 
-1. Delete local storage and reinitialise — that rotates your keypair.
-2. Your old node ID becomes a ghost member in the other devices' manifests.
-3. Other devices then have to manually remove the ghost entry.
+A device that joins receives only messages sent after the other members learn it joined. Nothing is replayed from before. When `membersChanged` shows a new member, your app decides what to send it: everything, a snapshot of current state, or nothing for data that only matters from now on, such as a live location.
 
-A graceful-leave protocol might land in a future trueseal-sync version. It isn't there today.
+## It works when
 
-## Storage scoping
-
-Don't use the SDK's default storage path — it might be shared across every trueseal-sync consumer on the machine. Two apps sharing a storage path would share a group identity, which is decidedly not what you want.
-
-The pattern that works:
-
-```
-<platform app support dir> / <your-app-bundle-id> / TrueSealSync /
-```
-
-Create the directory before passing it to the session constructor.
-
-## You'll know it works when...
-
-- **Pairing succeeds.** A second device shows up in `session.members()` after `onMemberJoined` fires on both sides.
-- **Blobs flow both directions.** A `publish` from device A produces an event in device B's blob stream, and vice versa.
-- **Outbox drains on reconnect.** Publish something while the relay is offline, reconnect, watch the queued messages arrive on the recipient.
-
-If those three work, your integration is sound.
+- A second device appears in `members` on both devices after pairing.
+- A `send()` on one device runs the message handler on the other, in both directions.
+- A message sent while the relay was unreachable arrives after it comes back.

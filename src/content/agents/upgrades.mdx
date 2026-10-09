@@ -1,0 +1,72 @@
+---
+title: Upgrades
+description: Store Version, forward migration, End-to-End Version re-seal, automatic Store Reset with storeReset, rollback refusal with storeTooNew, crash points, and the relay store.
+---
+import Fact from '../../components/mdx/Fact.astro';
+
+# Upgrades
+
+This page states upgrades in the Developer Preview as trueseal-sync ADR-0032 decides them, amended by ADR-0034, with the relay store of trueseal-relay ADR-0013 and the API names of ADR-0028. The labels of breaking releases are on [Upgrade Notes](/agents/upgrade-notes).
+
+## Store Version
+
+- Session State records the Store Version that wrote it.
+- The first preview release, 0.6.0, writes Store Version <Fact id="sessionStoreVersion" />.
+- The Compatibility Table lists each release's Store Version and migration floor.
+
+## Migration
+
+- Every TrueSeal Release opens the store of any earlier preview release at or above the migration floor and migrates it forward.
+- Migrations are chained. Every migration since 0.6.0 stays in the code for the whole preview. A release that skips versions (0.6 → 0.8) still migrates.
+- Durable states survive: Pending Join, `leaving`, `destroying`, queued outbox entries and the dedup table.
+- A migration runs in one database transaction. A crash leaves the old store untouched and the next start retries.
+- A migration that fails outright makes `TrueSeal.open` fail with `storage`. The old store is intact.
+- No pre-migration copy is kept on disk, because a second file would hold the identity keys too.
+
+## End-to-End Version bump
+
+- In the migration transaction, the library rebuilds and re-seals every outbox entry under the new End-to-End Version: `Sync`, Pair, Group Manifest and Revoke.
+- Sequence order is unchanged. A re-sealed `Sync` entry keeps its Message ID, and its Sender Timestamp and 30-day outbox expiry, both counted from `send()`.
+- Nothing is lost. `undeliverableAfterUpgrade` doesn't exist (ADR-0034).
+- Peers still on the old release leave the re-sealed Blobs unacked on the relay and raise `heldForUpgrade(version)` until they upgrade, up to <Fact id="heldBlobCap" />. Past that, the oldest is dropped as `unreadable(droppedWhileHeld)`.
+- An upgraded device drops a Blob in the older End-to-End Version and raises `unreadable(senderOutdated)`.
+- A Transport Version bump: a client the relay doesn't support gets `connection = relayVersionUnsupported{min, max}` and keeps its outbox queued.
+
+## Store Reset
+
+- A release may drop migration and declare itself a Store Reset release. It needs the product owner's explicit approval and a release-notes entry, and its Upgrade Notes entry carries the label "local data is wiped and every group must pair again".
+- A Store Reset release moves the migration floor to itself.
+- An unmigratable store is reset automatically on `open()`. Unmigratable means written before the migration floor, or unversioned (every build before 0.6.0).
+- The reset wipes the namespace, generates a fresh identity and raises `statusChanged(notJoined, storeReset)`. This is the same pattern as removal and Destroy Group.
+- The `TrueSeal` object stays usable and can pair again.
+- Events raised before the first listener is registered are buffered, so a listener registered after `open()` still receives `storeReset`.
+- A Store Reset release ends every group whose devices upgrade to it. Peers still on the old release keep sending to an identity that no longer exists.
+
+## Rollback
+
+- A store written by a newer release makes `TrueSeal.open` fail with `storeTooNew`.
+- The store is not modified. Shipping the newer release again loses nothing.
+- The library never resets or best-effort reads a newer store.
+
+## Crash points
+
+| Point | Next start |
+|---|---|
+| Before the migration transaction commits | Old store intact; migration retries |
+| During an automatic Store Reset wipe | The store is still unmigratable, so the reset runs again |
+
+## Relay store
+
+- `inbox.db` records its Store Version. The first preview relay writes Store Version <Fact id="relayStoreVersion" />.
+- The relay migrates any older preview Store Version forward in one transaction on start. A crash leaves the old store intact; the next start retries.
+- A store from a newer release, or one the relay can't migrate, makes the relay refuse to start. The store is unchanged, and one log line names both Store Versions.
+- On a declared relay Store Reset release, the relay refuses an older store until the Operator passes the reset flag. With it, the relay drops every inbox and keeps the keypair. No product-owner approval is needed.
+- Steps and the flag are on [Running a relay](/agents/running-a-relay).
+
+## What stays the app's job
+
+- Reading Upgrade Notes before moving to a new release.
+- Handling `storeTooNew` from `open()`: an older build is running on a newer store.
+- Handling `statusChanged(notJoined, storeReset)`: telling the user, deciding what to do with the app's own data, and guiding them through pairing again.
+- Prompting an update on `heldForUpgrade` and `unreadable(senderOutdated)`.
+- Upgrading the relay and every device together across a Transport Version bump.

@@ -1,32 +1,76 @@
 ---
-title: trueseal-protocol
-description: The wire protocol specification that governs all communication between sync clients and relays. Pure documentation, no library.
+title: Protocol
+description: The TrueSeal protocol in the Developer Preview, its two layers and two versions, and the Push Session and Receive Session every device opens to the relay.
 ---
+import Fact from '../../../components/mdx/Fact.astro';
 
-# trueseal-protocol — Overview
+# Protocol
 
-trueseal-protocol is the wire spec for the ecosystem. It says how a sync client talks to a relay, byte for byte. There's no code, no library, no repo to depend on — just the spec.
+The TrueSeal protocol is what a device and a relay must agree on, byte for byte, for a message to get from one device to another. It has no library of its own. trueseal-sync implements the device side and trueseal-relay the relay side, and the Sync-level test vectors pin down the bytes both must produce.
 
-Any relay that implements it accepts any client that implements it, and vice versa. The spec is the contract; everything plugged into it is interchangeable.
+This page describes the protocol as the Developer Preview decides it. Where today's code still differs, each Reference page lists the gap at its end.
 
-## What the protocol covers
+## Two layers, two versions
 
-- **Wire framing** — the byte layout of every message.
-- **Message types** — Push, Deliver, Heartbeat, Ack, Error, DeliverAck, their tags, their meanings.
-- **Push body layout** — how a sender addresses a blob to a recipient.
-- **Ack and DeliverAck semantics** — what each acknowledgement actually guarantees.
-- **Error semantics** — permanent rejection, do not retry.
-- **Envelope size cap** — enforced on both sides.
+The protocol has two layers, and each carries its own version number.
 
-## What it doesn't cover
+| Layer | Between | What it covers | Version |
+|---|---|---|---|
+| Transport | Device and relay | The Noise handshake, the frames inside it, acks, refusals and heartbeats | Transport Version |
+| End-to-end | Device and device | The sealed Envelope, addressed encryption, signatures and the Group Manifest | End-to-End Version |
 
-- Relay storage policy (TTL, reap intervals, infra choices).
-- The Noise handshake patterns themselves — those belong to the [Noise Protocol spec](https://noiseprotocol.org/). The wire spec just says which patterns to use where.
-- Envelope format and the sync semantics on top of it — that's trueseal-sync's territory.
-- Client-side delivery guarantees — outbox, replay, ordering, all client concerns.
+Both versions start at 1, and 0 is reserved. In the preview the Transport Version is <Fact id="transportVersion" /> and the End-to-End Version is <Fact id="endToEndVersion" />. Each version is bound into the cryptography as well as sent as a number. The Transport Version goes into the Noise prologue, and the End-to-End Version goes into the key derivation, the AEAD associated data and every signing input.
 
-## Who implements it today
+There is no negotiation. A component speaks exactly one version of each layer and rejects anything else:
 
-**trueseal-sync** on the client side. Opens Push Sessions to send blobs, Receive Sessions to receive them.
+- A relay that gets a Transport Version it doesn't speak replies with a plaintext `unsupported min..max` and closes the connection. The SDK reports it as `connection` = `relayVersionUnsupported{min, max}`.
+- A device that receives a message in a newer End-to-End Version leaves it unacknowledged on the relay, so it can be handled after the app upgrades. It holds up to <Fact id="heldBlobCap" />, then acknowledges and drops the oldest.
+- A device that receives a message in an older End-to-End Version, or one it can't decode, acknowledges and drops it.
 
-**trueseal-relay** on the server side. Accepts both, routes blobs between devices.
+The device reports each case to its own app, and nothing is sent back to the device that sent the message. A version bump means every device upgrades together, and a Transport Version bump means the relay upgrades with them; [Upgrading](/docs/operate/upgrades) covers what that does to queued messages.
+
+## The relay is always in the path
+
+Devices never connect to each other. Each device opens two kinds of outbound connection to the relay, on two TCP ports, and both run the Noise Protocol Framework with the cipher suite `25519_ChaChaPoly_BLAKE2s`. The device checks the relay's static public key on both, against the key in its Relay Address.
+
+| | Push Session | Receive Session |
+|---|---|---|
+| Purpose | Hand messages to the relay | Take messages from the device's Inbox |
+| Noise pattern | [NK](/docs/reference/nk-pattern) | [XX](/docs/reference/xx-pattern) |
+| Device key sent | None. A fresh ephemeral key per session. | The device's static X25519 key |
+| Default port | <Fact id="defaultPushPort" /> | <Fact id="defaultReceivePort" /> |
+| Length | Short. The relay closes it after 30 seconds. | Open as long as the device is online |
+
+## Push Session
+
+A device opens a Push Session when its outbox has messages for the relay.
+
+1. The device connects to the push port and runs the NK handshake. It has to finish within 10 seconds.
+2. The device sends one `Push` frame per message. Each frame names the recipient's public key.
+3. For each `Push`, the relay writes the message to the recipient's Inbox on disk, then replies `Ack`. If it refuses the message, it replies `Error` with a reason code and stores nothing.
+4. The device deletes each acknowledged message from its outbox and closes the session.
+
+The relay closes any Push Session still open 30 seconds after it accepted the connection. A message the relay didn't acknowledge, and didn't refuse for good, stays in the outbox and goes out again in a later Push Session.
+
+The NK handshake gives the relay no key that belongs to the sending device. The relay can still often tell which device pushed from the timing of the connection, and the server it runs on also sees its IP address. The [How it works](/docs/overview/how-it-works#what-the-relay-sees) page lists what the relay sees.
+
+## Receive Session
+
+A device keeps one Receive Session open while it's online.
+
+1. The device connects to the receive port and runs the XX handshake within 10 seconds. The relay learns the device's static public key, which is also the address of its Inbox.
+2. The relay sends each message in the Inbox as a `Deliver` frame, in the order they arrived, then new messages as they arrive. The device takes nothing from its Inbox before the app has registered its message handler.
+3. The device handles each message, then replies `DeliverAck`. The relay deletes the message only then, and only from that device's own Inbox.
+4. The device sends a `Heartbeat` every 25 seconds and the relay echoes it. The relay closes a Receive Session when it has received nothing from the device for 75 seconds.
+
+The relay sends each message once per Receive Session. A message without a `DeliverAck` stays in the Inbox and is delivered again on the next Receive Session. The relay allows <Fact id="maxReceiveSessionsPerDevice" /> per device key at once.
+
+[Sending and receiving](/docs/integrate/sending-and-receiving) gives the delivery promise this adds up to. [Limits and quotas](/docs/operate/limits-and-quotas) lists the relay's limits and the refusal each one causes.
+
+## Where today's code differs
+
+The relay doesn't yet enforce the handshake and session deadlines, the 75-second idle limit or the cap on Receive Sessions per key (trueseal-relay#43). Neither layer carries a version yet (trueseal-sync#93, trueseal-relay#42). [Wire Format](/docs/reference/wire-format#where-todays-code-differs) lists the differences in the frames.
+
+## What the protocol leaves to the app
+
+The protocol moves opaque bytes between the members of a group. What the bytes mean, how two conflicting changes merge, and what a new member should receive from the past stay with the app.

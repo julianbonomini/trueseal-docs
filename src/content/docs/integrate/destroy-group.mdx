@@ -1,0 +1,60 @@
+---
+title: Destroy Group
+description: What Destroy Group does when a device is lost or stolen, what it doesn't do, its states, and what happens on a crash or when the relay is out of reach.
+---
+import Fact from '../../../components/mdx/Fact.astro';
+
+# Destroy Group
+
+A user's phone is stolen. Removing it from the group isn't enough, because a hostile device can ignore its removal and keep changing the member list. Destroy Group ends the group instead, and every other device starts over.
+
+## What it does
+
+> **Destroy Group ends the group for every device that receives it.** Each device that receives it passes the Destroy on to the members it knows about, deletes all group state, and starts over with a new identity. After that, no device that received it sends anything to any old device address, the stolen one included. To use TrueSeal together again, pair your devices from scratch.
+>
+> **What it does not do:**
+> - It can't recover or erase anything the stolen device already received or stored.
+> - It can't force the stolen device to wipe itself.
+> - It doesn't reach a device that stays offline longer than the relay's message lifetime (<Fact id="relayTtlDefault" /> by default). That device keeps its old group until the user destroys or leaves it there too.
+> - It doesn't complete while your device can't reach the relay. Your device shows "destroying" until it can.
+> - Any current or former member can trigger it. That includes a stolen device, which can end your group, though that cuts it off from the group as well.
+
+Use `remove(memberId)` for a device you no longer want but still trust, such as an old phone you've wiped. Use `destroyGroup()` when a device is lost, stolen or acting against the group.
+
+## How it works
+
+1. Any member calls `destroyGroup()`. In one write, the device enters `destroying` and queues a Revoke message for every member it knows about in its outbox. It drops its unsent app messages and any membership change it was still making.
+2. In `destroying` the device sends no app messages and runs no message handler. It stays connected until the relay has accepted every Revoke. There is no timeout.
+3. Then it deletes the namespace's group state, its outbox and its record of handled messages, and generates a fresh identity as the last step. It reports `statusChanged(notJoined, destroyed)`.
+
+A device that receives a valid Revoke enters `destroying` too, and acknowledges the Revoke to the relay only after that. It queues a Revoke for every member in its own member list apart from the one that sent it, then waits and wipes in the same way. Forwarding reaches a device that another member admitted at the same moment and that the first device never knew about. A device forwards once, because it ignores every Revoke after the first.
+
+A device honours a Revoke from any device that appears in any Group Manifest it has held for this group, current or past. A thief who removes your device first can't block your Destroy that way. It also means a former member can end the group. A Revoke from a device that never appeared in a manifest this device held is ignored.
+
+The same `TrueSeal` object stays usable after the wipe. Pair the devices again from scratch. The stolen device can ask to join like any other device, and it gets in only if someone accepts its join request.
+
+## States
+
+| `status` | `destroyGroup()` | A valid Revoke arrives |
+|---|---|---|
+| `member` | → `destroying` | → `destroying`, and forwards |
+| `leaving` | → `destroying`. The leave is abandoned. | → `destroying`, and forwards |
+| `pendingJoin` | Fails with `notMember{status}`{/* TODO: ADR-0029 says "typed error: not in a group"; notMember{status} is the ADR-0028 case that matches. */} | Ignored |
+| `destroying` | Does nothing | Ignored |
+| `notJoined` | Fails with `notMember{status}` | Ignored |
+
+`destroying` becomes `notJoined` once the relay has accepted every queued Revoke.
+
+## Crashes and an unreachable relay
+
+- If the app crashes before `destroyGroup()` finishes its write, nothing has changed. On a receiving device, the relay delivers the Revoke again because the device hadn't acknowledged it.
+- If the app crashes after that write, or while sending the Revokes, the device is still `destroying` at the next start. The outbox sends the Revokes the relay hasn't accepted yet.
+- If the app crashes during the wipe, the wipe starts again. Replacing the identity is the last step, so the wipe never runs against the new identity.
+- If the relay is out of reach, the device stays `destroying` until it reconnects and the relay accepts every Revoke. Show that state to the user instead of telling them the group is gone.
+
+## What stays your app's job
+
+- Deleting your app's own copy of the shared data when the status changes to `notJoined` with reason `destroyed`, if it should.
+- Showing `destroying` while it lasts.
+- Telling the user to check every device that might have been offline for longer than the relay's message lifetime, and to destroy or leave the group there too.
+- Guiding the user through pairing their devices again.

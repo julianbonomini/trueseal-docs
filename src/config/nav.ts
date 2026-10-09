@@ -8,7 +8,7 @@ export type Surface = 'docs' | 'agents';
 
 /** Each surface's header label and the page the Docs / Agent Docs switch opens. Key order is switch order. */
 export const surfaces: Record<Surface, { label: string; home: string }> = {
-  docs: { label: 'Docs', home: '/docs/overview/introduction' },
+  docs: { label: 'Docs', home: '/docs/overview/what-trueseal-is' },
   agents: { label: 'Agent Docs', home: '/agents/' },
 };
 
@@ -49,11 +49,13 @@ const docsNav: NavSection<DocsNavItem>[] = [
   {
     title: 'Overview',
     items: [
-      { title: 'Introduction',            slug: 'overview/introduction',              agents: 'what-trueseal-is' },
-      { title: 'Architecture',            slug: 'overview/architecture',              agents: 'protocol' },
-      { title: 'Principles & Boundaries', slug: 'overview/principles-and-boundaries', agents: 'what-trueseal-is' },
-      { title: 'Roadmap & Research',      slug: 'overview/roadmap',                   agents: 'what-trueseal-is' },
-      { title: 'License',                 slug: 'overview/license',                   agents: 'what-trueseal-is' },
+      { title: 'What TrueSeal is',        slug: 'overview/what-trueseal-is',        agents: 'what-trueseal-is' },
+      { title: 'How it works',            slug: 'overview/how-it-works',            agents: 'protocol' },
+      { title: 'Is it right for my app?', slug: 'overview/is-it-right-for-my-app',  agents: 'what-trueseal-is' },
+      { title: 'Why TrueSeal exists',     slug: 'overview/why-trueseal-exists',     agents: 'what-trueseal-is' },
+      { title: 'Developer preview',       slug: 'overview/developer-preview',       agents: 'developer-preview' },
+      { title: 'Roadmap & Research',      slug: 'overview/roadmap',                 agents: 'what-trueseal-is' },
+      { title: 'License',                 slug: 'overview/license',                 agents: 'what-trueseal-is' },
     ],
   },
   {
@@ -62,18 +64,22 @@ const docsNav: NavSection<DocsNavItem>[] = [
       { title: 'SDKs',                      slug: 'integrate/sdks',                      agents: 'api' },
       { title: 'Integrating trueseal-sync', slug: 'integrate/integrating-trueseal-sync', agents: 'api' },
       { title: 'Device Identity',           slug: 'integrate/device-identity',           agents: 'api' },
-      { title: 'Pairing',                   slug: 'integrate/pairing',                   agents: 'api' },
-      { title: 'Sync Groups',               slug: 'integrate/sync-groups',               agents: 'api' },
-      { title: 'Revocation',                slug: 'integrate/revocation',                agents: 'api' },
-      { title: 'Delivery Guarantees',       slug: 'integrate/delivery-guarantees',       agents: 'protocol' },
+      { title: 'Pairing',                   slug: 'integrate/pairing',                   agents: 'pairing' },
+      { title: 'Membership',                slug: 'integrate/membership',                agents: 'membership' },
+      { title: 'Destroy Group',             slug: 'integrate/destroy-group',             agents: 'destroy-group' },
+      { title: 'Sending and receiving',     slug: 'integrate/sending-and-receiving',     agents: 'sending-and-receiving' },
+      { title: 'Delivery issues',           slug: 'integrate/delivery-issues',           agents: 'delivery-issues' },
     ],
   },
   {
     title: 'Operate',
     items: [
-      { title: 'Deploying',      slug: 'operate/deploying',      agents: 'versions-and-relay-address' },
-      { title: 'trueseal-relay', slug: 'operate/trueseal-relay', agents: 'protocol' },
-      { title: 'Inbox & TTL',    slug: 'operate/inbox-and-ttl',  agents: 'limits' },
+      { title: 'Running a relay',           slug: 'operate/running-a-relay',           agents: 'running-a-relay' },
+      { title: 'Relay Address and keypair', slug: 'operate/relay-address-and-keypair', agents: 'relay-address-and-keypair' },
+      { title: 'Limits and quotas',         slug: 'operate/limits-and-quotas',         agents: 'relay-limits-and-quotas' },
+      { title: 'Backups',                   slug: 'operate/backups',                   agents: 'relay-backups' },
+      { title: 'Upgrading',                 slug: 'operate/upgrades',                  agents: 'upgrades' },
+      { title: 'Upgrade Notes',             slug: 'operate/upgrade-notes',             agents: 'upgrade-notes' },
     ],
   },
   {
@@ -88,17 +94,16 @@ const docsNav: NavSection<DocsNavItem>[] = [
   {
     title: 'Reference',
     items: [
-      { title: 'trueseal-protocol', slug: 'reference/protocol',    agents: 'protocol' },
-      { title: 'Wire Format',       slug: 'reference/wire-format', agents: 'protocol' },
-      { title: 'Sessions',          slug: 'reference/sessions',    agents: 'protocol' },
+      { title: 'Protocol',    slug: 'reference/protocol',    agents: 'protocol' },
+      { title: 'Wire Format', slug: 'reference/wire-format', agents: 'protocol' },
       {
         title: 'trueseal-sync',
         slug: 'reference/trueseal-sync',
         agents: 'api',
         children: [
-          { title: 'Envelopes & Blobs',      slug: 'reference/envelopes-and-blobs',      agents: 'protocol' },
-          { title: 'Group Manifest',         slug: 'reference/group-manifest',           agents: 'protocol' },
-          { title: 'Operation Log & Outbox', slug: 'reference/operation-log-and-outbox', agents: 'protocol' },
+          { title: 'Envelopes and Blobs', slug: 'reference/envelopes-and-blobs', agents: 'protocol' },
+          { title: 'Group Manifest',      slug: 'reference/group-manifest',      agents: 'protocol' },
+          { title: 'Session State',       slug: 'reference/session-state',       agents: 'upgrades' },
         ],
       },
       {
@@ -118,7 +123,35 @@ const docsNav: NavSection<DocsNavItem>[] = [
 
 // The Agent Docs sections.
 const agentsNav: NavSection[] = [
-  { title: 'Start',     items: [{ title: 'Agent Snippet', slug: '' }, { title: 'What TrueSeal is', slug: 'what-trueseal-is' }] },
+  {
+    title: 'Start',
+    items: [
+      { title: 'Agent Snippet',     slug: '' },
+      { title: 'What TrueSeal is',  slug: 'what-trueseal-is' },
+      { title: 'Developer preview', slug: 'developer-preview' },
+    ],
+  },
+  {
+    title: 'Integrate',
+    items: [
+      { title: 'Pairing',               slug: 'pairing' },
+      { title: 'Membership',            slug: 'membership' },
+      { title: 'Destroy Group',         slug: 'destroy-group' },
+      { title: 'Sending and receiving', slug: 'sending-and-receiving' },
+      { title: 'Delivery issues',       slug: 'delivery-issues' },
+    ],
+  },
+  {
+    title: 'Operate',
+    items: [
+      { title: 'Running a relay',           slug: 'running-a-relay' },
+      { title: 'Relay Address and keypair', slug: 'relay-address-and-keypair' },
+      { title: 'Relay limits and quotas',   slug: 'relay-limits-and-quotas' },
+      { title: 'Relay backups',             slug: 'relay-backups' },
+      { title: 'Upgrades',                  slug: 'upgrades' },
+      { title: 'Upgrade Notes',             slug: 'upgrade-notes' },
+    ],
+  },
   {
     title: 'Reference',
     items: [

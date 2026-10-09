@@ -2,8 +2,8 @@
 import { expect, test } from 'bun:test';
 import { pagePaths, servedAt } from './dist.ts';
 
-// Written by the preview-trust and preview-pages Goals; remove each entry when its page lands.
-const pending = new Set(['/docs/overview/why-trueseal-exists']);
+// Pages a link may name before they are built. Every planned page has landed; add an entry only while one is in flight.
+const pending = new Set<string>();
 
 test('every internal link points at a built page or file, and its fragment exists', () => {
   const broken: string[] = [];

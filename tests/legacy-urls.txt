@@ -33,3 +33,15 @@
 /docs/protocol/overview
 /docs/protocol/wire-format
 /docs/sdks
+# Served by main at 22a6e2c, after the site-shell Goal moved the Overview pages.
+/docs/overview/introduction
+/docs/overview/architecture
+/docs/overview/principles-and-boundaries
+/docs/integrate/sync-groups
+/docs/integrate/revocation
+/docs/integrate/delivery-guarantees
+/docs/operate/deploying
+/docs/operate/trueseal-relay
+/docs/operate/inbox-and-ttl
+/docs/reference/sessions
+/docs/reference/operation-log-and-outbox

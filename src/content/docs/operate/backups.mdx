@@ -1,0 +1,35 @@
+---
+title: Backups
+description: What to back up on a relay, what you lose without each file, and why restoring an old backup is safe.
+---
+
+# Backups
+
+The relay's volume holds two files, and they matter differently. `keypair.hex` is the relay's identity, and every copy of your app depends on it. `inbox.db` holds messages waiting for devices that are offline, and a message leaves it once it's delivered.
+
+## The keypair
+
+Back it up once, right after the first start, and keep the copy somewhere private:
+
+```bash
+docker compose cp relay:/data/keypair.hex ./keypair.hex
+```
+
+If you lose it, every installed copy of your app has a Relay Address that no longer matches any relay. You'd need a new key, a new Relay Address and a new app release. The preview can't rotate the key, so there is no smoother way back.
+
+To restore it on a new host, set `TRUESEAL_RELAY_KEYPAIR_HEX` to the file's contents, or put the file at `/data/keypair.hex` on the new volume before the first start.
+
+## The inbox
+
+Backing up `inbox.db` is optional. If you lose it, you lose only the messages that were waiting, and the senders won't send them again, because the relay had already acknowledged them. Recipients never learn about them.
+
+If you do back it up, use SQLite's online `.backup` command, which takes a consistent copy while the relay runs. Copying the file directly can give you a broken copy, because the relay writes to it in WAL mode.
+
+{/* TODO: an exact command for .backup against the relay-data volume; the relay image has no sqlite3 binary. */}
+
+Restoring an older `inbox.db` is safe. Messages that were delivered after the backup come back and go out again, and devices drop them. A message still inside the 60-day Replay Window matches a record of having been handled, and an older one is rejected as too old.
+
+## What stays your job
+
+- Keeping the keypair backup private. Anyone with it can pose as your relay (see [Relay Address and keypair](/docs/operate/relay-address-and-keypair)).
+- Deciding whether `inbox.db` is worth backing up for your users.

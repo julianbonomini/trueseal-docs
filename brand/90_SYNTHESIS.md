@@ -209,6 +209,8 @@ Contrast against the background is 15.7:1 for ink and 6.4:1 for ink-muted in lig
 
 These are brand claims today. Each needs a test or a check before it appears in public copy.
 
+The verdict, evidence and date for each are in [91_EVIDENCE.md](91_EVIDENCE.md), with each Landing comparison cell.
+
 - "About ten lines" and "three screens", checked against the shipped SDKs.
 - "A relay in one container", checked against the self-hosting guide.
 - The Life360 data-broker report (The Markup, December 2021), if cited at all.

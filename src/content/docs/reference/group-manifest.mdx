@@ -1,61 +1,82 @@
 ---
 title: Group Manifest
-description: The signed, versioned membership record that defines a Sync Group — structure, validity rules, and last-version-wins convergence.
+description: The signed, parent-linked membership record of a Sync Group in the Developer Preview, its fields, the rules a device checks before accepting one, and how concurrent changes converge.
 ---
+import Fact from '../../../components/mdx/Fact.astro';
 
 # Group Manifest
 
-The Group Manifest is the authoritative membership record for a Sync Group. It defines who belongs, who can send, whose messages get accepted. Every device holds a copy. Any member can update it.
+The Group Manifest is the signed list of a Sync Group's members. Every member holds a copy and checks every incoming message against it. Any member can issue a new one. When two members change the group at the same moment, the one whose change lost re-applies it.
 
-## Structure
+This page describes the manifest as the Developer Preview decides it. [Membership](/docs/integrate/membership) explains what it means for an app.
 
-| Field | Type | Description |
-|---|---|---|
-| `group_id` | `[u8; 32]` | Stable random identifier for the group. Never changes. |
-| `version` | `u64` | Monotonically increasing. Bumps on every membership change. |
-| `members` | `Vec<ManifestMember>` | All current members — noise pub + signing pub + display name. |
-| `issued_by` | `[u8; 32]` | Signing public key of the member who issued this version. |
-| `signature` | `[u8; 64]` | Ed25519 signature over `group_id || version || members`. |
+## Fields
 
-Each member entry holds:
-- `noise_pub` — the device's X25519 key, used to address Envelopes.
-- `signing_pub` — the device's Ed25519 key, used to verify Envelope signatures.
-- `name` — a short display name derived deterministically from the signing public key (first 4 bytes as hex). Not user-configurable at this layer.
+| Field | Meaning |
+|---|---|
+| `group_id` | A random identifier, fixed when the group is created |
+| `version` | One higher than the manifest this one was built on |
+| `parent` | The hash of the manifest this one was built on. Empty in the first manifest of a group. |
+| `members` | Every member's X25519 key, Ed25519 key and name |
+| `issued_by` | The Ed25519 key of the member who issued it |
+| `signature` | Ed25519, by `issued_by`, over a domain-separated input that includes the End-to-End Version, `group_id`, `version`, `parent` and `members` |
 
-The manifest is Protobuf on the wire. It travels as a `GroupManifest` message (tag `0x04`) inside a regular Envelope — encrypted, signed, and relayed identically to `Sync` messages.
+A member's name is a label derived from its signing key, two words such as `SwiftFox`. It is for display only. Names are short enough that someone can generate a key whose name matches a real device, so a name never proves which device is which.
 
-## Validity rules
+A manifest travels as a `GroupManifest` message inside an ordinary sealed [Envelope](/docs/reference/envelopes-and-blobs), one per member, through the same outbox as every other message. Manifest messages never expire from the outbox. The relay can't read the message type, though it sees a manifest go out to every member at once.
 
-A device accepts a new manifest only if all three conditions hold:
+A group holds at most <Fact id="maxGroupSize" />, so that the largest manifest still fits in one frame. An admission that would go over fails with `groupFull{max}`.
 
-1. **Valid signature.** The Ed25519 signature verifies against `issued_by`, over the canonical signing message (`group_id || version || members`).
-2. **Known issuer.** `issued_by` is a member in the recipient's *current* manifest. An update from a non-member is rejected even with a valid signature.
-3. **Higher version.** Incoming `version` is strictly greater than the current one. Same-version and lower-version updates are rejected.
+## Accepting a manifest
 
-The genesis manifest (the very first one, when the group is created) has no previous manifest to check against. The issuer check is skipped — the genesis is self-authorising.
+A member accepts an incoming manifest only if all of these hold:
 
-## Last-version-wins convergence
+- the signature verifies against `issued_by`;
+- `group_id` matches its own group;
+- `issued_by` is a member of the manifest it currently holds;
+- it orders after its current manifest by `(version, hash)`, which means a higher version, or the same version and a lower hash;
+- the version jump is within a sanity bound{/* TODO: the value of the version-jump bound; sync ADR-0027 requires one and doesn't set it. */}.
 
-Any current member can issue a new manifest at any time. If two members issue conflicting updates at the same moment — A removes B while C adds D — both manifests propagate. Every recipient applies whichever has the higher version.
+A manifest that fails is acknowledged, dropped and reported as a delivery issue.
 
-The result is eventual consistency with no consensus protocol involved. Higher version wins, always. In a tie (two simultaneous updates with the same version), neither is accepted — they both fail the strictly-higher check against each other, and one of the issuers will eventually retry with a higher version.
+A device in no group accepts a manifest only while it has a Pending Join. It then accepts its first manifest only if the signing key from the Pairing Token signed it, signed the Envelope it came in, and the device's own keys are among the members. The group ID and version can be anything, because a device can join an existing group at any version. [Pairing](/docs/integrate/pairing) covers the joining side.
 
-## Membership changes
+## Concurrent changes
 
-**Adding a member.** After pairing, the admitting device issues a new manifest that includes the joiner and pushes it to every existing member. The joiner also receives the current manifest as part of the join flow, so it has a complete view of the group from the moment it lands.
+Two members can change the group at the same moment, each building on the same manifest. Every device orders the two the same way, by `(version, hash)`, so every device ends up holding the same one. The issuer of the losing change re-applies it, except in the cases the table below lists.
 
-**Soft removal.** The removing device issues a new manifest that excludes the target. Remaining members update their local copy and start filtering the removed device's messages. The removed device, when it receives the new manifest, deletes its group state, starts over with a new identity and reports `statusChanged(notJoined, removed)`.
+When a member admits, removes or leaves, it records a Pending Membership Change in the same transaction as the new manifest and its outbox entries. The change holds its intent, such as "D is a member", and the hash of the manifest that carried it. Each time the issuer accepts a newer manifest, it checks each pending change:
 
-**Destroy Group.** Any current member calls `destroyGroup()`. A `Revoke` message goes out to every known member. Each device that receives it passes it on to the members it knows about, deletes all group state, and starts over with a new identity. The manifest is gone, and the group no longer exists. There is no key rotation inside the group (sync ADR-0029).
+| The newer manifest | What the issuer does |
+|---|---|
+| Already reflects the intent | Clears the change |
+| Descends from a manifest that carried the change | Clears it. A later, deliberate change undid it. |
+| Neither, so it was built concurrently | Re-applies the change on top, as a new manifest one version higher |
+| Leaves the issuer out | Drops the change, because the issuer is no longer a member |
+| Would go over the Maximum Group Size (<Fact id="maxGroupSize" />) if the admission were re-applied | Drops the change and reports `admissionDropped(name, reason)`; the joiner stays in Pending Join |
 
-For the full semantics of each operation, see [Revocation](/docs/integrate/revocation).
+Pending Membership Changes survive a restart. An issuer that was offline re-applies after it reconnects.
 
-## Inbound filtering
+The promise, which the preview tests:
 
-Every inbound Envelope is checked against the current manifest after decryption and signature verification. If `author_pub` (extracted from the decrypted payload) isn't a `signing_pub` in the current manifest, the message is silently discarded.
+> Once every member has received the same set of Group Manifests, all members hold an identical manifest. A membership change from an honest member is never lost, unless that member was itself removed concurrently.
 
-This is how soft removal actually takes effect at the message level. A removed device's Envelopes pass relay routing (the relay doesn't check membership), pass decryption (the payload is still valid ciphertext), and pass Ed25519 signature verification (the device's key is still cryptographically valid) — but they fail the manifest filter and get dropped without anyone telling the caller.
+While a change is being re-applied, a device can see a member leave and come back. Apps render the current member list and don't treat a single `membersChanged` event as final.
 
-## What the relay knows
+## Removal and leaving
 
-The relay has no concept of Group Manifests, group IDs, or membership. It routes Envelopes by `recipient_pub`. It can still infer which devices likely share a group from how a send fans out, as the [Threat Model](/docs/trust/threat-model#what-the-relay-sees) lists. A manifest update is just another Envelope — routed to the recipient's Inbox and deleted on delivery. The relay can't tell a `GroupManifest` message from a `Sync` message.
+A device counts itself removed only when the manifest that leaves it out has a `parent` the device holds, or has held, that includes it. It then wipes its group state, outbox and handled Message IDs, generates a fresh identity, and reports `statusChanged(notJoined, removed)`.
+
+When a manifest that leaves the device out was built concurrently, on a manifest that never included it, the device treats it as a race it lost. It keeps that manifest as its current view, stays alive, and waits for its admitter to re-apply the admission. A new member whose admission lost a tie is the usual case.
+
+A leaving device issues a manifest without itself and moves to `leaving`. It stays connected until the relay has accepted every one of its manifest pushes, then wipes in the same way and reports `statusChanged(notJoined, left)`.
+
+## Trust
+
+Any current member can change the manifest, and every current member is fully trusted for membership. A hostile member can remove everyone else. A removed device that ignores its removal can still change membership on devices that haven't yet seen it removed. TrueSeal doesn't defend against either. The answer to a lost or hostile device is [Destroy Group](/docs/integrate/destroy-group).
+
+The relay holds no manifest and keeps no record of groups. It routes each manifest Envelope by its recipient key like any other. It can still guess which devices share a group from which devices receive messages together.
+
+## Where today's code differs
+
+Today's manifest has no `parent`. A device keeps whichever equal-version manifest it saw first, so a concurrent change can be undone without anyone knowing. There is no Pending Membership Change, no leave operation, no group size cap and no bound on version jumps. The format above is decided in sync ADR-0027 and isn't built yet.

@@ -47,6 +47,13 @@ describe('Landing', () => {
     );
   });
 
+  // brand/91_EVIDENCE.md marks these pending or removed. Delete a phrase here only after its verdict there is verified.
+  test('no claim without evidence appears in the text, title or meta description', () => {
+    const all = [text(html), title, description].join(' ').toLowerCase().replace(/\s+/g, ' ');
+    const unproven = ['ten lines', '10 lines', 'three screens', 'one container', 'life360', 'etebase'];
+    expect(unproven.filter(claim => all.includes(claim))).toEqual([]);
+  });
+
   test('no banned term appears in the text, title or meta description', () => {
     const all = [text(html), title, description];
     expect(all.flatMap(bannedTermsIn)).toEqual([]);

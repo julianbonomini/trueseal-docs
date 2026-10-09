@@ -179,6 +179,12 @@ code, kbd, samp, pre {
   font-weight: 600;
 }
 
+/* The mascot at the top of Why TrueSeal exists, the one docs page that shows it. */
+.prose__mascot {
+  width: clamp(140px, 24vw, 200px);
+  margin-bottom: var(--space-xl);
+}
+
 /* ─── Stacked table ─────────────────────────────────────── */
 /* A table that stays a table from 660px and turns each row into one block on a phone, so the reader
    never scrolls sideways. `table.stacked-table` has the same specificity as `.prose table`, so it

@@ -1,0 +1,70 @@
+---
+title: Limits and quotas
+description: The relay's default limits per inbox, per recipient and per connection, its deadlines, how long it keeps a message, and which limits you can change.
+---
+import Fact from '../../../components/mdx/Fact.astro';
+
+# Limits and quotas
+
+A relay on the internet will meet a client that opens a thousand sockets, or one that pushes to the same device as fast as it can. The relay limits both by default, without any configuration from you.
+
+Pushes carry no sender identity, so the relay can't limit by sender. Every limit is keyed on the recipient's inbox, on a device's key, or on a total count. None is keyed on an IP address. The relay never logs, stores or uses a client's IP address ([Running a relay](/docs/operate/running-a-relay#what-the-relay-knows-about-the-client) has the wording for your users). If you want per-IP limits, set them in your firewall or reverse proxy.
+
+## Defaults
+
+{/* TODO: render these numbers from Shared Facts once the agent-docs Goal is merged. */}
+
+| Limit | Default | When it's reached |
+|---|---|---|
+| Messages waiting per inbox | <Fact id="inboxMaxBlobs" /> | The push is refused as `inbox full`. The sender retries later. |
+| Bytes waiting per inbox | <Fact id="inboxMaxBytes" /> | The push is refused as `inbox full`. The sender retries later. |
+| Push rate per recipient | 20 per second, bursts of up to 500 | The push is refused as `rate limited`. The sender retries later. |
+| Open connections per port | 1,000 | The new connection is closed. |
+| Receive Sessions per device key | 4 | The new session is refused. |
+| Message size | The Protocol Size Limit | The push is refused as `too large`, for good. |
+| How long a message waits | <Fact id="relayTtlDefault" /> | The message is deleted. |
+
+A refused push carries a short code and no content. The sending device keeps a message refused as `inbox full` or `rate limited` in its outbox and tries again with backoff. A `too large` refusal is permanent, and the sending app gets `sendFailed(messageId, tooLarge)`. [Delivery issues](/docs/integrate/delivery-issues) covers the app side.
+
+## Deadlines
+
+| Step | Deadline |
+|---|---|
+| Noise handshake, on either port | 10 seconds |
+| A whole Push Session, from connect to close | 30 seconds |
+| A Receive Session with nothing received | 75 seconds, then the relay closes it |
+
+Devices send a heartbeat every 25 seconds on their Receive Session and the relay echoes it, so a healthy device never hits the 75-second limit.
+
+## How long the relay keeps a message
+
+The relay keeps a message until the recipient device acknowledges it, which the device does after your app's handler has finished with it. A message nobody acknowledges is deleted after <Fact id="relayTtlDefault" />. A sweep runs every hour and deletes what has expired.
+
+A device that stays offline past that point never gets those messages, and neither device is told. Apps should expect that a device away for over a month comes back having missed some.
+
+## Changing the limits
+
+You can change every value. Two of them can only go down:
+
+- The message size limit, called the Relay Size Limit when you set it. The relay refuses to start if it's above the Protocol Size Limit. If you lower it, pass a matching lower `maxPayloadBytes` to `open()` in your app, so `send()` refuses large bodies before they're queued.
+- The TTL. The relay refuses to start with a TTL over <Fact id="relayTtlMax" />. That ceiling keeps a message sent on the last day a device would retry it inside the Replay Window (<Fact id="replayWindow" />), the window in which devices accept it.
+
+| Setting | Variable | Format |
+|---|---|---|
+| TTL | `TRUESEAL_RELAY_TTL` | A duration such as `168h` |
+| Sweep interval | `TRUESEAL_RELAY_REAP_INTERVAL` | A duration such as `1h` |
+| Open connections per port | `TRUESEAL_RELAY_MAX_CONNECTIONS` | A number |
+| Relay Size Limit | `TRUESEAL_RELAY_MAX_ENVELOPE_BYTES` | Bytes of the sealed envelope, which is larger than the body your app passes to `send()` |
+
+{/* TODO: the envelope overhead above the body, so an Operator can work out the matching maxPayloadBytes; trueseal-sync ADR-0025 publishes only the body limit. */}
+{/* TODO: the variable names for the inbox quotas, the push rate and the Receive Session cap; relay ADR-0012 makes them configurable but doesn't name them. */}
+
+## The quota attack
+
+Anyone who knows a device's public key can push to it until its inbox is full or its rate limit is hit. Messages for that device are then delayed until the inbox drains. The relay doesn't prevent this. It is an attack on availability for that one device, and the messages stay sealed.
+
+## What stays your job
+
+- Per-IP limits, in your firewall or reverse proxy.
+- Telling your app about a Relay Size Limit lower than the Protocol Size Limit.
+- Telling your users that a device offline for longer than the TTL misses messages.

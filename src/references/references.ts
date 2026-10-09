@@ -29,8 +29,13 @@ export interface MissingReference {
   kind: 'page' | 'api' | 'error' | 'event' | 'fact';
 }
 
-// Spans that look like API names but are not TrueSeal's: the Noise specification's names and the word camelCase.
-const notApiNames = ['camelCase', 'SymmetricState.split', 'fromInitiator', 'fromResponder'];
+// Spans that look like API names but are not TrueSeal SDK names: the Noise specification's names, trueseal-noise's
+// Rust session API, the word camelCase, and names the docs say TrueSeal deliberately doesn't have (sync ADR-0028, ADR-0034).
+const notApiNames = [
+  'camelCase', 'SymmetricState.split', 'fromInitiator', 'fromResponder',
+  'receive',
+  'ack', 'undeliverableAfterUpgrade',
+];
 
 const labels: Record<MissingReference['kind'], string> = {
   page: 'page', api: 'API name', error: 'error case', event: 'event case', fact: 'Shared Fact',

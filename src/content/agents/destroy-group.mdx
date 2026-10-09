@@ -1,0 +1,84 @@
+---
+title: Destroy Group
+description: Destroy Group's public wording, its authority rule, the destroying state, Revoke forwarding, the state table, crash points, and what it does not do.
+---
+import Fact from '../../components/mdx/Fact.astro';
+
+# Destroy Group
+
+This page states Destroy Group in the Developer Preview as trueseal-sync ADR-0029 decides it, with the API names of ADR-0028.
+
+## Public wording
+
+Use this wording when describing Destroy Group to users, and claim nothing beyond it.
+
+> **Destroy Group ends the group for every device that receives it.** Each device that receives it passes the Destroy on to the members it knows about, deletes all group state, and starts over with a new identity. After that, no device that received it sends anything to any old device address, the stolen one included. To use TrueSeal together again, pair your devices from scratch.
+>
+> **What it does not do:**
+> - It can't recover or erase anything the stolen device already received or stored.
+> - It can't force the stolen device to wipe itself.
+> - It doesn't reach a device that stays offline longer than the relay's message lifetime (<Fact id="relayTtlDefault" /> by default). That device keeps its old group until the user destroys or leaves it there too.
+> - It doesn't complete while your device can't reach the relay. Your device shows "destroying" until it can.
+> - Any current or former member can trigger it. That includes a stolen device, which can end your group, though that cuts it off from the group as well.
+
+## Authority
+
+- Any current member may call `destroyGroup()`, including a stolen device.
+- A receiver honours a `Revoke` whose author appears in any Group Manifest it has held for this group, current or past.
+- A `Revoke` from a device that never appeared in a held manifest is ignored.
+- A hostile former member can therefore end the group. That affects availability only.
+- Receivers keep the signing keys of every manifest they have held for the group until the group is wiped.
+
+## Initiator
+
+1. `destroyGroup()` persists `destroying` and, in the same transaction, queues one `Revoke` per member of the current view in the outbox.
+2. It drops pending `Sync` sends and Pending Membership Changes without reporting them.
+3. In `destroying` the device sends no `Sync`, runs no message handler and stays connected until the relay has accepted every `Revoke` push. There is no timeout.
+4. It wipes the namespace's group state, outbox and dedup table, generates a fresh identity as the last step, and raises `statusChanged(notJoined, destroyed)`.
+
+## Receiver
+
+1. A valid `Revoke` moves a `member` or `leaving` device to `destroying`.
+2. It queues a `Revoke` to every member of its own view except the author, by the same rules as the initiator.
+3. It acks the `Revoke` to the relay after `destroying` commits (ADR-0026).
+4. It waits and wipes as the initiator does.
+
+Forwarding reaches members admitted concurrently and missing from the initiator's view. Each device forwards at most once, because a device in `destroying` or `notJoined` ignores further `Revoke`s. The worst case is about `maxGroupSize × (maxGroupSize − 1)` Revoke Blobs.
+
+## States
+
+| `status` | `destroyGroup()` | Valid incoming `Revoke` |
+|---|---|---|
+| `member` | → `destroying` | → `destroying`, forwards |
+| `leaving` | → `destroying`, the leave is abandoned | → `destroying`, forwards |
+| `pendingJoin` | Fails with `notMember{status}`{/* TODO: ADR-0029 says "typed error: not in a group"; notMember{status} is the ADR-0028 case that matches. */} | Ignored, no manifest to check the author against |
+| `destroying` | No-op | Ignored |
+| `notJoined` | Fails with `notMember{status}` | Ignored |
+
+`destroying → notJoined` happens once the relay has accepted every queued `Revoke`.
+
+## Crash points
+
+| Point | Outcome |
+|---|---|
+| Before the `destroying` transaction commits | No change. On a receiver, the relay redelivers the unacked `Revoke`. |
+| After the commit, during the pushes | `destroying` resumes on the next start. The outbox replays the `Revoke`s the relay hasn't accepted. |
+| During the wipe | The wipe restarts. It never runs against a fresh identity, because the identity is replaced last. |
+
+## After the wipe
+
+- There is no key rotation inside the session. Every surviving device is `notJoined` with a fresh identity.
+- The same `TrueSeal` object stays usable (ADR-0028). The user rebuilds the group by pairing again.
+- The stolen device can send a join request like any other device. It is admitted only if a member calls `accept(request)` for it.
+- Replaying a `Revoke` for a group that is already destroyed changes nothing, because every device has a fresh identity (ADR-0034).
+
+## Choosing Destroy Group over removal
+
+`remove(memberId)` relies on the removed device cooperating. Use `destroyGroup()` for a lost, stolen, compromised or hostile device. See [Membership](/agents/membership).
+
+## What stays the app's job
+
+- Showing `destroying` while it lasts, and never reporting the group as gone before `statusChanged(notJoined, destroyed)`.
+- Deleting the app's own data after `statusChanged(notJoined, destroyed)`, if it should.
+- Telling the user to destroy or leave the group on any device that was offline past the relay TTL.
+- Guiding the user through pairing again.

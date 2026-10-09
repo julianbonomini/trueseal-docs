@@ -44,8 +44,8 @@ describe('Markdown versions', () => {
 
   test('components give their own Markdown: every CodeBlock tab and the FlowDiagram panels', () => {
     const kitchenSink = markdownOf('/docs/kitchen-sink');
-    for (const fence of ['```rust', '```go', '```bash']) expect(kitchenSink).toContain(fence);
-    expect(markdownOf('/docs/overview/architecture')).toContain('**SENDER** (DEVICE):');
+    for (const fence of ['```ts', '```swift', '```bash']) expect(kitchenSink).toContain(fence);
+    expect(kitchenSink).toContain('**NODE\\_A** (INITIATOR):');
   });
 });
 
@@ -92,7 +92,7 @@ describe('Agent Docs version and Copy as Markdown', () => {
   });
 
   test('the Agent Docs link names the Agent Docs page', () => {
-    expect(text(versionsBlock(pageHtml('/docs/integrate/pairing'))!)).toContain('Agent Docs: SDK API');
+    expect(text(versionsBlock(pageHtml('/docs/integrate/pairing'))!)).toContain('Agent Docs: Pairing');
   });
 
   test('no Agent Docs page shows them', () => {

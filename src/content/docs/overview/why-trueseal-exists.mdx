@@ -1,0 +1,36 @@
+---
+title: Why TrueSeal exists
+description: Julian Bonomini on the clipboard that started TrueSeal, and why it is a primitive other apps build on.
+---
+import Mascot from '../../../components/ui/Mascot.astro';
+
+# Why TrueSeal exists
+
+<div class="prose__mascot"><Mascot /></div>
+
+I'm Julian, and TrueSeal started because I wanted a clipboard with history.
+
+When I left Apple's walled garden, I wanted to copy on one device and paste on another, and to find what I'd copied yesterday. Universal Clipboard, which I was leaving behind, had no history either. There are plenty of third-party clipboard apps, and none of them felt trustworthy to me. A clipboard holds passwords, addresses and half-written messages, and each of those apps asked me to trust a company and code I couldn't run myself.
+
+I could have built one more clipboard app and asked you to trust me instead. I built the part every one of those apps needs, so that any developer can give their users the same privacy for their own app. Seeing that privacy multiply across other people's products excites me more than the clipboard did.
+
+## The parts that hurt
+
+{/* TODO: name the former employer once the founder has checked their agreements (brandbook section 7). */}
+I've spent more than ten years building software, sync included. I know which parts of sync hurt: pairing devices, sharing keys, queueing messages for devices that are offline, and keeping every device's member list the same. Those are the parts TrueSeal takes off your hands.
+
+## What I believe
+
+What's yours should stay between your devices. You draw the circle of who can read your data, and everyone outside it, including the relay, sees ciphertext. I think that should be the default in any app, and it should cost the developer no extra work.
+
+TrueSeal asks for your trust too, so it shows its evidence. The relay can't read or forge messages, and it does see some metadata. The [Threat Model](/docs/trust/threat-model) lists exactly what it sees, and each claim there names the test that proves it.
+
+## Why a primitive
+
+Private sync engines exist. Anytype's any-sync is one, and it is shaped around Anytype's own note-taking app. I wanted a piece with no opinion about your data. TrueSeal delivers sealed bytes between the devices in a group and leaves your data model and your conflict resolution to you, because those are different in every app and I don't want to decide them for you.
+
+It's free to use and free to host. Everything is Apache-2.0, and the relay is yours to run. The seal on this page is a pun on the name, and I couldn't resist.
+
+The best privacy feature is the one nobody had to build.
+
+Julian

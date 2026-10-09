@@ -1,45 +1,82 @@
 ---
 title: Pairing
-description: The three-step ceremony that establishes trust between two devices — with the relay blind to what is happening.
+description: How a device joins a Sync Group, with explicit admission on both sides, every join state, and what happens on failure and restart.
 ---
+import Fact from '../../../components/mdx/Fact.astro';
 
 # Pairing
 
-Before two devices can sync, they need to trust each other. Pairing is the little ceremony that gets them there — they exchange public keys directly, with no central authority and no server vouching for either side. The relay sits in the middle without knowing any of it is happening.
+Your user has the app on their phone and installs it on a new tablet. The tablet needs to join the phone's group, and nobody else should be able to slip in while that happens. The relay passes the messages between the two devices but never sees the Pairing Token, so the token is where both devices anchor their trust.
 
-## TL;DR
+## Admission is explicit on both sides
 
-- **Three steps.** Initiator shares a token out-of-band → joiner sends a `Pair` message → initiator accepts.
-- **The token** carries the initiator's two public keys. Transmit it however suits you: QR code, AirDrop, a link.
-- **The relay routes blindly.** It sees an encrypted blob addressed to the initiator. It has no idea that blob happens to be a pairing request.
-- **Acceptance is explicit.** The initiator has to be in an active pairing window and has to call `accept_member()` to admit the joiner.
+The admitting device shows a Pairing Token. It holds the admitting device's public keys and a random, single-use Pairing Secret. The joining device reads the token through a channel the relay never sees, such as a QR code on the screen.
 
-## What pairing establishes
+- The admitting user accepts one join request by hand. A join request has to prove it knows the Pairing Secret, so the relay can't make one up.
+- The joining device trusts only the signing key in the token it read. It accepts its first Group Manifest only if that key signed it and the joining device's own keys are in the member list, so the relay can't put it into a group of the relay's choosing.
 
-Once it's done, each device holds the other's public keys: noise for addressing blobs, signing for verifying envelopes. Both go into the Group Manifest, making the new device an official member of the [Sync Group](/docs/integrate/sync-groups). From that point on, every blob fans out to both devices.
+A device that is in no group drops every `Sync` and `Revoke` message it receives, and accepts a Group Manifest only while it has a Pending Join.
 
-## How it works
+## The admitting device
 
-The full diagram lives in [Architecture → Pairing](/docs/overview/architecture#pairing). Three steps:
+1. Call `startPairing()`. It opens the pairing window, makes a fresh Pairing Secret, and returns the Pairing Token as a string. Show it, for example as a QR code.
+2. Each join request arrives as a `joinRequest(request)` event, with an `id` and a `name`. If one device sends its request more than once, you get it once. Requests from different devices can arrive while the window is open, and the user picks one.
+3. Call `accept(request)`. Before it returns, the library saves the new Group Manifest and queues it for delivery to every member, the new device included. Then the window closes.
 
-**Step 1 — Initiator generates a Pairing Token.** The token contains the initiator's noise public key and signing public key. It's opaque to the caller: trueseal-sync hands you raw bytes and you present them out-of-band. QR code, AirDrop, link, whatever fits your UI.
+If this device wasn't in a group yet, the first `accept(request)` starts a new group with both devices in it.
 
-**Step 2 — Joiner sends a `Pair` message.** The joiner decodes the token, pulls out the initiator's public keys, and pushes a `Pair` message to the relay addressed to the initiator's noise key. The message is end-to-end encrypted with addressed encryption — only the initiator can read it — and contains the joiner's own public keys.
+`accept(request)` fails with `pairingClosed` when the window is no longer open, and with `groupFull{max}` when the group already has the Maximum Group Size of <Fact id="maxGroupSize" />. A window admits one device. To add another, call `startPairing()` again, which makes a new token.
 
-The relay sees one encrypted blob going to one public key. It has no clue it's a pairing request.
+There is no reject call, because the protocol sends no decline. A request you don't accept gets no reply, and it disappears when the window closes. `cancelPairing()` closes the window.
 
-**Step 3 — Initiator accepts.** The initiator receives the `Pair` message, decrypts it, and fires `on_member_request` with a Member Request Token. The caller hands that token to `accept_member()` to admit the new device. trueseal-sync then issues a new Group Manifest including both devices, signs it with the accepting device's key, and pushes it to every existing member.
+The window has no timer. It stays open until `accept(request)` succeeds or you call `cancelPairing()`, so close it when the user leaves your pairing screen.
 
-## The pairing window
+## The joining device
 
-The initiator opens a pairing window with `start_pairing()`. While it's open, a `Pair` message will be accepted. It closes on a successful `accept_member()`, an explicit `cancel_pairing()`, or a timeout.
+1. Call `join(token)` with the token the user scanned. The library saves a Pending Join and queues the join request in its outbox, both in one write. `status` becomes `pendingJoin`.
+2. The device waits. A Pending Join has no timer, survives a restart, and keeps its join request in the outbox until the relay has accepted it.
+3. When a valid Group Manifest arrives, the library stores it and clears the Pending Join in one write. `status` becomes `member`, and one `statusChanged(member, joined)` event fires.
 
-A `Pair` message that arrives outside an open window is dropped silently. That closes off a real attack: an attacker who intercepts the Pairing Token could try to pair as the joiner, but the initiator has to be actively in a window and explicitly accept the request. The rule of thumb: only open the window when the user has deliberately started a pairing flow.
+`join(token)` fails with `alreadyInGroup` when the device is already in a group, since one namespace holds one Sync Group. It fails with `invalidPairingToken` when the token can't be read.
 
-## Out-of-band key exchange
+Calling `join(token)` again with a new token replaces the Pending Join. `cancelJoin()` clears it and returns the device to `notJoined`.
 
-The security of pairing hinges on the token going through a channel the relay can't see. The token carries a 256-bit public key, so brute-force isn't the worry — **interception** is. An attacker who captures the QR code can try to pair as the joiner before the real device does.
+## Join states
 
-The pairing window plus explicit acceptance go a long way here. The initiator sees the incoming request and has to confirm it. If they're standing next to the joiner, they can sanity-check before accepting.
+`status` tells you where the device is at any time. Drive your pairing UI from it.
 
-A future version will add a Short Authentication String (SAS): both devices show a short code after the key exchange and the user confirms they match. That closes the interception window entirely.
+| `status` | Meaning | Calls that move it |
+|---|---|---|
+| `notJoined` | In no group and not waiting to join. | `join(token)` → `pendingJoin` |
+| `pendingJoin` | Waiting for the admitting device to accept. | A valid manifest → `member`. `cancelJoin()` → `notJoined`. `join(token)` replaces the Pending Join. |
+| `member` | In the group. | See [Membership](/docs/integrate/membership) and [Destroy Group](/docs/integrate/destroy-group). |
+
+`status` has two more values, `leaving` and `destroying`. A device reaches them only after it has been a `member`, as the Membership and Destroy Group pages describe.
+
+The pairing window on the admitting device is separate from `status`. It is open from `startPairing()` until `accept(request)` succeeds, `cancelPairing()` runs, or the app restarts.
+
+## Failure and restart
+
+| What happens | Result |
+|---|---|
+| The joining device restarts while pending | The Pending Join survives. The library doesn't send a second join request on restart; the outbox keeps retrying the first one until the relay accepts it. |
+| The admitting app restarts, or calls `cancelPairing()` | The window closes and its Pairing Secret is spent. Pending requests are forgotten, since they live in memory only. A join request that arrives later under that secret is dropped. |
+| The joining device holds a token from a closed window | It stays in `pendingJoin` and nothing arrives. Its app calls `cancelJoin()`, or the user scans a new token and the app calls `join(token)` again. |
+| The admitting user never accepts | The joining device gets no reply. Same as above. |
+| A Group Manifest arrives that the token's key didn't sign, or that leaves this device out | The library drops it and keeps the Pending Join. |
+| The joining device crashes during `join(token)` | Before the write completes, the device is still `notJoined`, and the app calls `join(token)` again. After it, the device is `pendingJoin`. |
+| The joining device crashes while storing the manifest | The relay delivers the manifest again, because the device hadn't acknowledged it. |
+| The admitting device crashes before `accept(request)` completes | The window is lost and no one joined. The joining device stays pending until its app cancels or the user scans a new token. |
+| The admitting device crashes after `accept(request)` completes | The outbox sends the queued manifest after restart. |
+
+A Pending Join with no answer stays pending forever. Give the user a way out, such as a cancel button that calls `cancelJoin()`.
+
+## What stays your app's job
+
+- Showing the token, and keeping the pairing screen open while the user scans it.
+- Confirming the device. Anyone who sees the Pairing Token while the window is open can send a join request with it. The `name` in a request is a label the joining device chose, so it doesn't prove which device sent it. Your app should ask the user to confirm that the request comes from the device in front of them before it calls `accept(request)`.
+- Closing the window with `cancelPairing()` when the user leaves the pairing screen.
+- A way to cancel a Pending Join.
+- History. A new member receives only the messages other members send after they learn it joined. If it needs earlier data, your app sends it.
+
+TrueSeal has no short authentication string, so the two screens never show a matching code to compare. Pairing relies on the token being seen only by the people in the room.

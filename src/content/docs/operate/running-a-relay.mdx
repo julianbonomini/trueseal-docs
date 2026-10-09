@@ -1,0 +1,128 @@
+---
+title: Running a relay
+description: Run trueseal-relay on one Docker host from an exact image tag, check it with /healthz, read its logs, and upgrade it without losing queued messages.
+---
+import Fact from '../../../components/mdx/Fact.astro';
+import { Code } from 'astro:components';
+import { codeTheme } from '../../../config/shiki';
+import { factText } from '../../../facts/facts';
+
+export const receive = factText('defaultReceivePort').text;
+export const push = factText('defaultPushPort').text;
+export const compose = `# docker-compose.yml
+services:
+  relay:
+    image: ghcr.io/julianbonomini/trueseal-relay:v0.2.0
+    restart: unless-stopped
+    command: ["-no-config"]
+    ports:
+      - "${receive}:${receive}"
+      - "${push}:${push}"
+    volumes:
+      - relay-data:/data
+    environment:
+      TRUESEAL_RELAY_KEYPAIR_PATH: /data/keypair.hex
+      TRUESEAL_RELAY_STORE_SQLITE_PATH: /data/inbox.db
+
+volumes:
+  relay-data:
+`;
+
+import Callout from '../../../components/mdx/Callout.astro';
+
+# Running a relay
+
+Your app's devices need somewhere to leave messages for each other while one of them is offline. That place is a relay you run. It holds sealed messages until the recipient device connects and confirms it has handled them, or until they expire. It can't read them, but it does see which devices are online, who each message is for, and its size and time.
+
+The Developer Preview supports one way to run it: a single host, the relay in one Docker container, its data in SQLite on a volume. A Postgres backend and a cluster setup sit in the relay repo as experimental, and nothing on this page applies to them.
+
+## Start it
+
+Pin the image to an exact version. A floating tag can bring in a release with a newer Store Version or Transport Version the next time anyone pulls the image, and you want that to happen when you choose.
+
+<Code lang="yaml" theme={codeTheme} code={compose} />
+
+{/* TODO: v0.2.0 is the first preview relay version in the release spec and is not released yet. Take the tag from the Compatibility Table, or Shared Facts, once the relay ships. */}
+
+```bash
+docker compose up -d
+```
+
+On its first start the container writes a new keypair to `/data/keypair.hex` and prints the public key. [Relay Address and keypair](/docs/operate/relay-address-and-keypair) explains how to give it to your app.
+
+`-no-config` makes the relay take every setting from `TRUESEAL_RELAY_*` environment variables, so no config file needs mounting.
+
+## Ports
+
+| Port | Used for | Open to |
+|---|---|---|
+| <Fact id="defaultReceivePort" /> | Receive Sessions, where a device holds a connection open to collect its messages | The internet |
+| <Fact id="defaultPushPort" /> | Push Sessions, where a device drops off messages for other devices | The internet |
+| 7702 | `/healthz` | The host only. Leave it unpublished. |
+
+Devices always connect to the relay; the relay never connects out to them. Both ports carry Noise over plain TCP, so a proxy in front of them must pass the TCP stream through unchanged.
+
+## Check it's healthy
+
+`/healthz` on port 7702 reads from the store and returns 200 while the store works and 503 when it doesn't. It also reports the relay's Transport Version, and `dev_mode: true` when dev mode is on. The image's Docker `HEALTHCHECK` calls it, so `docker compose ps` shows the result.
+
+{/* TODO: the response body format of /healthz; relay ADR-0012 names its fields but not the format. */}
+
+The relay has no metrics endpoint in the preview.
+
+## Logs
+
+The relay writes its log to standard output, so read it with `docker compose logs relay`. No log viewer ships with it, and the log stays on your host.
+
+In normal mode the log has startup, the listener addresses, the relay's public key, shutdown and errors. No normal-mode line contains an IP address, a key or part of one, a size, a Blob ID, or a time tied to one message.
+
+Dev mode adds detail for debugging the protocol. Turn it on with the `-dev` flag or `TRUESEAL_RELAY_DEV=1`. The relay prints a warning at startup and `/healthz` reports `dev_mode: true`. A dev-mode log may contain key prefixes, sizes and Blob IDs. It never contains message bytes or IP addresses.
+
+<Callout variant="warning">
+Run dev mode only while you debug. Its log ties key prefixes to message sizes and Blob IDs, which normal mode never writes down.
+</Callout>
+
+## What the relay knows about the client
+
+This is the wording to give your users:
+
+> The relay never logs, stores or uses your IP address. The server it runs on still sees the connection, as with any internet service. To hide your IP from the server too, use a VPN or Tor.
+
+The second sentence is about you as the Operator. Your host, your VPS provider and any firewall you add see each connection's source address, and the relay's promise doesn't cover them. The relay's limits are keyed on device keys and recipients, so if you want to limit by IP, do it in your firewall. [Limits and quotas](/docs/operate/limits-and-quotas) has the details, and [How it works](/docs/overview/how-it-works#what-the-relay-sees) lists what the relay does see.
+
+## Stopping
+
+On `SIGTERM`, which `docker compose stop` sends, the relay stops accepting connections and gives pushes it is already writing up to 10 seconds to commit and acknowledge. Then it closes every Receive Session and the store. A message a device hadn't acknowledged stays in the store and is delivered again when the device reconnects, and the device drops the repeat. A device whose push was cut off before the relay acknowledged it sends the push again.
+
+## Upgrading
+
+Check [Upgrade Notes](/docs/operate/upgrade-notes) for the new release first. Change the tag in `docker-compose.yml`, then:
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+`inbox.db` records the Store Version that wrote it. On start, a newer relay moves an older store forward to its own Store Version in one transaction. If the container stops halfway, the old store is left as it was and the next start tries again. Queued messages survive.
+
+The relay won't start on a store a newer release wrote, or on one it can't move forward. It leaves the store unchanged and writes one log line naming both Store Versions. For a store from a newer release, go back to that release's tag.
+
+### Store Reset releases
+
+A release whose notes declare it a relay Store Reset can't carry your queued messages forward. On such a release the relay refuses to start on an older store until you pass the reset flag. With the flag it deletes every queued message and keeps the keypair, so your app needs no new configuration.
+
+{/* TODO: the reset flag's name; relay ADR-0013 decides the flag but doesn't name it. */}
+
+<Callout variant="danger">
+The reset flag deletes messages the senders believe were delivered, because the relay already acknowledged them. Senders won't send them again.
+</Callout>
+
+A release that changes the Transport Version needs every device and the relay to upgrade together. A device whose library doesn't speak the relay's version keeps its messages queued and reports `relayVersionUnsupported` until your app ships a matching library.
+
+## What stays your job
+
+- Choosing the tag and when to move it.
+- Backing up the keypair once. See [Backups](/docs/operate/backups).
+- Keeping ports <Fact id="defaultReceivePort" /> and <Fact id="defaultPushPort" /> reachable and 7702 private.
+- Any per-IP limiting, at your firewall or reverse proxy.
+- Reading the release notes before an upgrade, and deciding when to pass the reset flag.

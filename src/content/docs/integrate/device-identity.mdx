@@ -1,49 +1,44 @@
 ---
 title: Device Identity
-description: In trueseal, identity is a keypair — generated locally, never registered, never linked to a human.
+description: What a device's identity is in TrueSeal, where it's stored, when it changes, and what it means for your app.
 ---
 
 # Device Identity
 
-In trueseal, identity is a keypair. That's it.
+Your user has a phone and a laptop, both in the same group. To TrueSeal they are two members, each with its own identity, and TrueSeal doesn't know they belong to the same person. A device's identity is two keypairs it generated itself, and nothing else.
 
-A device generates its own identity locally on first launch without talking to anyone. The identity is two keypairs, and as far as the protocol is concerned, those keypairs *are* the device.
+## Two keypairs
 
-## TL;DR
-
-| | |
-|---|---|
-| **What identity is** | Two keypairs (X25519 + Ed25519), generated locally on first launch. |
-| **What it isn't** | A human, an account, portable across devices, recoverable if lost. |
-| **Who knows about it** | Only the devices in your group. The relay never holds your keys. |
-
-## Two keypairs, two roles
-
-| Keypair | Algorithm | Role |
+| Keypair | Algorithm | What it's for |
 |---|---|---|
-| **Noise** | X25519 | Encrypted sessions with the relay, and addressed encryption of blobs. The public key is the device's routing address. |
-| **Signing** | Ed25519 | Signs every envelope. The signing public key is what the Group Manifest tracks as the authoritative identity of a member. |
+| Encryption | X25519 | Other members seal messages to its public key. It is also the device's address on the relay. |
+| Signing | Ed25519 | The device signs every message it sends. The member's `id` and name come from this key. |
 
-Both keypairs are generated locally on first launch and never leave the device. Private keys are never transmitted, never stored on the relay, and never seen by any trueseal infrastructure.
+The library generates both on first use and keeps them in [Session State](/docs/reference/session-state). The library never sends the private keys anywhere. The public keys go to every member in the Group Manifest, and the relay sees the encryption key as the address of the device's Inbox.
 
-The noise public key is fine to share. It's published in the Group Manifest to every member, and the relay sees it as the routing target. Knowing it doesn't grant access to anything — it just lets a sender address an encrypted blob to that device. Only the matching private key can open the blob.
+## No account
 
-## No registration
+No server registers a device or hands out IDs. A device that hasn't paired exists only on itself. The relay learns its encryption key once the device opens a Receive Session or someone sends to it. It gets no name or account with the key.
 
-There's no step where a device tells a central authority "I exist." No server hands out IDs. No account links multiple devices to a person. A device just generates its keypairs. Until it pairs with another device, it exists only locally — the relay has no record, the protocol has no concept of it.
+Your app sees each member as a `Member` with an `id` and a `name`. `me` is this device, and `members` lists every other member. The `name` is a two-word label derived from the signing key, such as `SwiftFox`. Show it, but don't use it to decide who to trust, because anyone can generate keys until their name matches a real device's.
 
-Any registration system would force a server to know about your device, which puts the trust problem right back in the middle of the stack we built to avoid it.
+## When the identity changes
 
-## Identity persistence
+A device keeps its identity across restarts, crashes and app updates. It gets a new one, and loses its group with the old one, in four cases:
 
-The keypairs are the device's persistent identity. They live in the local Session State managed by trueseal-sync — an embedded SQLite database on the device — and they survive process restarts, crashes, and OS kills.
+- another member removes it;
+- it leaves the group;
+- it destroys the group, or receives a Destroy Group from another member;
+- an upgrade can't migrate its Session State, and the library resets the store.
 
-If that Session State gets wiped, on purpose or by accident, the device loses its identity. From the group's point of view, it's a new, unknown device. To rejoin any group it used to be in, it has to pair again.
+Each time, the library wipes the namespace, generates new keypairs and reports `statusChanged(notJoined, reason)`, with `removed`, `left`, `destroyed` or `storeReset` as the reason. Your `TrueSeal` object stays usable and can pair again. To the other devices it is then a new device, with a new `id`.
 
-## What identity is not
+## What stays your app's job
 
-**Not a human.** One person can have many devices, each with its own keypair. The protocol treats them as separate participants. Mapping devices to humans is the caller's job.
+- Mapping devices to people. One person with three devices is three members.
+- Telling the user that a lost device can't be recovered. TrueSeal keeps no backup of the keys and has no way to move them to a new device; the new device pairs as a new member.
+- Labelling devices if two-word names aren't enough, inside your own messages.
 
-**Not portable.** Private keys don't leave the device. You can't "log in" from another device. New phone, new device, fresh pairing.
+## Where the keys are kept
 
-**Not recoverable.** No password reset. No seed phrase. No recovery flow. If a private key is gone, that identity is gone with it. The device can come back as a new member of a group, but it can't get its old identity back.
+In the preview, the keys sit in Session State protected only by file permissions and, where the platform has one, the app sandbox. They aren't in the Keychain or Keystore, and the database isn't encrypted. Both are required before 1.0. [Developer preview](/docs/overview/developer-preview) lists what the preview does and doesn't promise.

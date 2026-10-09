@@ -49,7 +49,7 @@ Every envelope is signed by the sender's Ed25519 signing key. The signature cove
 
 **Sender binding.** The sender's `author_pub` lives inside the encrypted payload. When the recipient decrypts, they pull `author_pub` out and check the signature against it. Device B can't pretend to be device A: if B encrypts a payload and labels it as A's, the signature was made with B's key, so verification fails.
 
-After signature verification, the sender is checked against the current Group Manifest. Anything from a key that isn't a member gets discarded. The manifest is the authoritative trusted-device list — see [Sync Groups](/docs/integrate/sync-groups) for how it's managed.
+After signature verification, the sender is checked against the current Group Manifest. Anything from a key that isn't a member gets discarded. The manifest is the authoritative trusted-device list — see [Membership](/docs/integrate/membership) for how it's managed.
 
 ## What encryption doesn't cover
 

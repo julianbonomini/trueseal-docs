@@ -1,0 +1,23 @@
+---
+title: Upgrade Notes
+description: The two fixed labels for breaking releases, what each requires, and every breaking release with its upgrade steps, newest first.
+---
+
+# Upgrade Notes
+
+This page lists breaking TrueSeal releases as trueseal-sync ADR-0033 requires. Every breaking `0.x` release carries a "Breaking" section with upgrade steps, published in the changelog, on the GitHub Release and here. A release with no entry breaks nothing.
+
+## Fixed labels
+
+Use these strings verbatim when reporting or searching for these breaks.
+
+| Label | Release changes | Required action |
+|---|---|---|
+| "every device and the relay must upgrade together" | The Transport Version or the End-to-End Version (ADR-0022). | Upgrade the relay and every device. Across a Transport Version bump, mismatched clients get `relayVersionUnsupported{min, max}`. Across an End-to-End Version bump, peers raise `heldForUpgrade(version)` or `unreadable(senderOutdated)`. |
+| "local data is wiped and every group must pair again" | A Store Reset (ADR-0032). | Expect `statusChanged(notJoined, storeReset)` on every upgraded device, then pair again. See [Upgrades](/agents/upgrades). |
+
+## Breaking releases
+
+None yet.
+
+{/* TODO: one "### X.Y.Z" entry per breaking release, newest first, with the fixed labels that apply and the upgrade steps. Decide whether 0.6.0 gets an entry for the unversioned stores ADR-0032 resets. */}

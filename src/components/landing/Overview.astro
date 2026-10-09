@@ -4,32 +4,41 @@ import LandingSection from './LandingSection.astro';
 
 interface ComparisonRow {
   feature: string;
-  ownBackend: string;
   libsodium: string;
   cloudKit: string;
   trueSeal: string;
 }
 
+// Every cell has a dated primary source in brand/91_EVIDENCE.md. Change a cell there first.
 const rows: ComparisonRow[] = [
-  // TODO: brandbook section 10. Check every cell in this row against the threat model and Apple's CloudKit encryption docs.
-  { feature: 'Server can read the data', ownBackend: 'Yes', libsodium: 'No', cloudKit: 'No, for those fields', trueSeal: 'No' },
-  // TODO: brandbook section 10. Check every cell in this row against trueseal-sync's pairing ADRs and Apple's CloudKit sharing docs.
-  { feature: 'Pairing and membership', ownBackend: 'You build it', libsodium: 'You build it', cloudKit: 'Apple ID', trueSeal: 'Included' },
-  // TODO: brandbook section 10. Check every cell in this row against trueseal-sync's outbox ADRs and Apple's CloudKit sync docs.
-  { feature: 'Offline outbox and ordering', ownBackend: 'You build it', libsodium: 'You build it', cloudKit: 'Included', trueSeal: 'Included' },
-  // TODO: brandbook section 10. Check every cell in this row against the shipped SDK repos.
-  { feature: 'Platforms', ownBackend: 'Any', libsodium: 'Any', cloudKit: 'Apple', trueSeal: 'Swift, Kotlin, TypeScript' },
-  // TODO: brandbook section 10. Check every cell in this row against the self-hosting guide (relay ADR-0012).
-  { feature: 'Runs on your own server', ownBackend: 'Yes', libsodium: 'Yes', cloudKit: 'No', trueSeal: 'Yes' },
-  // TODO: brandbook section 10. Check every cell in this row against the developer-preview release spec.
-  { feature: 'Ready for production', ownBackend: 'Yours to judge', libsodium: 'Yours to judge', cloudKit: 'Yes', trueSeal: "Not yet. It's a preview." },
+  {
+    feature: 'Server can read the data',
+    libsodium: 'No',
+    cloudKit: 'Not those fields, if the user turned on Advanced Data Protection',
+    trueSeal: 'No',
+  },
+  {
+    feature: 'Pairing and membership',
+    libsodium: 'You build it',
+    cloudKit: 'iCloud sharing, an iCloud account each',
+    trueSeal: 'Included',
+  },
+  { feature: 'Offline outbox', libsodium: 'You build it', cloudKit: 'Included, with CKSyncEngine', trueSeal: 'Included' },
+  { feature: 'Platforms', libsodium: 'Any', cloudKit: 'Apple platforms', trueSeal: 'Swift, Kotlin, TypeScript' },
+  { feature: 'Runs on your own server', libsodium: 'Yes, you write the server', cloudKit: 'No', trueSeal: 'Yes' },
+  {
+    feature: 'Ready for production',
+    libsodium: 'The library is stable. Your protocol is yours to judge.',
+    cloudKit: 'Yes',
+    trueSeal: "Not yet. It's a preview.",
+  },
 ];
 ---
 
 <LandingSection
   id="overview"
   heading="Private sync usually turns into a protocol project."
-  docs={{ href: '/docs/overview/introduction', label: 'Read the overview' }}
+  docs={{ href: '/docs/overview/what-trueseal-is', label: 'Read the overview' }}
 >
   <Fragment slot="aside">
     <p>
@@ -45,7 +54,6 @@ const rows: ComparisonRow[] = [
       <thead>
         <tr>
           <th scope="col"><span class="visually-hidden">Feature</span></th>
-          <th scope="col">Your own backend</th>
           <th scope="col">libsodium and your own pairing</th>
           <th scope="col">CloudKit encrypted fields</th>
           <th scope="col" class="compare__us">TrueSeal</th>
@@ -56,7 +64,6 @@ const rows: ComparisonRow[] = [
           rows.map(row => (
             <tr>
               <th scope="row">{row.feature}</th>
-              <td>{row.ownBackend}</td>
               <td>{row.libsodium}</td>
               <td>{row.cloudKit}</td>
               <td class="compare__us">{row.trueSeal}</td>
@@ -75,7 +82,7 @@ const rows: ComparisonRow[] = [
 
   .compare__table {
     width: 100%;
-    min-width: 760px;
+    min-width: 640px;
     border-collapse: collapse;
     font-size: 15px;
   }

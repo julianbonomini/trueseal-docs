@@ -9,15 +9,9 @@ const root = join(import.meta.dir, '..');
 const known = knownReferences(dist);
 const fixtures = 'tests/fixtures/references';
 
-// Today's API names on Human Docs pages written before ADR-0028; the preview-pages Goal rewrites them. Remove each entry then.
-const pending = new Set([
-  ...[
-    'session.publish()', 'onMemberJoined', 'removeMember', 'onRemovedFromGroup', 'onGroupDestroyed', 'session.pairingToken()',
-    'acceptRequest()', 'onMemberRequest', 'senderNoisePub', 'onMemberJoined(id, name)', 'onMemberLeft(id, name)',
-  ].map(name => `src/content/docs/integrate/integrating-trueseal-sync.mdx: ${name}`),
-  'src/content/docs/integrate/delivery-guarantees.mdx: onMemberJoined',
-  'src/content/docs/reference/trueseal-sync.mdx: onMemberJoined',
-]);
+// Names a page may cite before they exist. Every page written before ADR-0028 has been rewritten; add an entry only
+// while a fix is in flight.
+const pending = new Set<string>();
 
 describe('the broken fixtures', () => {
   test.each([

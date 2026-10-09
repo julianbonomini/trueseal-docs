@@ -48,7 +48,7 @@ describe('Docs / Agent Docs switch', () => {
       expect({ path, links }).toEqual({
         path,
         links: [
-          { href: '/docs/overview/introduction', label: 'Docs', current: path.startsWith('/docs') },
+          { href: '/docs/overview/what-trueseal-is', label: 'Docs', current: path.startsWith('/docs') },
           { href: '/agents/', label: 'Agent Docs', current: path.startsWith('/agents') },
         ],
       });
