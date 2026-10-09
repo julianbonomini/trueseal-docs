@@ -40,3 +40,6 @@
 /docs/integrate/sync-groups
 /docs/integrate/revocation
 /docs/integrate/delivery-guarantees
+/docs/operate/deploying
+/docs/operate/trueseal-relay
+/docs/operate/inbox-and-ttl

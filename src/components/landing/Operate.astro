@@ -10,7 +10,7 @@ import LandingSection from './LandingSection.astro';
 <LandingSection
   id="operate"
   heading="A relay in one container."
-  docs={{ href: '/docs/operate/deploying', label: 'Run a relay' }}
+  docs={{ href: '/docs/operate/running-a-relay', label: 'Run a relay' }}
 >
   <p>
     The relay holds sealed bytes for devices that are offline, which in most families means Dad's phone. It drops them
@@ -19,7 +19,7 @@ import LandingSection from './LandingSection.astro';
 
   <pre
     slot="aside"
-    class="terminal"><span class="terminal__dim">$</span> docker run -v trueseal:/data -p 7700:7700 -p 7701:7701 ghcr.io/julianbonomini/trueseal-relay:0.2.0
+    class="terminal"><span class="terminal__dim">$</span> docker run -v trueseal:/data -p 7700:7700 -p 7701:7701 ghcr.io/julianbonomini/trueseal-relay:v0.2.0
 <span class="terminal__dim">relay address  trueseal://9f2c…e41a@localhost</span></pre>
 </LandingSection>
 

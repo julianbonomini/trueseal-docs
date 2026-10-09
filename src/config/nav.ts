@@ -48,9 +48,10 @@ export const docsNav: NavSection[] = [
   {
     title: 'Operate',
     items: [
-      { title: 'Deploying',      slug: 'operate/deploying' },
-      { title: 'trueseal-relay', slug: 'operate/trueseal-relay' },
-      { title: 'Inbox & TTL',    slug: 'operate/inbox-and-ttl' },
+      { title: 'Running a relay',            slug: 'operate/running-a-relay' },
+      { title: 'Relay Address and keypair',  slug: 'operate/relay-address-and-keypair' },
+      { title: 'Limits and quotas',          slug: 'operate/limits-and-quotas' },
+      { title: 'Backups',                    slug: 'operate/backups' },
     ],
   },
   {

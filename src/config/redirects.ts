@@ -6,7 +6,7 @@
  *  no trailing slash. Passed to Astro's `redirects`; a target is always a built page, never another key. */
 export const redirects: Record<string, string> = {
   '/docs': '/docs/overview/what-trueseal-is',
-  '/relay': '/docs/operate/deploying',
+  '/relay': '/docs/operate/running-a-relay',
   '/showcase': '/',
 
   '/docs/introduction':              '/docs/overview/what-trueseal-is',
@@ -30,9 +30,12 @@ export const redirects: Record<string, string> = {
   '/docs/components/trueseal-sync/delivery-guarantees': '/docs/integrate/sending-and-receiving',
   '/docs/integrate/delivery-guarantees':                '/docs/integrate/sending-and-receiving',
 
-  '/docs/components/trueseal-relay/deploying':     '/docs/operate/deploying',
-  '/docs/components/trueseal-relay/overview':      '/docs/operate/trueseal-relay',
-  '/docs/components/trueseal-relay/inbox-and-ttl': '/docs/operate/inbox-and-ttl',
+  '/docs/components/trueseal-relay/deploying':     '/docs/operate/running-a-relay',
+  '/docs/components/trueseal-relay/overview':      '/docs/operate/running-a-relay',
+  '/docs/components/trueseal-relay/inbox-and-ttl': '/docs/operate/limits-and-quotas',
+  '/docs/operate/deploying':                       '/docs/operate/running-a-relay',
+  '/docs/operate/trueseal-relay':                  '/docs/operate/running-a-relay',
+  '/docs/operate/inbox-and-ttl':                   '/docs/operate/limits-and-quotas',
 
   '/docs/concepts/zero-trust-and-encryption': '/docs/trust/zero-trust-and-encryption',
   '/docs/concepts/the-dumb-relay':            '/docs/trust/the-dumb-relay',

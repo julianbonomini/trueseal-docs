@@ -15,7 +15,7 @@ test('placeOf gives the first page its section and only a next link', () => {
 
 test('previous and next cross section boundaries', () => {
   expect(placeOf('integrate/sdks')?.prev?.href).toBe('/docs/overview/license');
-  expect(placeOf('integrate/delivery-issues')?.next?.href).toBe('/docs/operate/deploying');
+  expect(placeOf('integrate/delivery-issues')?.next?.href).toBe('/docs/operate/running-a-relay');
 });
 
 test('children follow their parent in reading order, in its section', () => {

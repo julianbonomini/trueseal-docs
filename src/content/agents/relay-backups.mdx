@@ -1,0 +1,29 @@
+---
+title: Relay backups
+description: What to back up on a relay, the cost of losing the keypair or inbox.db, how to restore each, and why an older inbox snapshot is safe to restore.
+---
+
+# Relay backups
+
+This page states relay backup and restore in the Developer Preview as trueseal-relay ADR-0012 decides it.
+
+## Files on the volume
+
+| File | Role | Back up |
+|---|---|---|
+| `/data/keypair.hex` | The relay identity | Required, once |
+| `/data/inbox.db` | A buffer of undelivered Blobs, SQLite in WAL mode | Optional |
+
+## Keypair
+
+- Back it up once: `docker compose cp relay:/data/keypair.hex ./keypair.hex`.
+- Losing it means reconfiguring every client: a new key and a new Relay Address in a new app release. The preview has no key rotation.
+- Restore by setting `TRUESEAL_RELAY_KEYPAIR_HEX` to the file's contents, or by placing the file at `/data/keypair.hex` before the first start.
+- A copy of the private key lets its holder impersonate the relay. See [Relay Address and keypair](/agents/relay-address-and-keypair).
+
+## `inbox.db`
+
+- Losing it loses only undelivered Blobs. Senders don't resend them, because the relay already acked their pushes. Neither device is told.
+- Back it up with SQLite's online `.backup`. Copying the file while the relay runs is unsafe in WAL mode.{/* TODO: an exact .backup command; the relay image has no sqlite3 binary. */}
+- Restoring an older snapshot is safe. Already-delivered Blobs return and are delivered again. Clients drop them: a Blob inside the 60-day Replay Window hits its dedup record, and an older one is rejected by the window (trueseal-sync ADR-0031, ADR-0034).
+- A snapshot from a newer relay release is refused at start with a log line naming both Store Versions (trueseal-relay ADR-0013).

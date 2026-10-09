@@ -1,0 +1,51 @@
+---
+title: Relay Address and keypair
+description: The relay's keypair, how to read its public key and Relay Address, how to bring your own key, and why the key can't change.
+---
+
+# Relay Address and keypair
+
+Your app has to know which relay to connect to, and it has to be sure it's talking to that relay and not to something sitting in between. The Relay Address carries both: where the relay is, and the public half of its keypair. Every device checks the relay's key when it connects.
+
+## The keypair
+
+The relay's identity is one X25519 keypair. On the first start the container generates it, writes the private key as hex to `/data/keypair.hex` with mode `0600`, and prints the public key.
+
+To print the public key later:
+
+```bash
+docker compose exec relay trueseal-relay pubkey
+```
+
+To bring a key you generated elsewhere, set `TRUESEAL_RELAY_KEYPAIR_HEX` to the hex private key. The container writes it to the keypair path on start, in place of generating one.
+
+## The Relay Address
+
+The Relay Address is one string your app passes to `open()`:
+
+```
+trueseal://<relay public key hex>@host[:receivePort][?push=pushPort]
+```
+
+The receive port defaults to 7700 and the push port to 7701, so a relay on the default ports needs neither. The relay's CLI prints its Relay Address.
+
+{/* TODO: the name of the relay CLI command that prints the Relay Address; trueseal-sync ADR-0028 decides the command exists but doesn't name it. */}
+{/* TODO: render the Relay Address format from Shared Facts once the agent-docs Goal is merged. */}
+
+Ship the address with your app, for example as a build-time constant. The SDKs also take a typed `RelayAddress(host, publicKey, receivePort, pushPort)` if you'd rather build it from parts.
+
+## The key can't change
+
+The preview has no way to rotate the relay key. Changing it breaks every installed copy of your app that has the old Relay Address, because each device refuses a relay whose key doesn't match. Treat the first key as permanent and back it up once (see [Backups](/docs/operate/backups)).
+
+## If the private key leaks
+
+Someone holding the private key can pose as your relay to any device that reaches them instead of your server. They can't read messages, because each one is sealed end to end. They can't change or re-address one either, because its signature is sealed inside it. They can see what your relay sees (device keys, online times, recipients, sizes and timing), and they can hold back messages so they never arrive. [The Dumb Relay](/docs/trust/the-dumb-relay) has the full list of what the relay sees.
+
+Since the key can't rotate in the preview, recovering from a leak means a new key and a new Relay Address in a new release of your app.
+
+## What stays your job
+
+- Getting the Relay Address into your app.
+- Backing up `keypair.hex` and keeping it private.
+- Never editing or replacing the key on a relay your users depend on.

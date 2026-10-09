@@ -1,0 +1,119 @@
+---
+title: Running a relay
+description: The one supported relay deployment, the pinned image, ports, /healthz, normal and dev logging, the IP wording, shutdown, Store Version migration and the reset flag.
+---
+
+# Running a relay
+
+This page states relay operation in the Developer Preview as trueseal-relay ADR-0012 and ADR-0013 decide it. Limits are on [Relay limits and quotas](/agents/relay-limits-and-quotas), the key and Relay Address on [Relay Address and keypair](/agents/relay-address-and-keypair), backups on [Relay backups](/agents/relay-backups).
+
+## Supported deployment
+
+- Exactly one: a single Node on SQLite, in one Docker container.
+- Postgres, the cluster compose file and HAProxy are experimental and unsupported.
+- No hosted public relay exists in the preview.
+
+## Image
+
+- `ghcr.io/julianbonomini/trueseal-relay:v0.2.0`{/* TODO: v0.2.0 is the first preview relay version in the release spec and is not released yet; take the tag from the Compatibility Table or Shared Facts once it ships. */}
+- Always pin an exact version tag. A floating tag can move the Store Version or the Transport Version on the next image pull.
+
+```yaml
+services:
+  relay:
+    image: ghcr.io/julianbonomini/trueseal-relay:v0.2.0
+    restart: unless-stopped
+    command: ["-no-config"]
+    ports:
+      - "7700:7700"
+      - "7701:7701"
+    volumes:
+      - relay-data:/data
+    environment:
+      TRUESEAL_RELAY_KEYPAIR_PATH: /data/keypair.hex
+      TRUESEAL_RELAY_STORE_SQLITE_PATH: /data/inbox.db
+
+volumes:
+  relay-data:
+```
+
+- `-no-config` reads every setting from `TRUESEAL_RELAY_*` environment variables.
+- On first start the entrypoint generates `/data/keypair.hex` (mode 0600) and prints the public key.
+
+## Ports
+
+| Port | Purpose | Exposure |
+|---|---|---|
+| 7700 | Receive Sessions (Noise XX) | Public |
+| 7701 | Push Sessions (Noise NK) | Public |
+| 7702 | `/healthz` | Unpublished; used by the Docker `HEALTHCHECK` |
+
+- Noise over plain TCP. A proxy in front must pass TCP through unchanged.
+- The relay never opens outbound connections to devices.
+
+## `/healthz`
+
+- Performs a cheap read against the store.
+- 200 while the store is usable; 503 when it isn't.
+- Reports the relay's Transport Version.
+- Reports `dev_mode: true` in dev mode.
+- {/* TODO: the response body format. */}
+- There is no metrics endpoint in the preview.
+
+## Logging
+
+| Mode | Enabled by | May log | Never logs |
+|---|---|---|---|
+| Normal | Default | Startup, listener addresses, the relay public key, shutdown, errors | IP addresses, keys or key prefixes, sizes, Blob IDs, per-message timestamps, any per-client or per-message field |
+| Dev | `-dev` or `TRUESEAL_RELAY_DEV=1` | Key prefixes, sizes, Blob IDs | Payload bytes, IP addresses |
+
+- Dev mode prints a startup warning.
+- Logs go to standard output. No log viewer ships. Logs are private to the Operator.
+
+## IP addresses
+
+- The relay never logs, stores or uses a client's IP address, in any mode. No limit is keyed on one.
+- The host OS, the VPS provider and any firewall still see each connection's source address.
+- Per-IP limiting belongs at the Operator's firewall or reverse proxy.
+- Public wording, verbatim. Never write that the relay "can't see" IPs:
+
+> The relay never logs, stores or uses your IP address. The server it runs on still sees the connection, as with any internet service. To hide your IP from the server too, use a VPN or Tor.
+
+## Shutdown
+
+On `SIGTERM`:
+
+1. Stop accepting connections on every listener.
+2. Let pushes already writing commit and send their Ack, for at most 10 s.
+3. Cancel every Receive Session. Unacked Blobs stay in their Inbox and are redelivered on reconnect; client dedup drops the repeat.
+4. Close the store.
+
+A push cut off before its Ack is retried by the sender.
+
+## Store Version and upgrades
+
+- Upgrade by changing the image tag, then `docker compose pull` and `docker compose up -d`.
+- `inbox.db` records the Store Version that wrote it.
+- On start, the relay migrates any older preview Store Version forward in one transaction. A crash leaves the old store intact; the next start retries. Queued Blobs survive.
+- A store written by a newer release, or one the relay can't migrate, makes the relay refuse to start. The store is left unchanged. One log line names both Store Versions; it carries no client metadata.
+
+## Store Reset and the reset flag
+
+- A release may declare itself a relay Store Reset in its release notes.
+- On that release the relay refuses to start on an older store until the Operator passes the reset flag.{/* TODO: the reset flag's name; ADR-0013 doesn't name it. */}
+- With the flag, it drops every inbox and keeps the keypair. Clients need no reconfiguration.
+- The flag is honoured only on a declared Store Reset release.
+- Dropped Blobs are lost silently. Senders don't resend, because the relay already acked them.
+
+## Transport Version
+
+- A Transport Version change needs every device and the relay to upgrade together.
+- A client that doesn't speak the relay's Transport Version gets `connection = relayVersionUnsupported{min, max}` and keeps its outbox queued (trueseal-sync ADR-0026).
+
+## Operator's job
+
+- Choosing and moving the pinned tag.
+- Backing up the keypair.
+- Keeping 7700 and 7701 reachable and 7702 private.
+- Per-IP limits, outside the relay.
+- Reading release notes before upgrading, and deciding when to pass the reset flag.

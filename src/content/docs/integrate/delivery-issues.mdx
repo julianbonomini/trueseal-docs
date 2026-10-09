@@ -53,7 +53,7 @@ These are thrown by the call, before anything enters the outbox, so they never a
 
 ## What isn't reported
 
-- A message that waits on the relay longer than its TTL, 30 days by default{/* TODO: Shared Fact relayTtlDefault */}, is deleted by the relay. The sender saw the relay accept it, and the recipient never sees it, so neither device gets an issue. See [Inbox and TTL](/docs/operate/inbox-and-ttl).
+- A message that waits on the relay longer than its TTL, 30 days by default{/* TODO: Shared Fact relayTtlDefault */}, is deleted by the relay. The sender saw the relay accept it, and the recipient never sees it, so neither device gets an issue. See [Limits and quotas](/docs/operate/limits-and-quotas).
 - A duplicate is dropped without an issue.
 - Messages a device hadn't sent when it was removed, or when its group was destroyed, are dropped without an issue. See [Membership](/docs/integrate/membership) and [Destroy Group](/docs/integrate/destroy-group).
 

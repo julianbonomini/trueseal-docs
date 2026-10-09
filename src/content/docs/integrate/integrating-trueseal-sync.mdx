@@ -53,13 +53,13 @@ Don't try to re-derive the name or ID in your app. Use what the SDK exposes so e
 
 ## Pointing at a relay
 
-The SDK takes two values at construction time: a **relay URL** and the **relay's public key** (32 bytes). Both come from whoever runs the relay — yourself, a friend, or the public hosted relay. {/* TODO: the preview-pages Goal links the Relay Address page here once it exists. */}
+`open()` takes a Relay Address, one string holding the relay's host, ports and public key. You get it from whoever runs the relay, which in the preview is you or someone you trust, because there is no hosted public relay. See [Relay Address and keypair](/docs/operate/relay-address-and-keypair).
 
-The public key is a build-time constant. Bake it in. Don't make it user-configurable. The Noise XX handshake uses it to verify you're talking to the right relay before any data moves.
+Ship the Relay Address as a build-time constant, and keep it out of user settings. The handshake uses it to verify you're talking to the right relay before any data moves.
 
 **Relay being offline is a no-op for you.** If the relay is unreachable at launch or drops mid-session, the SDK queues outbound messages in the local outbox and reconnects on its own. **Don't write any reconnect logic.** Show a connection indicator and otherwise do nothing.
 
-For the operator-side view — deploying a relay, generating its keypair, configuring TTL — see [Deploying](/docs/operate/deploying).
+To run the relay yourself, see [Running a relay](/docs/operate/running-a-relay).
 
 ## Session lifecycle
 
