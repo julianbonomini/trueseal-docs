@@ -11,7 +11,7 @@ The Inbox is the relay's storage unit. Every device has one — a set of blobs a
 
 Four operations:
 
-**Put** — store a blob for a recipient. The blob is persisted durably *before* the relay sends an Ack. A relay that crashes between Put and Ack leaves the sender uncertain, so the client's outbox replays it on reconnect. Put never deduplicates: if the same blob arrives twice, both copies are stored. Public SDKs attach the same stable Message ID to both deliveries so applications can process them idempotently.
+**Put** — store a blob for a recipient. The blob is persisted durably *before* the relay sends an Ack. A relay that crashes between Put and Ack leaves the sender uncertain, so the client's outbox replays it on reconnect. Put never deduplicates: if the same blob arrives twice, both copies are stored. Both copies carry the same Message ID, and the library drops a copy it has already handled.
 
 **Flush** — fetch all blobs for a recipient without deleting them. Returns blobs in insertion order (FIFO). They stay in the store until a DeliverAck is received for each.
 
@@ -40,4 +40,4 @@ Every blob has a TTL set at Put time. When it expires, the blob becomes eligible
 
 Default TTL is 30 days, deliberately generous. Reaping is a last resort for permanently offline or abandoned devices, not routine housekeeping. Operators with tighter storage budgets can shorten the TTL.
 
-A device that reconnects after its blobs have already been reaped will miss them permanently. A client crash after acknowledging frame receipt but before committing application state is another boundary. Both are documented in [Delivery Guarantees](/docs/integrate/delivery-guarantees).
+A device that reconnects after its blobs have already been reaped will miss them permanently. [Delivery issues](/docs/integrate/delivery-issues) lists what the devices are and aren't told.

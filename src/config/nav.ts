@@ -41,7 +41,8 @@ export const docsNav: NavSection[] = [
       { title: 'Pairing',                   slug: 'integrate/pairing' },
       { title: 'Membership',                slug: 'integrate/membership' },
       { title: 'Destroy Group',             slug: 'integrate/destroy-group' },
-      { title: 'Delivery Guarantees',       slug: 'integrate/delivery-guarantees' },
+      { title: 'Sending and receiving',     slug: 'integrate/sending-and-receiving' },
+      { title: 'Delivery issues',           slug: 'integrate/delivery-issues' },
     ],
   },
   {

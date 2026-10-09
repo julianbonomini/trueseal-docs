@@ -17,7 +17,7 @@ The SDK does the parts of private sync that every app would otherwise build by h
 - Membership. Any member can admit, remove or leave, and every device ends up with the same member list. See [Membership](/docs/integrate/membership).
 - End-to-end encrypted delivery. Each message is sealed separately to each member's key before it leaves the device.
 - An offline outbox. `send()` writes the message to a local outbox and returns. The SDK delivers it when the relay is reachable, including after a restart.
-- Deduplication and ordering. Messages from one device reach your handler in the order that device sent them, and the SDK drops duplicates before your handler sees them. See [Delivery Guarantees](/docs/integrate/delivery-guarantees).
+- Deduplication and ordering. Messages from one device reach your handler in the order that device sent them, and the SDK drops duplicates before your handler sees them. See [Sending and receiving](/docs/integrate/sending-and-receiving).
 
 The same API, with the same names and the same error cases, covers all three languages. Each SDK wraps one shared core written in Rust.
 

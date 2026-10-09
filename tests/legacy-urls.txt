@@ -39,3 +39,4 @@
 /docs/overview/principles-and-boundaries
 /docs/integrate/sync-groups
 /docs/integrate/revocation
+/docs/integrate/delivery-guarantees

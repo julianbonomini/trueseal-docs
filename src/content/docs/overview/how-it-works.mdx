@@ -126,7 +126,7 @@ Admission is explicit on both sides. The admitting user accepts one request, and
 3. The SDK drops a message it has already handled, then runs your message handler with the bytes, the sender and the Message ID.
 4. Only after your handler finishes does the SDK acknowledge the message, and only then does the relay delete it. If the app crashes inside the handler, the relay delivers the message again.
 
-A message waits in the relay's Inbox until your phone takes it or its TTL runs out. [Delivery Guarantees](/docs/integrate/delivery-guarantees) has the exact promise and its exceptions.
+A message waits in the relay's Inbox until your phone takes it or its TTL runs out. [Sending and receiving](/docs/integrate/sending-and-receiving) has the exact promise, and [Delivery issues](/docs/integrate/delivery-issues) its exceptions.
 
 ## What the relay sees
 

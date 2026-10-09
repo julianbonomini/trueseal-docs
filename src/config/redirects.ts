@@ -27,7 +27,8 @@ export const redirects: Record<string, string> = {
   '/docs/concepts/revocation':                          '/docs/integrate/destroy-group',
   '/docs/integrate/sync-groups':                        '/docs/integrate/membership',
   '/docs/integrate/revocation':                         '/docs/integrate/destroy-group',
-  '/docs/components/trueseal-sync/delivery-guarantees': '/docs/integrate/delivery-guarantees',
+  '/docs/components/trueseal-sync/delivery-guarantees': '/docs/integrate/sending-and-receiving',
+  '/docs/integrate/delivery-guarantees':                '/docs/integrate/sending-and-receiving',
 
   '/docs/components/trueseal-relay/deploying':     '/docs/operate/deploying',
   '/docs/components/trueseal-relay/overview':      '/docs/operate/trueseal-relay',

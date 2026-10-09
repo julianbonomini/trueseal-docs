@@ -1,0 +1,61 @@
+---
+title: Sending and receiving
+description: What send() does with a message, when the relay may delete it, how often your handler sees it, and the order messages arrive in.
+---
+
+# Sending and receiving
+
+Your user adds a note on their phone and puts the phone in a drawer. The tablet is offline. A week later the tablet comes back online, and the note should appear there once, in the right place among the other notes from that phone, even if the tablet's app crashed halfway through saving it the first time. The library promises that much, and your app writes code for only one case of it, a crash inside the handler.
+
+## The promise
+
+> Messages from one device reach each recipient's handler in the order that device sent them, at least once, within the TTL. A handler runs twice for the same message only if the app crashed while handling it. There is no ordering across different senders.
+
+Two exceptions apply, and [Delivery issues](/docs/integrate/delivery-issues) covers both. A message in a newer protocol version waits on the relay until this device upgrades, and is then handled out of order. A message the sender gave up on leaves a gap.
+
+## Sending
+
+`send(bytes)` takes your message body and returns its Message ID once the message is in the outbox. Your app can call it while the device is offline or still connecting.
+
+- It fails at once with `payloadTooLarge{max}` when the body is over the Protocol Size Limit of 61,440 bytes{/* TODO: Shared Fact protocolSizeLimit */}, or over a lower `maxPayloadBytes` you passed to `open()`. An oversize body never enters the outbox.
+- It fails with `notMember{status}` when `status` isn't `member`.
+- Otherwise it writes one outbox entry per recipient and returns. If the app crashes before the write, `send()` never returned, so your app knows the message wasn't sent.
+
+From the outbox, the library pushes each entry to the relay and deletes it when the relay confirms that it has written the message to disk. When a push fails or the relay refuses it for now, the library retries it with backoff from 1 second up to 5 minutes{/* TODO: Shared Fact retryBackoff */} while the device is connected, and again straight after a reconnect. Entries for one recipient go out in the order you sent them, and a later message never overtakes one that is waiting to be retried.
+
+A message that can't be delivered is removed from the outbox and reported as `sendFailed`. That happens when the relay refuses it for good, or when it is still undelivered 30 days{/* TODO: Shared Fact outboxExpiry */} after `send()`. Pairing, membership and Destroy Group messages use the same outbox and never expire.
+
+## Receiving
+
+Register one message handler with `onMessage(handler)`. Receiving starts when you register it, so no message arrives before your app is ready for it. A second registration fails with `messageHandlerAlreadySet`.
+
+The handler is async, and it receives a `Message` with an `id` (the Message ID), `from` (the member who sent it) and `body` (the bytes passed to `send()`). For each message, the library:
+
+1. Decrypts it, checks the sender's signature, and checks that the sender is a member. A message that fails is acknowledged, dropped and reported as a delivery issue.
+2. Looks the Message ID up in its record of handled messages. A duplicate is acknowledged and dropped without reaching your handler.
+3. Runs your handler and waits for it to finish. Messages are handled one at a time.
+4. Records the Message ID, then sends the acknowledgement that lets the relay delete the message.
+
+Because the acknowledgement waits for your handler, a crash inside the handler leaves the message on the relay. The relay delivers it again on the next connection, and your handler runs again. That is the only way your handler sees a message twice.
+
+If your handler throws, the library runs it again, up to 5 attempts in total{/* TODO: Shared Fact handlerAttempts */}. After the last one it acknowledges and drops the message and reports `handlerGaveUp`. The library sets no timeout. A handler that never finishes stops delivery until the connection ends, so put a timeout in your handler if it calls anything that can hang.
+
+The relay can see how long your handler takes, because the acknowledgement waits for it. The acknowledgement doesn't tell the relay whether a message was handled or dropped, because the library acknowledges every message it can't use as well.
+
+## Duplicates and Message IDs
+
+The Message ID stays the same on every delivery of a message. The library keeps each handled Message ID for at least 60 days{/* TODO: Shared Fact replayWindow */} and drops any message sent more than 60 days ago, so a message never reaches your handler twice unless your app crashed while handling it.
+
+To make that crash case harmless, store `message.id` in the same database transaction as the change your handler makes, and skip a message whose ID you already stored. If your handler's write is idempotent anyway, for example it sets a value rather than adding to one, you don't need to. Don't dedupe by body: two separate sends can carry the same bytes.
+
+## Order
+
+Messages from one device reach your handler in the order that device sent them. Messages from different devices have no order between them. If your data needs one, such as which edit is newest, put it in the message body, for example as a timestamp or a version counter.
+
+## What stays your app's job
+
+- Keeping each message under the size limit. Split large data, or store it elsewhere and send a reference.
+- Making the handler safe to run twice after a crash, by storing `message.id` with its change.
+- Putting a timeout in a handler that can hang.
+- Resolving conflicts when two devices change the same data. TrueSeal delivers each change and doesn't pick a winner.
+- Sending history to a new member. A device receives only messages sent after the other members learn it joined.

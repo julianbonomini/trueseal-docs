@@ -53,9 +53,10 @@ Rust core. UniFFI generates Swift and Kotlin bindings, so iOS and Android get th
 
 ## Going deeper
 
-Four sub-pages with the internals:
+The internals, and the two pages on delivery:
 
 - [Envelopes & Blobs](/docs/reference/envelopes-and-blobs) — wire format and addressed encryption.
 - [Group Manifest](/docs/reference/group-manifest) — membership structure and convergence rules.
 - [Operation Log & Outbox](/docs/reference/operation-log-and-outbox) — durable send record and reconnect replay.
-- [Delivery Guarantees](/docs/integrate/delivery-guarantees) — retry, TTL, duplicates, and the application boundary.
+- [Sending and receiving](/docs/integrate/sending-and-receiving): the delivery promise, retries, duplicates and order.
+- [Delivery issues](/docs/integrate/delivery-issues): what isn't delivered, and what your app does about it.
