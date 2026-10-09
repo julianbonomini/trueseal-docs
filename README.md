@@ -85,6 +85,8 @@ Use `.mdx` when a page needs custom components (flow diagrams, phase breakdowns,
 
 ```
 brand/
+  90_SYNTHESIS.md # The brandbook
+  91_EVIDENCE.md  # Evidence for brandbook section 10 claims and the Landing comparison cells
   mascot/         # Mascot SVG and its PNG exports
 src/
   components/

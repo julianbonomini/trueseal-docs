@@ -1,6 +1,6 @@
 ---
 title: Developer preview
-description: What the TrueSeal developer preview promises and doesn't, how breaking releases are announced, and what must be true before 1.0.
+description: What the TrueSeal Developer Preview promises and doesn't, how breaking releases are announced, and what must be true before 1.0.
 ---
 
 # Developer preview
@@ -40,7 +40,7 @@ Fixes, security fixes included, land only in the next `0.x` release. Nothing is 
 
 ## What must be true before 1.0
 
-1. Identity keys are stored in the Keychain on Apple platforms and the Keystore on Android, and the local store is encrypted at rest. In the preview, the operating system's app sandbox is their only protection on the device.
+1. Identity keys are stored in the Keychain on Apple platforms and the Keystore on Android, and the local store is encrypted at rest. In the preview, they are protected on the device only by file permissions and, where the platform has one, the app sandbox.
 2. The public SDK APIs follow semver, so a breaking change needs a new major version. A check in each SDK's CI compares the API between versions and enforces it.
 3. Stored data on the device and on the relay migrates forward within a major version, with no Store Reset inside a major version.
 4. Each major version speaks exactly one Transport Version and one End-to-End Version, as the preview does. A new protocol version means a new major version.

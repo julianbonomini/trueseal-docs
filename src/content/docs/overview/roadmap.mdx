@@ -11,7 +11,7 @@ TrueSeal is a Developer Preview. It delivers end-to-end encrypted messages betwe
 
 The preview ends when these four things are true, and not before. There is no target date.
 
-1. Identity keys are stored in the Keychain on Apple platforms and the Keystore on Android, and Session State is encrypted at rest. Today both rely on file permissions and, where there is one, the app sandbox.
+1. Identity keys are stored in the Keychain on Apple platforms and the Keystore on Android, and Session State is encrypted at rest. Today both are protected only by file permissions and, where the platform has one, the app sandbox.
 2. The SDK APIs follow semver, so a breaking change needs a new major version. A CI check of each SDK's API enforces it.
 3. Stored data, on devices and on the relay, migrates forward within a major version, with no Store Reset.
 4. Each major version speaks exactly one Transport Version and one End-to-End Version. A protocol change is a new major version.

@@ -2,25 +2,26 @@
 // The Operate part of the Journey: what running a relay takes.
 import LandingSection from './LandingSection.astro';
 
-// TODO: brandbook section 10. "One container", the printed Relay Address and the backup sentence are unchecked against the self-hosting guide (relay ADR-0012).
-// The relay is versioned apart from the SDKs and restarts at 0.2.0, and the docs pin an exact tag (trueseal-sync ADR-0030).
-// Check the tag against the first relay release.
+// "One container" stays out of this copy until someone follows the running-a-relay page on a clean machine
+// (brand/91_EVIDENCE.md). The commands match that page, which pins the image tag in its compose file.
 ---
 
 <LandingSection
   id="operate"
-  heading="A relay in one container."
+  heading="A relay on your own server."
   docs={{ href: '/docs/operate/running-a-relay', label: 'Run a relay' }}
 >
   <p>
     The relay holds sealed bytes for devices that are offline, which in most families means Dad's phone. It drops them
-    once they're delivered or expire. Back up one keypair and one SQLite file.
+    once they're delivered or expire. Back up its keypair once. Its SQLite file only holds messages waiting for
+    delivery, so backing that up is optional.
   </p>
 
   <pre
     slot="aside"
-    class="terminal"><span class="terminal__dim">$</span> docker run -v trueseal:/data -p 7700:7700 -p 7701:7701 ghcr.io/julianbonomini/trueseal-relay:v0.2.0
-<span class="terminal__dim">relay address  trueseal://9f2c…e41a@localhost</span></pre>
+    class="terminal"><span class="terminal__dim">$</span> docker compose up -d
+<span class="terminal__dim">$</span> docker compose logs relay
+<span class="terminal__dim"># the first start prints the relay's public key</span></pre>
 </LandingSection>
 
 <style>

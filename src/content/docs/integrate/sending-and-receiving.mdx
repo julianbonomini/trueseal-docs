@@ -36,7 +36,7 @@ The handler is async, and it receives a `Message` with an `id` (the Message ID),
 3. Runs your handler and waits for it to finish. Messages are handled one at a time.
 4. Records the Message ID, then sends the acknowledgement that lets the relay delete the message.
 
-Because the acknowledgement waits for your handler, a crash inside the handler leaves the message on the relay. The relay delivers it again on the next connection, and your handler runs again. That is the only way your handler sees a message twice.
+Because the acknowledgement waits for your handler, a crash inside the handler leaves the message on the relay. The relay delivers it again on the next connection, and your handler runs again. Apart from the retries after your handler throws, that is the only way your handler sees a message twice.
 
 If your handler throws, the library runs it again, up to 5 attempts in total{/* TODO: Shared Fact handlerAttempts */}. After the last one it acknowledges and drops the message and reports `handlerGaveUp`. The library sets no timeout. A handler that never finishes stops delivery until the connection ends, so put a timeout in your handler if it calls anything that can hang.
 
@@ -44,7 +44,7 @@ The relay can see how long your handler takes, because the acknowledgement waits
 
 ## Duplicates and Message IDs
 
-The Message ID stays the same on every delivery of a message. The library keeps each handled Message ID for at least 60 days{/* TODO: Shared Fact replayWindow */} and drops any message sent more than 60 days ago, so a message never reaches your handler twice unless your app crashed while handling it.
+The Message ID stays the same on every delivery of a message. The library keeps each handled Message ID for at least 60 days{/* TODO: Shared Fact replayWindow */} and drops any message sent more than 60 days ago, so a message never reaches your handler twice unless your app crashed while handling it or your handler threw.
 
 To make that crash case harmless, store `message.id` in the same database transaction as the change your handler makes, and skip a message whose ID you already stored. If your handler's write is idempotent anyway, for example it sets a value rather than adding to one, you don't need to. Don't dedupe by body: two separate sends can carry the same bytes.
 
