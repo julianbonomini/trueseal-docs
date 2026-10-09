@@ -1,0 +1,56 @@
+---
+// Every entry of one SDK API reference section: signature, meaning, values, errors, what to do, and the
+// spelling of each platform that differs. Fails the build when the data names a missing case or fact.
+import { apiSection, type ApiSection } from '../../api/api';
+import FactParts from './FactParts.astro';
+
+interface Props {
+  section: ApiSection;
+}
+const entries = apiSection(Astro.props.section);
+---
+{entries.map(entry => (
+  <section class="api-entry" id={entry.anchor}>
+    <h3>{entry.signature ? <code>{entry.signature}</code> : entry.title}</h3>
+    <p><FactParts parts={entry.meaning} /></p>
+    {entry.values.length > 0 && (
+      <p>Values: {entry.values.map((value, index) => <>{index > 0 && '; '}{value.name}: <FactParts parts={[value.value]} /></>)}.</p>
+    )}
+    {entry.throws.length > 0 && (
+      <p>Fails with {entry.throws.map((error, index) => <>{index > 0 && ', '}<a href={error.href}><code>{error.name}</code></a></>)}.</p>
+    )}
+    {entry.action.length > 0 && <p><strong>What to do.</strong>{' '}<FactParts parts={entry.action} /></p>}
+    {entry.spellings.length > 0 && (
+      <table class="api-entry__spellings">
+        <thead><tr><th>Platform</th><th>Spelling</th></tr></thead>
+        <tbody>{entry.spellings.map(spelling => <tr><td>{spelling.label}</td><td><code>{spelling.code}</code></td></tr>)}</tbody>
+      </table>
+    )}
+  </section>
+))}
+
+<style>
+  .api-entry {
+    border-top: 1px solid var(--rule);
+    padding-top: var(--space-md);
+    margin-top: var(--space-xl);
+  }
+
+  .api-entry h3 {
+    margin-top: 0;
+  }
+
+  /* The signature reads as one mono line on the hairline, without the inline-code wash. */
+  .api-entry h3 code {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: var(--text-code);
+  }
+
+  /* Long Swift and TypeScript signatures wrap inside the cell at phone width. */
+  .api-entry__spellings td code {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+</style>

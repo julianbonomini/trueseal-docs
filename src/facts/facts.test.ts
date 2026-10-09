@@ -131,3 +131,15 @@ describe('the Shared Facts data', () => {
     expect(texts.filter(text => /—|–| - /.test(text))).toEqual([]);
   });
 });
+
+describe('the Shared Facts cases', () => {
+  test('there are 13 errors, 5 events and 5 delivery issues, each with what the app should do', () => {
+    expect([sharedFacts.errors.length, sharedFacts.events.length, sharedFacts.deliveryIssues.length]).toEqual([13, 5, 5]);
+    const cases = [...sharedFacts.errors, ...sharedFacts.events, ...sharedFacts.deliveryIssues];
+    expect(cases.filter(c => !c.action?.trim()).map(c => c.id)).toEqual([]);
+  });
+
+  test('the status value set includes destroying (trueseal-sync ADR-0029)', () => {
+    expect(sharedFacts.valueSets.find(set => set.id === 'status')?.values).toEqual(['notJoined', 'pendingJoin', 'member', 'leaving', 'destroying']);
+  });
+});

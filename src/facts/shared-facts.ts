@@ -176,87 +176,127 @@ export const sharedFacts = {
     },
   ],
   errors: [
-    { id: 'invalidRelayAddress', meaning: "`open()` was given a Relay Address it can't parse.", source: { adr: ['trueseal-sync ADR-0028'] }, gap: caseSetGap },
     {
-      id: 'invalidNamespace', meaning: '`open()` was given a namespace it refuses.', source: { adr: ['trueseal-sync ADR-0028'] }, gap: caseSetGap,
+      id: 'invalidRelayAddress', action: 'Fix the configured Relay Address. Copy it as the relay CLI prints it.',
+      meaning: "`open()` was given a Relay Address it can't parse.", source: { adr: ['trueseal-sync ADR-0028'] }, gap: caseSetGap,
+    },
+    {
+      id: 'invalidNamespace', action: 'Pass another namespace, or leave the default.',
+      meaning: '`open()` was given a namespace it refuses.', source: { adr: ['trueseal-sync ADR-0028'] }, gap: caseSetGap,
       todo: 'TODO: no ADR says which namespaces are invalid.',
     },
     {
-      id: 'storage', meaning: "Session State can't be read or written, or a migration failed; the old store is left intact.",
+      id: 'storage', action: 'Check that the storage location exists and is writable, then call `TrueSeal.open` again. The old store is intact.',
+      meaning: "Session State can't be read or written, or a migration failed; the old store is left intact.",
       source: { adr: ['trueseal-sync ADR-0028', 'trueseal-sync ADR-0032'] }, gap: caseSetGap,
     },
-    { id: 'closed', meaning: 'A call on a `TrueSeal` object after `close()`.', source: { adr: ['trueseal-sync ADR-0028'] }, gap: caseSetGap },
-    { id: 'notMember', args: ['status'], meaning: '`send()` while the status is not `member`.', source: { adr: ['trueseal-sync ADR-0028'] }, gap: caseSetGap },
     {
-      id: 'alreadyInGroup', meaning: '`join(token)` on a device that already has a Sync Group in this namespace.',
+      id: 'closed', action: 'Open a new object with `TrueSeal.open`. A closed object stays closed.',
+      meaning: 'A call on a `TrueSeal` object after `close()`.', source: { adr: ['trueseal-sync ADR-0028'] }, gap: caseSetGap,
+    },
+    {
+      id: 'notMember', args: ['status'], action: 'Check `status` before calling. Offer pairing while it is `notJoined` or `pendingJoin`.',
+      meaning: '`send()` while the status is not `member`.', source: { adr: ['trueseal-sync ADR-0028'] }, gap: caseSetGap,
+    },
+    {
+      id: 'alreadyInGroup', action: 'Call `leave()` first, or use another namespace.',
+      meaning: '`join(token)` on a device that already has a Sync Group in this namespace.',
       source: { adr: ['trueseal-sync ADR-0028', 'trueseal-sync ADR-0023'] }, gap: caseSetGap,
     },
-    { id: 'invalidPairingToken', meaning: '`join(token)` with a string that is not a valid Pairing Token.', source: { adr: ['trueseal-sync ADR-0028'] }, gap: caseSetGap },
-    { id: 'pairingClosed', meaning: '`accept(request)` after the pairing window closed.', source: { adr: ['trueseal-sync ADR-0028'] }, gap: caseSetGap },
     {
-      id: 'groupFull', args: ['max'], meaning: '`accept(request)` when admitting would exceed the Maximum Group Size; `max` is that size.',
+      id: 'invalidPairingToken', action: 'Ask the user to scan or paste the token again from the admitting device.',
+      meaning: '`join(token)` with a string that is not a valid Pairing Token.', source: { adr: ['trueseal-sync ADR-0028'] }, gap: caseSetGap,
+    },
+    {
+      id: 'pairingClosed', action: 'Call `startPairing()` again on the admitting device, and join with the new token.',
+      meaning: '`accept(request)` after the pairing window closed.', source: { adr: ['trueseal-sync ADR-0028'] }, gap: caseSetGap,
+    },
+    {
+      id: 'groupFull', args: ['max'], action: 'Remove a member before admitting another.',
+      meaning: '`accept(request)` when admitting would exceed the Maximum Group Size; `max` is that size.',
       source: { adr: ['trueseal-sync ADR-0028', 'trueseal-sync ADR-0027'] }, gap: caseSetGap,
     },
     {
-      id: 'memberNotFound', meaning: 'A member id that names no current member.', source: { adr: ['trueseal-sync ADR-0028'] }, gap: caseSetGap,
+      id: 'memberNotFound', action: 'Read `members` again and use an id from it.',
+      meaning: 'A member id that names no current member.', source: { adr: ['trueseal-sync ADR-0028'] }, gap: caseSetGap,
       todo: 'TODO: no ADR says which calls raise it.',
     },
     {
-      id: 'payloadTooLarge', args: ['max'], meaning: '`send()` with a body over `maxPayloadBytes`; `max` is the limit in force. Nothing enters the outbox.',
+      id: 'payloadTooLarge', args: ['max'], action: 'Send a smaller body. Split the data, or store it elsewhere and send a reference.',
+      meaning: '`send()` with a body over `maxPayloadBytes`; `max` is the limit in force. Nothing enters the outbox.',
       source: { adr: ['trueseal-sync ADR-0028', 'trueseal-sync ADR-0025'] }, gap: caseSetGap,
     },
-    { id: 'messageHandlerAlreadySet', meaning: 'A second `onMessage(handler)`.', source: { adr: ['trueseal-sync ADR-0028'] }, gap: caseSetGap },
     {
-      id: 'storeTooNew', meaning: '`open()` found Session State written by a newer release; the store is left unchanged.',
+      id: 'messageHandlerAlreadySet', action: "Register one handler for the object's life. Cancel its `Subscription` before registering another.",
+      meaning: 'A second `onMessage(handler)`.', source: { adr: ['trueseal-sync ADR-0028'] }, gap: caseSetGap,
+    },
+    {
+      id: 'storeTooNew', action: 'Ship the newer release again. The store is unchanged, so nothing is lost.',
+      meaning: '`open()` found Session State written by a newer release; the store is left unchanged.',
       source: { adr: ['trueseal-sync ADR-0032'] }, gap: caseSetGap,
     },
   ],
   events: [
     {
-      id: 'statusChanged', args: ['status', 'reason'], reasonSet: 'statusReason', meaning: "The device's status changed.",
+      id: 'statusChanged', args: ['status', 'reason'], reasonSet: 'statusReason', action: 'Update the UI from `status`. Offer pairing again on `notJoined`.',
+      meaning: "The device's status changed.",
       source: { adr: ['trueseal-sync ADR-0028', 'trueseal-sync ADR-0032'] }, gap: caseSetGap,
     },
     {
       id: 'membersChanged', args: ['members'],
+      action: 'Render the whole list. Never treat one event as a join or leave.',
       meaning: 'The whole current member list, never a delta. It can briefly show a member leave and rejoin while a concurrent change is re-applied.',
       source: { adr: ['trueseal-sync ADR-0028', 'trueseal-sync ADR-0027'] }, gap: caseSetGap,
     },
     {
-      id: 'joinRequest', args: ['request'], meaning: 'A device asks to join while the pairing window is open; `request` is `JoinRequest{id, name}`.',
+      id: 'joinRequest', args: ['request'], action: 'Show `name` and call `accept(request)` only after the user confirms it is the device in front of them.',
+      meaning: 'A device asks to join while the pairing window is open; `request` is `JoinRequest{id, name}`.',
       source: { adr: ['trueseal-sync ADR-0028', 'trueseal-sync ADR-0023'] }, gap: caseSetGap,
     },
-    { id: 'connectionChanged', args: ['connection'], meaning: 'The relay connection changed.', source: { adr: ['trueseal-sync ADR-0028'] }, gap: caseSetGap },
+    {
+      id: 'connectionChanged', args: ['connection'], action: 'Show the state. On `relayVersionUnsupported`, ask the user to update the app. Queued messages wait in the outbox.',
+      meaning: 'The relay connection changed.', source: { adr: ['trueseal-sync ADR-0028'] }, gap: caseSetGap,
+    },
     {
       id: 'admissionDropped', args: ['name', 'reason'], reasonSet: 'admissionDroppedReason',
+      action: 'Tell the admitting user the device was not admitted. Remove a member, then pair again.',
       meaning: 'An admission this device issued was dropped, for example because re-applying it would exceed the Maximum Group Size. The joiner stays in Pending Join.',
       source: { adr: ['trueseal-sync ADR-0028', 'trueseal-sync ADR-0027'] }, gap: caseSetGap,
     },
   ],
   deliveryIssues: [
     {
-      id: 'unreadable', args: ['reason'], reasonSet: 'unreadableReason', meaning: "A Blob the library can't use was acked and dropped.",
+      id: 'unreadable', args: ['reason'], reasonSet: 'unreadableReason', action: 'Nothing is required. On `senderOutdated`, tell the user one of their devices needs an update.',
+      meaning: "A Blob the library can't use was acked and dropped.",
       source: { adr: ['trueseal-sync ADR-0034'] }, gap: caseSetGap,
     },
     {
-      id: 'unauthorized', meaning: 'A Blob failed the pairing or membership rules and was acked and dropped.',
+      id: 'unauthorized', action: 'Nothing is required.',
+      meaning: 'A Blob failed the pairing or membership rules and was acked and dropped.',
       source: { adr: ['trueseal-sync ADR-0028', 'trueseal-sync ADR-0026'] }, gap: caseSetGap,
     },
     {
-      id: 'heldForUpgrade', args: ['version'], meaning: 'A Blob in a newer End-to-End Version stays unacked on the relay until this device upgrades.',
+      id: 'heldForUpgrade', args: ['version'], action: 'Ask the user to update the app. Held Blobs are handled after the upgrade.',
+      meaning: 'A Blob in a newer End-to-End Version stays unacked on the relay until this device upgrades.',
       source: { adr: ['trueseal-sync ADR-0022', 'trueseal-sync ADR-0028'] }, gap: caseSetGap,
     },
     {
-      id: 'handlerGaveUp', args: ['messageId', 'error'], meaning: 'The message handler threw on every attempt; the Blob was acked and dropped.',
+      id: 'handlerGaveUp', args: ['messageId', 'error'], action: 'Fix the handler. The message is dropped; log `messageId` and `error`.',
+      meaning: 'The message handler threw on every attempt; the Blob was acked and dropped.',
       source: { adr: ['trueseal-sync ADR-0026'] }, gap: caseSetGap,
     },
     {
       id: 'sendFailed', args: ['messageId', 'reason'], reasonSet: 'sendFailedReason',
+      action: 'Mark the message `send()` returned as failed. The library never retries it.',
       meaning: 'An outbox entry was removed: a permanent relay refusal, or a `Sync` entry past the outbox expiry.',
       source: { adr: ['trueseal-sync ADR-0026', 'trueseal-sync ADR-0028', 'trueseal-sync ADR-0034'] }, gap: caseSetGap,
     },
   ],
   valueSets: [
-    { id: 'status', values: ['notJoined', 'pendingJoin', 'member', 'leaving'], meaning: "The device's `status`.", source: { adr: ['trueseal-sync ADR-0028'] } },
+    {
+      id: 'status', values: ['notJoined', 'pendingJoin', 'member', 'leaving', 'destroying'], meaning: "The device's `status`.",
+      source: { adr: ['trueseal-sync ADR-0028', 'trueseal-sync ADR-0029'] },
+    },
     {
       id: 'statusReason', values: ['created', 'joined', 'left', 'removed', 'destroyed', 'storeReset'], meaning: 'The reason in `statusChanged`.',
       source: { adr: ['trueseal-sync ADR-0028', 'trueseal-sync ADR-0032'] },

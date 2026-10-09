@@ -13,7 +13,7 @@ function sidebarNav(html: string, label: string): string | undefined {
 
 describe('Agent Docs', () => {
   test('the Agent Docs pages are built and served as pages', () => {
-    expect(['/agents', '/agents/protocol', '/agents/versions-and-relay-address', '/agents/limits', '/agents/errors-and-events'].filter(path => servedAt(path)?.kind !== 'page')).toEqual([]);
+    expect(['/agents', '/agents/api', '/agents/protocol', '/agents/versions-and-relay-address', '/agents/limits', '/agents/errors-and-events'].filter(path => servedAt(path)?.kind !== 'page')).toEqual([]);
   });
 
   test('every Agent Docs page shows the Agent Docs sidebar and never the Human Docs one', () => {

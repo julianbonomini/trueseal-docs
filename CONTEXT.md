@@ -13,7 +13,7 @@ The developer documentation surface at `/docs/...`, written for people: short pa
 _Avoid_: documentation site, wiki, reference, Docs (on its own, now ambiguous)
 
 **Agent Docs**
-The documentation surface written for AI coding agents: dense, exhaustive pages that say exactly what TrueSeal is and what it is not, including the full SDK API reference. It is authored separately from the Human Docs, has its own `llms.txt`, and is the canonical reference when the two differ (ADR-0003).
+The documentation surface written for AI coding agents: dense, exhaustive pages that say exactly what TrueSeal is and what it is not, including the full SDK API reference. It is authored separately from the Human Docs, has its own `llms.txt`, and is the canonical reference when the two differ (ADR-0003). The SDK API reference renders from one data file, `src/api/api-reference.ts`, which also lists the API names the reference-existence check reads.
 _Avoid_: LLM docs, AI docs, llms.txt (that is one file within the Agent Docs)
 
 **Agent Snippet**
@@ -25,7 +25,7 @@ The Agent Skills TrueSeal publishes for coding agents: Integrate, Pairing and Re
 _Avoid_: prompts, agent docs (a different surface), plugin (the package, not the skills)
 
 **Shared Facts**
-The values both the Human Docs and the Agent Docs state and that must never differ between them: error cases, event cases, limits, protocol versions and the Relay Address format. They come from one source, `src/facts/shared-facts.ts`, rendered on both surfaces by the `Fact` and `FactTable` Astro components; trueseal-sync will later generate that file from the core (SYNC-21).
+The values both the Human Docs and the Agent Docs state and that must never differ between them: error cases, event cases, limits, protocol versions and the Relay Address format; error, event and delivery-issue cases carry what the app should do. They come from one source, `src/facts/shared-facts.ts`, rendered on both surfaces by the `Fact` and `FactTable` Astro components; trueseal-sync will later generate that file from the core (SYNC-21).
 _Avoid_: constants (too code-specific)
 
 **Journey**

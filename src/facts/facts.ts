@@ -40,6 +40,8 @@ export interface ValueFact extends FactBase {
 export interface CaseFact extends FactBase {
   args?: string[];
   reasonSet?: string;
+  /** What the app does when it sees this case, Markdown backticks for code. Required on every error, event and delivery issue (tested). */
+  action?: string;
 }
 
 export interface ValueSet extends FactBase {
@@ -67,7 +69,8 @@ export interface FactPart {
 
 const valueGroups = ['versions', 'relayAddress', 'clientLimits', 'relayLimits'] as const;
 const caseGroups = ['errors', 'events', 'deliveryIssues'] as const;
-type CaseGroup = (typeof caseGroups)[number];
+/** The groups that hold error, event and delivery-issue cases. */
+export type CaseGroup = (typeof caseGroups)[number];
 const notFixed: FactPart = { text: 'Not fixed by an ADR yet.', code: false };
 
 const number = new Intl.NumberFormat('en-US');
@@ -104,14 +107,24 @@ function written(value: FactValue): FactPart {
   }
 }
 
+function valueFact(id: string, data: SharedFacts): ValueFact {
+  const fact = valueGroups.flatMap(group => data[group]).find(fact => fact.id === id);
+  if (!fact) throw new Error(`Unknown Shared Fact "${id}"`);
+  return fact;
+}
+
 /** The display text of the value fact `id`, e.g. "61,440 bytes (60 KiB)", "30 days", "7700".
  *  Throws `Unknown Shared Fact "<id>"` when no value fact has that id, and
  *  `Shared Fact "<id>" has no value yet: <todo>` when it has none, so a bad id fails the build. */
 export function factText(id: string, data: SharedFacts = sharedFacts): FactPart {
-  const fact = valueGroups.flatMap(group => data[group]).find(fact => fact.id === id);
-  if (!fact) throw new Error(`Unknown Shared Fact "${id}"`);
+  const fact = valueFact(id, data);
   if (!fact.value) throw new Error(`Shared Fact "${id}" has no value yet: ${fact.todo}`);
   return written(fact.value);
+}
+
+/** The display name of the value fact `id`, e.g. "Protocol Size Limit". Throws `Unknown Shared Fact "<id>"` like factText. */
+export function factName(id: string, data: SharedFacts = sharedFacts): string {
+  return valueFact(id, data).name;
 }
 
 function sourceText(source: FactSource): string {
@@ -119,8 +132,16 @@ function sourceText(source: FactSource): string {
 }
 
 // Meanings are written with Markdown backticks around code, so the data file reads like the docs.
-function meaningParts(meaning: string): FactPart[] {
+/** Markdown backticks as code parts: "A call after `close()`." → text, code, text. Empty text gives no parts. */
+export function meaningParts(meaning: string): FactPart[] {
   return meaning.split('`').map((text, index) => ({ text, code: index % 2 === 1 })).filter(part => part.text !== '');
+}
+
+/** A case as written in the docs: an error with braces (`groupFull{max}`), an event or delivery issue with
+ *  parentheses (`sendFailed(messageId, reason)`), the bare id when it has no arguments. */
+export function caseSignature(group: CaseGroup, c: CaseFact): string {
+  if (!c.args) return c.id;
+  return group === 'errors' ? `${c.id}{${c.args.join(', ')}}` : `${c.id}(${c.args.join(', ')})`;
 }
 
 function isCaseGroup(group: FactGroup): group is CaseGroup {
@@ -161,10 +182,9 @@ export function factTable(group: FactGroup, data: SharedFacts = sharedFacts): {
     return {
       columns: ['Case', 'Reasons', 'When', 'Source'],
       rows: cases.map(c => {
-        const args = c.args ? (group === 'errors' ? `{${c.args.join(', ')}}` : `(${c.args.join(', ')})`) : '';
         const reasons = data.valueSets.find(set => set.id === c.reasonSet);
         return {
-          name: { text: `${c.id}${args}`, code: true },
+          name: { text: caseSignature(group, c), code: true },
           value: reasons ? codeParts(reasons.values, reasons.todo) : [],
           meaning: meaningParts(c.meaning),
           source: sourceText(c.source),

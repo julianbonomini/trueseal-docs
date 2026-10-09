@@ -1,7 +1,8 @@
 ---
 title: Errors and events
-description: Every error case, event case, delivery issue and value set of the TrueSeal API, with when each is raised.
+description: Every error case, event case and delivery issue of the TrueSeal API, with what it means, what to do and each platform's spelling, and the value sets they use.
 ---
+import ApiEntries from '../../components/mdx/ApiEntries.astro';
 import FactTable from '../../components/mdx/FactTable.astro';
 
 # Errors and events
@@ -12,19 +13,19 @@ The cases are the same in Swift, Kotlin and TypeScript (trueseal-sync ADR-0028);
 
 Swift throws an enum, Kotlin a sealed exception class, and TypeScript one `TrueSealError` class whose `code` is a string union, with the fields below as typed extras.
 
-<FactTable group="errors" />
+<ApiEntries section="errors" />
 
 ## Events
 
 `onEvent(listener)` accepts any number of listeners. Events raised before the first listener is registered are buffered.
 
-<FactTable group="events" />
+<ApiEntries section="events" />
 
 ## Delivery issues
 
 `onDeliveryIssue(listener)` is optional, and ignoring it is safe. Every issue stays on the device; nothing is sent back to the sender.
 
-<FactTable group="deliveryIssues" />
+<ApiEntries section="deliveryIssues" />
 
 ## Value sets
 

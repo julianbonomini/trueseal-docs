@@ -110,6 +110,7 @@ const agentsNav: NavSection[] = [
   {
     title: 'Reference',
     items: [
+      { title: 'SDK API',                    slug: 'api' },
       { title: 'Protocol and wire format',   slug: 'protocol' },
       { title: 'Versions and Relay Address', slug: 'versions-and-relay-address' },
       { title: 'Limits',                     slug: 'limits' },

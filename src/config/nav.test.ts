@@ -79,10 +79,11 @@ test('the Agent Docs index starts its sidebar', () => {
   const place = placeOf('/agents/');
   expect(place?.section).toBe('Start');
   expect(place?.prev).toBeUndefined();
-  expect(place?.next?.href).toBe('/agents/protocol');
+  expect(place?.next?.href).toBe('/agents/api');
+  expect(placeOf('/agents/api')?.next?.href).toBe('/agents/protocol');
 });
 
 test('sidebarPaths lists a surface in reading order', () => {
-  expect(sidebarPaths('agents')).toEqual(['/agents/', '/agents/protocol', '/agents/versions-and-relay-address', '/agents/limits', '/agents/errors-and-events']);
+  expect(sidebarPaths('agents')).toEqual(['/agents/', '/agents/api', '/agents/protocol', '/agents/versions-and-relay-address', '/agents/limits', '/agents/errors-and-events']);
   expect(sidebarPaths('docs')[0]).toBe('/docs/overview/introduction');
 });

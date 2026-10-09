@@ -66,7 +66,7 @@ Build settings (already configured in Cloudflare):
 
 The Human Docs live in `src/content/docs/`. Files can be `.md` or `.mdx`.
 
-The Agent Docs live in `src/content/agents/` and are served at `/agents/...`. They are written for coding agents: literal, with no humour. Every Shared Fact (limits, versions, Relay Address, error and event cases) lives in `src/facts/shared-facts.ts` with its source; pages show one with `<Fact id="…" />` or `<FactTable group="…" />` and never type the value. A test fails on a typed value. Their sidebar is in `src/config/nav.ts`, beside the Human Docs one.
+The Agent Docs live in `src/content/agents/` and are served at `/agents/...`. They are written for coding agents: literal, with no humour. Every Shared Fact (limits, versions, Relay Address, error and event cases) lives in `src/facts/shared-facts.ts` with its source; pages show one with `<Fact id="…" />` or `<FactTable group="…" />` and never type the value. A test fails on a typed value. The SDK API reference renders from `src/api/api-reference.ts`; pages place `<ApiEntries>` and never list API names. Their sidebar is in `src/config/nav.ts`, beside the Human Docs one.
 
 Use `.mdx` when a page needs custom components (flow diagrams, phase breakdowns, code blocks with tabs, callouts, etc.). Plain prose pages can stay as `.md`.
 
@@ -84,6 +84,7 @@ Use `.mdx` when a page needs custom components (flow diagrams, phase breakdowns,
 | `<NextPage prev next />` | Previous/next links; `DocsLayout` adds them from the sidebar order, so pages don't |
 | `<Fact id="..." />` | One Shared Fact's value, inline |
 | `<FactTable group="..." />` | Every Shared Fact of a group as a table |
+| `<ApiEntries section="..." />` | Every API entry of a section, or every error, event or delivery-issue case, with its signature, meaning and each platform's spelling |
 
 ---
 
@@ -95,6 +96,7 @@ Use `.mdx` when a page needs custom components (flow diagrams, phase breakdowns,
 brand/
   mascot/         # Mascot SVG and its PNG exports
 src/
+  api/            # api-reference.ts (every public API name and its platform spelling), api.ts (sections, case spelling rule, apiNames())
   components/
     landing/      # Landing page sections
     docs/         # Sidebar
@@ -111,4 +113,4 @@ src/
   styles/         # tokens.css, global.css
 ```
 
-`tests/` holds the brand checks on the source and the Landing checks, the mascot and 404 checks, the redirect, link and docs-sidebar checks on the built site, the Agent Docs and header-switch checks, the Shared Facts checks, including a build of a copy with a changed fact, and the CI workflow check, run by `bun test`.
+`tests/` holds the brand checks on the source and the Landing checks, the mascot and 404 checks, the redirect, link and docs-sidebar checks on the built site, the Agent Docs and header-switch checks, the SDK API reference checks, the Shared Facts checks, including a build of a copy with a changed fact, and the CI workflow check, run by `bun test`.
