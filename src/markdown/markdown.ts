@@ -1,7 +1,7 @@
 // The Markdown versions of the built docs pages, and llms.txt and llms-full.txt over the Agent Docs.
 // It hides how a built page becomes Markdown (which part of the HTML is the page, what is dropped, how a
 // component gives its own Markdown, how code keeps its language), the two llms formats and where in dist/ they go.
-import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Element, ElementContent, Root as HastRoot } from 'hast';
 import type { RootContent } from 'mdast';
@@ -11,7 +11,8 @@ import remarkGfm from 'remark-gfm';
 import remarkParse from 'remark-parse';
 import remarkStringify from 'remark-stringify';
 import { unified } from 'unified';
-import { markdownPathOf, sidebarPages, type Surface } from '../config/nav';
+import { builtSite } from '../built-site/built-site';
+import { markdownPathOf, sidebarPages, surfaceOf } from '../config/nav';
 import { siteDescription, siteUrl, versionLabel } from '../config/site';
 
 const droppedTags = new Set(['nav', 'button', 'script', 'style', 'template']);
@@ -86,28 +87,17 @@ function descriptionOf(html: string): string {
   return String(meta?.properties.content ?? '');
 }
 
-// Every built page under dist/<surface>, as its site path and HTML. Redirect pages have no article and are left out.
-function builtPages(dist: string, surface: Surface): { path: string; html: string }[] {
-  const walk = (dir: string, path: string): { path: string; html: string }[] =>
-    readdirSync(dir, { withFileTypes: true }).flatMap(entry => {
-      if (entry.isDirectory()) return walk(join(dir, entry.name), `${path}/${entry.name}`);
-      if (entry.name !== 'index.html') return [];
-      const html = readFileSync(join(dir, entry.name), 'utf8');
-      return findElement(parseHtml.parse(html), isArticle) ? [{ path: `${path}/`, html }] : [];
-    });
-  return walk(join(dist, surface), `/${surface}`);
-}
-
-/** Writes beside the built site in `dist`: `<page path>.md` for every Human Docs and Agent Docs page (each
- *  index.html under dist/docs and dist/agents that holds an <article>), plus `llms.txt` and `llms-full.txt`
- *  over the Agent Docs sidebar pages in reading order. Throws `Agent Docs page <path> was not built` when a
- *  sidebar page has no built HTML. */
+/** Writes beside the built site in `dist`: `<page path>.md` for every Human Docs and Agent Docs page (every
+ *  built page, not a redirect, under /docs and /agents), plus `llms.txt` and `llms-full.txt` over the Agent
+ *  Docs sidebar pages in reading order. Throws `No <article> in page` when such a page has no article, and
+ *  `Agent Docs page <path> was not built` when a sidebar page has no built HTML. */
 export function writeMarkdownFiles(dist: string): void {
   const pagesByMarkdownPath = new Map(
-    [...builtPages(dist, 'docs'), ...builtPages(dist, 'agents')].map(page => [
-      markdownPathOf(page.path),
-      { html: page.html, markdown: pageMarkdown(page.html) },
-    ]),
+    [...builtSite(dist).pages].flatMap(([path, page]) =>
+      page.kind === 'page' && surfaceOf(path) !== undefined
+        ? [[markdownPathOf(path), { html: page.html, markdown: pageMarkdown(page.html) }] as const]
+        : [],
+    ),
   );
   for (const [markdownPath, { markdown }] of pagesByMarkdownPath) writeFileSync(join(dist, markdownPath), markdown);
 

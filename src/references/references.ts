@@ -1,9 +1,10 @@
 // The reference check (docs ADR-0003): which links and code spans in Markdown/MDX name a page, an API
 // name, a case or a Shared Fact, and whether a docs build holds each one. This module owns how a reference is
 // recognised, how each kind resolves, and where the known sets come from.
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { join } from 'node:path';
 import { anchorPrefix, apiNames, entryAnchorPrefix } from '../api/api.ts';
+import { builtSite } from '../built-site/built-site.ts';
 import { siteUrl } from '../config/site.ts';
 import { rowAnchorPrefix } from '../facts/facts.ts';
 import { sharedFacts } from '../facts/shared-facts.ts';
@@ -12,7 +13,7 @@ import { sharedFacts } from '../facts/shared-facts.ts';
 export interface KnownReferences {
   /** Site path of every built page ('/agents/api', '/' for the Landing; no trailing slash) → the ids on it. Redirects are left out. */
   pages: Map<string, Set<string>>;
-  /** Site path of every built file that is not a page: '/llms.txt', '/agents/api.md'. */
+  /** Site path of every built file that is not an index.html: '/llms.txt', '/agents/api.md', '/404.html'. */
   files: Set<string>;
   /** Code spans the check accepts: apiNames(), case argument names, notApiNames. */
   names: Set<string>;
@@ -52,22 +53,14 @@ function walk(dir: string, keep: (name: string) => boolean): string[] {
 /** The page, file, id and name sets of the site built in `dist`, plus the API names and Shared Facts.
  *  Run `bun run build` first; throws when `dist` has no index.html. */
 export function knownReferences(dist: string): KnownReferences {
-  if (!existsSync(join(dist, 'index.html'))) throw new Error(`No build in ${dist}: run bun run build first`);
-  const pages = new Map<string, Set<string>>();
-  const files = new Set<string>();
-  for (const path of walk(dist, () => true)) {
-    const site = `/${relative(dist, path)}`;
-    if (!site.endsWith('.html')) {
-      files.add(site);
-      continue;
-    }
-    if (!site.endsWith('/index.html')) continue;
-    const html = readFileSync(path, 'utf8');
-    if (html.includes('http-equiv="refresh"')) continue;
-    pages.set(site.replace(/\/?index\.html$/, '') || '/', new Set([...html.matchAll(/\sid="([^"]*)"/g)].map(([, id]) => id)));
-  }
+  const site = builtSite(dist);
+  const pages = new Map(
+    [...site.pages].flatMap(([path, page]) =>
+      page.kind === 'page' ? [[path, new Set([...page.html.matchAll(/\sid="([^"]*)"/g)].map(([, id]) => id))] as const] : [],
+    ),
+  );
   const caseArgs = [...sharedFacts.errors, ...sharedFacts.events, ...sharedFacts.deliveryIssues].flatMap(c => c.args ?? []);
-  return { pages, files, names: new Set([...apiNames(), ...caseArgs, ...notApiNames]) };
+  return { pages, files: site.files, names: new Set([...apiNames(), ...caseArgs, ...notApiNames]) };
 }
 
 const blank = (text: string) => text.replace(/[^\n]/g, ' ');

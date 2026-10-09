@@ -37,7 +37,7 @@ Output goes to `dist/`. Static site, no adapter needed.
 bun run check
 ```
 
-Type-checks with `astro check`, builds, then runs `bun test`. Some tests read the built site in `dist/`, so run `bun run build` before running `bun test` on its own.
+Type-checks with `astro check`, builds, then runs `bun test`. Some tests read the built site in `dist/` through `src/built-site/built-site.ts`, so run `bun run build` before running `bun test` on its own.
 
 CI runs the same `bun run check` on every pull request and every push to `main` (`.github/workflows/check.yml`).
 
@@ -138,6 +138,7 @@ brand/
 src/
   agent-snippet/  # agent-snippet.ts (the Agent Snippet text both surfaces render)
   api/            # api-reference.ts (every public API name and its platform spelling), api.ts (sections, case spelling rule, apiNames())
+  built-site/     # built-site.ts (the built site in dist/ as site paths: pages, redirects, other files)
   components/
     landing/      # Landing page sections
     docs/         # Sidebar

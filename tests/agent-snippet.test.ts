@@ -54,7 +54,7 @@ describe('Agent Snippet text', () => {
 
 describe('Agent Snippet on the site', () => {
   test('the Landing renders the same text', () => {
-    const html = readFileSync(join(dist, 'index.html'), 'utf8');
+    const html = pageHtml('/');
     const block = html.match(/<pre class="agent__snippet"[^>]*>([\s\S]*?)<\/pre>/)?.[1];
     expect(decode(block ?? '')).toBe(agentSnippet);
   });

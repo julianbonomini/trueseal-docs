@@ -1,10 +1,8 @@
 // The Agent Docs on the built site: their pages and sidebar, the header switch on every
 // page and brandbook voice. Reads dist/, so run `bun run build` first.
 import { describe, expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { sidebarPaths } from '../src/config/nav.ts';
-import { dist, pageHtml, pagePaths, servedAt } from './dist.ts';
+import { htmlDocuments, pageHtml, pagePaths, servedAt } from './dist.ts';
 import { descriptionOf, prose, text, titleOf, voiceProblems } from './html.ts';
 
 function sidebarNav(html: string, label: string): string | undefined {
@@ -37,7 +35,7 @@ describe('Agent Docs', () => {
 });
 
 describe('Docs / Agent Docs switch', () => {
-  const pages = [...pagePaths().map(path => ({ path, html: pageHtml(path) })), { path: '/404', html: readFileSync(join(dist, '404.html'), 'utf8') }];
+  const pages = htmlDocuments();
 
   test('every page links both surfaces and marks only the one it is on', () => {
     for (const { path, html } of pages) {

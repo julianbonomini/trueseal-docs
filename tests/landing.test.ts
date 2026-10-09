@@ -5,7 +5,7 @@ import { describe, expect, test } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { formatLocation, START_POINT } from '../src/components/landing/sealDemo.ts';
-import { builtPages, dist } from './dist.ts';
+import { dist, htmlDocuments } from './dist.ts';
 import { bannedTermsIn, descriptionOf, prose, text, titleOf, voiceProblems } from './html.ts';
 
 const indexPath = join(dist, 'index.html');
@@ -87,8 +87,8 @@ describe('Landing', () => {
 
 describe('Seal Demo outside the Landing', () => {
   test('no other built page loads the Seal Demo', () => {
-    const others = builtPages().filter(path => path !== indexPath);
-    expect(others.filter(path => readFileSync(path, 'utf8').includes('SealDemo'))).toEqual([]);
+    const others = htmlDocuments().filter(doc => doc.path !== '/');
+    expect(others.filter(doc => doc.html.includes('SealDemo')).map(doc => doc.path)).toEqual([]);
   });
 
   test('the demo moves only when reduced motion is not requested', () => {
