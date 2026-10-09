@@ -2,6 +2,7 @@
 title: Sessions
 description: The two session types trueseal-relay handles — anonymous Push Sessions (Noise NK) and authenticated Receive Sessions (Noise XX).
 ---
+import Fact from '../../../components/mdx/Fact.astro';
 
 # Sessions
 
@@ -14,7 +15,7 @@ A Push Session is short-lived and anonymous. A device opens one, drops off some 
 **Handshake:** Noise NK. The device verifies the relay's static public key (confirming it's talking to the real relay). The relay never learns the device's identity. A fresh ephemeral X25519 keypair is generated for each Push Session and thrown away the instant it's done. The relay has no way to link a Push Session to any device or to any Receive Session.
 
 **Flow:**
-1. Device opens a TCP connection to the push listener (default `:7701`).
+1. Device opens a TCP connection to the push listener (default <code>:<Fact id="defaultPushPort" /></code>).
 2. Noise NK handshake completes — relay authenticated, device anonymous.
 3. Device sends one or more `Push` frames, one per recipient blob.
 4. For each Push: relay persists the blob to the Inbox, sends `Ack`.
@@ -30,7 +31,7 @@ A Receive Session is long-lived and authenticated. A device opens one and keeps 
 **Handshake:** Noise XX. Mutual authentication — device and relay verify each other's static public keys. The relay learns the device's stable noise public key and marks it as online.
 
 **Flow:**
-1. Device opens a TCP connection to the receive listener (default `:7700`).
+1. Device opens a TCP connection to the receive listener (default <code>:<Fact id="defaultReceivePort" /></code>).
 2. Noise XX handshake completes — both sides authenticated.
 3. Relay flushes anything already in the device's Inbox — delivered without deletion yet.
 4. Relay delivers new blobs as they arrive, immediately, no polling.

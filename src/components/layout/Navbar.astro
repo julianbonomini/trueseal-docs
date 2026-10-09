@@ -1,18 +1,20 @@
 ---
 // The site header: wordmark, the Docs / Agent Docs switch, the version label, GitHub and
-// the Theme toggle. It owns which path prefix belongs to which documentation surface.
+// the Theme toggle. nav.ts owns which path belongs to which surface.
 import Wordmark from './Wordmark.astro';
 import ThemeToggle from '../ui/ThemeToggle';
 import { versionLabel } from '../../config/site';
+import { surfaceOf, surfaces } from '../../config/nav';
 
-const onDocs = Astro.url.pathname.startsWith('/docs');
+const current = surfaceOf(Astro.url.pathname);
 ---
 
 <header class="navbar">
   <Wordmark />
   <nav class="navbar__surfaces" aria-label="Documentation">
-    <a href="/docs/overview/introduction" aria-current={onDocs ? 'true' : undefined}>Docs</a>
-    <span class="navbar__soon-surface" aria-disabled="true">Agent Docs <span class="navbar__soon">soon</span></span>
+    {Object.entries(surfaces).map(([surface, { label, home }]) => (
+      <a href={home} aria-current={current === surface ? 'true' : undefined}>{label}</a>
+    ))}
   </nav>
   <span class="navbar__version">{versionLabel}</span>
   <div class="navbar__right">
@@ -40,7 +42,7 @@ const onDocs = Astro.url.pathname.startsWith('/docs');
     gap: 4px;
   }
 
-  .navbar__surfaces > * {
+  .navbar__surfaces a {
     font-size: var(--text-ui);
     padding: 6px 12px;
     border: 1px solid transparent;
@@ -56,15 +58,6 @@ const onDocs = Astro.url.pathname.startsWith('/docs');
   .navbar__surfaces [aria-current] {
     color: var(--ink);
     border-color: var(--ink);
-  }
-
-  .navbar__soon-surface {
-    cursor: default;
-  }
-
-  .navbar__soon {
-    font-family: var(--font-mono);
-    font-size: var(--text-meta);
   }
 
   .navbar__version {
@@ -97,7 +90,7 @@ const onDocs = Astro.url.pathname.startsWith('/docs');
       gap: 12px;
     }
 
-    .navbar__surfaces > * {
+    .navbar__surfaces a {
       padding: 6px 8px;
     }
 

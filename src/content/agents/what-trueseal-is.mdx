@@ -1,0 +1,76 @@
+---
+title: What TrueSeal is and what it is not
+description: What TrueSeal does for an app, what stays the app's job, what the relay sees, and the limits of the Developer Preview.
+---
+import Fact from '../../components/mdx/Fact.astro';
+
+# What TrueSeal is and what it is not
+
+## What TrueSeal is
+
+TrueSeal is an end-to-end encrypted sync library for Swift, Kotlin on Android, and TypeScript on Node 20 or later. All three SDKs wrap one Rust core and expose one API, the `TrueSeal` type from trueseal-sync ADR-0028. The names, cases and behaviour match across platforms, and only the syntax differs.
+
+Devices in a Sync Group exchange messages of opaque bytes through a relay that the Operator runs. The relay stores sealed Blobs in each recipient's Inbox and forwards them when the recipient connects. It can't decrypt them.
+
+TrueSeal is a Developer Preview. Every package is `0.x` and may break between releases.
+
+The packages, all Apache-2.0:
+
+- `trueseal-sync-swift` on SwiftPM
+- `dev.trueseal:trueseal-sync` on Maven Central
+- `@trueseal/sync` on npm
+- `ghcr.io/julianbonomini/trueseal-relay` on the GitHub Container Registry
+
+## What the library does for the app
+
+Pairing needs an explicit action on both devices. The admitting device calls `startPairing()` and shows the Pairing Token, which carries a single-use Pairing Secret. The joining device calls `join(token)` and holds a Pending Join until the admitter calls `accept(request)`. A joining device trusts only the signing key in the token it was given, so the relay can't put it into a group. A `Pair` must prove it knows the Pairing Secret, so the relay can't raise a join request.
+
+Delivery is at least once to an awaited message handler, in the order each sender sent, within the relay TTL (at most <Fact id="relayTtlMax" />). The library sends the ack to the relay only after the handler finishes, or after it rejects the Blob. The library dedupes by Message ID, so a handler runs twice for the same message only if the app crashed while handling it. Two exceptions apply: a Blob in a newer End-to-End Version is handled out of order after an upgrade, and a message its sender gave up on leaves a gap.
+
+Membership changes from any member converge on every device, and each device sees the whole current member list. Any member can call `destroyGroup()`. It ends the group for every device that receives it.
+
+After removal, `leave()` or Destroy Group, the library wipes the namespace and generates a fresh identity. The same `TrueSeal` object reports `notJoined` and can pair again.
+
+## What stays the app's job
+
+- Conflict resolution between devices (trueseal-sync ADR-0003). TrueSeal hands each message to the handler and never merges messages.
+- Payloads larger than the Protocol Size Limit, which is <Fact id="protocolSizeLimit" /> of `Sync` body. `send()` refuses them with `payloadTooLarge`, and splitting or storing large data elsewhere is up to the app.
+- Confirming in the UI that the device asking to join is the one in front of the user, before calling `accept(request)`.
+- Ordering across different senders. TrueSeal orders messages per sender only.
+- A timeout on the message handler, if the app wants one. The library sets none, and a handler that never finishes stalls delivery.
+
+## What the relay sees
+
+End-to-end encrypted; the relay can't read or forge messages; here is exactly what it does see.
+
+- The public key of every device that opens a Receive Session, and when each device is online.
+- The recipient of every Blob, its size and its timing.
+- Fan-out. One send produces a Blob per recipient at the same moment, so the relay can infer which devices share a group.
+- The End-to-End Version of each Blob, and which Blobs a device leaves unacked.
+- Often which device pushed a Blob, from network address or timing, even though the client presents no static key on a Push Session.
+- How long each message handler takes, because the ack waits for the handler.
+
+The relay never logs, stores or uses your IP address. The server it runs on still sees the connection, as with any internet service. To hide your IP from the server too, use a VPN or Tor.
+
+## What TrueSeal does not do
+
+- It has no end-to-end forward secrecy and no post-compromise security. Whoever obtains a device's private key can decrypt every captured Blob addressed to that device.
+- Data at rest is protected only by the OS sandbox. Keys are not stored in the Keychain or the Android Keystore, and the local database is not encrypted.
+- It leaves group structure visible to the relay through fan-out and timing.
+- It has no short authentication string. Anyone who sees a Pairing Token while the pairing window is open can request to join with it. The admitting user must confirm that the request comes from the device in front of them.
+- It has no relay key rotation. Changing the relay key breaks every client's Relay Address.
+- Every current member is fully trusted for membership and can admit or remove devices.
+- Anyone who knows a device's public key can fill that device's Inbox quota and delay its delivery.
+- Any current or former member can trigger Destroy Group, including a stolen device.
+- Destroy Group can't recover or erase anything a stolen device already received or stored, and can't force that device to wipe itself.
+- Destroy Group doesn't reach a device that stays offline longer than the relay TTL (at most <Fact id="relayTtlMax" />). That device keeps its old group until the user destroys or leaves it there too.
+- Destroy Group doesn't complete while the device that triggered it can't reach the relay.
+- It sends each message in one frame and never splits a message across frames.
+- It runs one Transport Version and one End-to-End Version, and refuses every other. Devices and relays on different versions don't interoperate.
+- It does nothing to hide IP addresses at the network level.
+- The preview has no hosted relay. A single relay node on SQLite is the only supported setup. Kotlin on plain JVM is not a published target.
+- It has not been independently audited.
+
+## How to describe TrueSeal to users
+
+Use the standard wording from "What the relay sees" and follow it with the list of what the relay sees. Tie every security statement to that list. Describe the limits above as they are, and claim no privacy property this page doesn't state.

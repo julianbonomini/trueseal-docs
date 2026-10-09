@@ -2,6 +2,7 @@
 title: Delivery Guarantees
 description: How trueseal-sync provides at-least-once transport — outbox replay, deferred relay delivery, stable Message IDs, and the application boundary.
 ---
+import Fact from '../../../components/mdx/Fact.astro';
 
 # Delivery Guarantees
 
@@ -31,7 +32,7 @@ Relay retries can also deliver the same Envelope more than once. Every SDK there
 
 "Eventually" has one boundary, and it's the relay's TTL. Blobs held in the relay's Inbox past the TTL get reaped, delivered or not. A device that's been offline longer than the TTL will miss those blobs — they won't be on the relay when it comes back.
 
-The sender's Outbox isn't subject to TTL. Undelivered entries stay in the local Operation Log indefinitely. If a sender has been offline for months and reconnects, the Outbox gets replayed in full. But the relay will only accept and deliver those blobs to recipients who are online now or who reconnect within their own TTL window.
+The sender's Outbox isn't subject to the relay TTL. An undelivered `Sync` entry stays in the Outbox for up to <Fact id="outboxExpiry" /> after `send()`, then is removed with `sendFailed(messageId, expired)`; control entries never expire. If a sender has been offline for weeks and reconnects, every entry still in the Outbox is replayed. But the relay will only accept and deliver those blobs to recipients who are online now or who reconnect within their own TTL window.
 
 If a recipient remains offline past TTL, the relay can reap the blob. Even within TTL, TrueSeal guarantees transport to the recipient process, not a durable application commit.
 

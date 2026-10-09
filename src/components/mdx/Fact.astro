@@ -1,0 +1,10 @@
+---
+// One Shared Fact's value, inline. Fails the build on an unknown id or a fact with no value yet.
+import { factText } from '../../facts/facts';
+
+interface Props {
+  id: string;
+}
+const { text, code } = factText(Astro.props.id);
+---
+{code ? <code>{text}</code> : text}
