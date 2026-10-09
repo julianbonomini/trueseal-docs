@@ -25,7 +25,7 @@ The Agent Skills TrueSeal publishes for coding agents: Integrate, Pairing and Re
 _Avoid_: prompts, agent docs (a different surface), plugin (the package, not the skills)
 
 **Shared Facts**
-The values both the Human Docs and the Agent Docs state and that must never differ between them: error cases, event cases, limits, protocol versions and the Relay Address format. They come from one generated source.
+The values both the Human Docs and the Agent Docs state and that must never differ between them: error cases, event cases, limits, protocol versions and the Relay Address format. They come from one source, `src/facts/shared-facts.ts`, rendered on both surfaces by the `Fact` and `FactTable` Astro components; trueseal-sync will later generate that file from the core (SYNC-21).
 _Avoid_: constants (too code-specific)
 
 **Journey**

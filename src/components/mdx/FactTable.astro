@@ -1,0 +1,24 @@
+---
+// Every Shared Fact of one group as a table: name, value, meaning, source.
+import { factTable, type FactGroup, type FactPart } from '../../facts/facts';
+
+interface Props {
+  group: FactGroup;
+}
+const { columns, rows } = factTable(Astro.props.group);
+---
+<table>
+  <thead>
+    <tr>{columns.map(column => <th>{column}</th>)}</tr>
+  </thead>
+  <tbody>
+    {rows.map(row => (
+      <tr>
+        <td>{row.name.code ? <code>{row.name.text}</code> : row.name.text}</td>
+        <td>{row.value.map((part: FactPart, index: number) => <>{index > 0 && ', '}{part.code ? <code>{part.text}</code> : part.text}</>)}</td>
+        <td>{row.meaning.map((part: FactPart) => (part.code ? <code>{part.text}</code> : part.text))}</td>
+        <td>{row.source}</td>
+      </tr>
+    ))}
+  </tbody>
+</table>

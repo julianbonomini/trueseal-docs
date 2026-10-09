@@ -1,0 +1,184 @@
+// Shared Facts: the values both the Human Docs and the Agent Docs state. The values live in shared-facts.ts.
+// This module owns how a fact is looked up and how its value is written, so no page formats a fact itself.
+import { sharedFacts } from './shared-facts.ts';
+
+/** A Shared Fact's value. Pages never see this shape; they get text from factText or factTable. */
+export type FactValue =
+  | { kind: 'release'; value: string }
+  | { kind: 'version'; value: number }
+  | { kind: 'port'; value: number }
+  | { kind: 'format'; value: string }
+  | { kind: 'bytes'; value: number }
+  | { kind: 'count'; value: number; noun: string; approximate?: boolean }
+  | { kind: 'duration'; seconds: number }
+  | { kind: 'backoff'; fromSeconds: number; toSeconds: number }
+  | { kind: 'rate'; perSecond: number; burst: number; noun: string };
+
+/** Where a fact comes from: the ADRs that decide it, and the code that already has it. */
+export interface FactSource {
+  adr: string[];
+  code?: string[];
+}
+
+interface FactBase {
+  id: string;
+  meaning: string;
+  source: FactSource;
+  /** How today's code differs from the ADR. Never rendered. */
+  gap?: string;
+  /** What no ADR or code settles yet, starting `TODO:`. Never rendered. */
+  todo?: string;
+}
+
+/** A fact with one value. `value` is absent only on a fact whose `todo` says why. */
+export interface ValueFact extends FactBase {
+  name: string;
+  value?: FactValue;
+}
+
+/** An error, event or delivery-issue case. `reasonSet` names the value set its `reason` argument takes. */
+export interface CaseFact extends FactBase {
+  args?: string[];
+  reasonSet?: string;
+}
+
+export interface ValueSet extends FactBase {
+  values: string[];
+}
+
+export interface SharedFacts {
+  versions: ValueFact[];
+  relayAddress: ValueFact[];
+  clientLimits: ValueFact[];
+  relayLimits: ValueFact[];
+  errors: CaseFact[];
+  events: CaseFact[];
+  deliveryIssues: CaseFact[];
+  valueSets: ValueSet[];
+}
+
+export type FactGroup = keyof SharedFacts;
+
+/** A piece of displayed text; `code` means it shows as inline code. */
+export interface FactPart {
+  text: string;
+  code: boolean;
+}
+
+const valueGroups = ['versions', 'relayAddress', 'clientLimits', 'relayLimits'] as const;
+const caseGroups = ['errors', 'events', 'deliveryIssues'] as const;
+type CaseGroup = (typeof caseGroups)[number];
+const notFixed: FactPart = { text: 'Not fixed by an ADR yet.', code: false };
+
+const number = new Intl.NumberFormat('en-US');
+
+function plural(count: number, noun: string): string {
+  return `${number.format(count)} ${count === 1 ? noun : `${noun}s`}`;
+}
+
+function duration(seconds: number): string {
+  const units: [string, number][] = [['day', 86400], ['hour', 3600], ['minute', 60], ['second', 1]];
+  const [unit, size] = units.find(([, size]) => seconds % size === 0)!;
+  return plural(seconds / size, unit);
+}
+
+function bytes(value: number): string {
+  const units: [string, number][] = [['MiB', 1024 * 1024], ['KiB', 1024]];
+  const whole = units.find(([, size]) => value >= size && value % size === 0);
+  const exact = `${number.format(value)} bytes`;
+  return whole ? `${exact} (${number.format(value / whole[1])} ${whole[0]})` : exact;
+}
+
+function written(value: FactValue): FactPart {
+  switch (value.kind) {
+    case 'release': return { text: value.value, code: false };
+    case 'format': return { text: value.value, code: true };
+    // Versions and ports are identifiers, never grouped: 7700, not 7,700.
+    case 'version':
+    case 'port': return { text: String(value.value), code: false };
+    case 'bytes': return { text: bytes(value.value), code: false };
+    case 'count': return { text: `${value.approximate ? 'about ' : ''}${number.format(value.value)} ${value.noun}`, code: false };
+    case 'duration': return { text: duration(value.seconds), code: false };
+    case 'backoff': return { text: `from ${duration(value.fromSeconds)} to ${duration(value.toSeconds)}`, code: false };
+    case 'rate': return { text: `${number.format(value.perSecond)} ${value.noun} per second sustained, bursts of ${number.format(value.burst)}`, code: false };
+  }
+}
+
+/** The display text of the value fact `id`, e.g. "61,440 bytes (60 KiB)", "30 days", "7700".
+ *  Throws `Unknown Shared Fact "<id>"` when no value fact has that id, and
+ *  `Shared Fact "<id>" has no value yet: <todo>` when it has none, so a bad id fails the build. */
+export function factText(id: string, data: SharedFacts = sharedFacts): FactPart {
+  const fact = valueGroups.flatMap(group => data[group]).find(fact => fact.id === id);
+  if (!fact) throw new Error(`Unknown Shared Fact "${id}"`);
+  if (!fact.value) throw new Error(`Shared Fact "${id}" has no value yet: ${fact.todo}`);
+  return written(fact.value);
+}
+
+function sourceText(source: FactSource): string {
+  return source.code ? `${source.adr.join(', ')}; code: ${source.code.join(', ')}` : source.adr.join(', ');
+}
+
+// Meanings are written with Markdown backticks around code, so the data file reads like the docs.
+function meaningParts(meaning: string): FactPart[] {
+  return meaning.split('`').map((text, index) => ({ text, code: index % 2 === 1 })).filter(part => part.text !== '');
+}
+
+function isCaseGroup(group: FactGroup): group is CaseGroup {
+  return (caseGroups as readonly string[]).includes(group);
+}
+
+function codeParts(values: string[], todo: string | undefined): FactPart[] {
+  return values.length === 0 && todo ? [notFixed] : values.map(text => ({ text, code: true }));
+}
+
+/** Every fact of `group` as table rows, plus the four column labels:
+ *  value groups → ['Fact', 'Value', 'Meaning', 'Source'];
+ *  errors/events/deliveryIssues → ['Case', 'Reasons', 'When', 'Source'];
+ *  valueSets → ['Set', 'Values', 'Meaning', 'Source'].
+ *  A case name is its signature as code: errors with braces (`groupFull{max}`), events and
+ *  issues with parentheses (`sendFailed(messageId, reason)`); its value is the values of its
+ *  reasonSet as code parts, empty when it has none. A value-set row lists its values as code parts.
+ *  A fact with no value and a todo shows the single part "Not fixed by an ADR yet."
+ *  A meaning is split into parts, its backticked spans as code.
+ *  Source reads "trueseal-sync ADR-0025, trueseal-sync ADR-0028; code: trueseal-relay internal/config/config.go". */
+export function factTable(group: FactGroup, data: SharedFacts = sharedFacts): {
+  columns: [string, string, string, string];
+  rows: { name: FactPart; value: FactPart[]; meaning: FactPart[]; source: string }[];
+} {
+  if (group === 'valueSets') {
+    return {
+      columns: ['Set', 'Values', 'Meaning', 'Source'],
+      rows: data.valueSets.map(set => ({
+        name: { text: set.id, code: true },
+        value: codeParts(set.values, set.todo),
+        meaning: meaningParts(set.meaning),
+        source: sourceText(set.source),
+      })),
+    };
+  }
+  if (isCaseGroup(group)) {
+    const cases = data[group];
+    return {
+      columns: ['Case', 'Reasons', 'When', 'Source'],
+      rows: cases.map(c => {
+        const args = c.args ? (group === 'errors' ? `{${c.args.join(', ')}}` : `(${c.args.join(', ')})`) : '';
+        const reasons = data.valueSets.find(set => set.id === c.reasonSet);
+        return {
+          name: { text: `${c.id}${args}`, code: true },
+          value: reasons ? codeParts(reasons.values, reasons.todo) : [],
+          meaning: meaningParts(c.meaning),
+          source: sourceText(c.source),
+        };
+      }),
+    };
+  }
+  return {
+    columns: ['Fact', 'Value', 'Meaning', 'Source'],
+    rows: data[group].map(fact => ({
+      name: { text: fact.name, code: false },
+      value: [fact.value ? written(fact.value) : notFixed],
+      meaning: meaningParts(fact.meaning),
+      source: sourceText(fact.source),
+    })),
+  };
+}

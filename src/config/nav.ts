@@ -107,7 +107,15 @@ const docsNav: NavSection[] = [
 // The Agent Docs sections. The Agent Snippet goes first in Start once it exists.
 const agentsNav: NavSection[] = [
   { title: 'Start',     items: [{ title: 'What TrueSeal is', slug: '' }] },
-  { title: 'Reference', items: [{ title: 'Protocol and wire format', slug: 'protocol' }] },
+  {
+    title: 'Reference',
+    items: [
+      { title: 'Protocol and wire format',   slug: 'protocol' },
+      { title: 'Versions and Relay Address', slug: 'versions-and-relay-address' },
+      { title: 'Limits',                     slug: 'limits' },
+      { title: 'Errors and events',          slug: 'errors-and-events' },
+    ],
+  },
 ];
 
 const navs: Record<Surface, NavSection[]> = { docs: docsNav, agents: agentsNav };

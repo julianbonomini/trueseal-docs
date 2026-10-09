@@ -62,7 +62,8 @@ test('children follow their parent in reading order, in its section', () => {
 
 test('the last page of a surface has no next link, so links never cross surfaces', () => {
   expect(placeOf('/docs/reference/nk-pattern')?.next).toBeUndefined();
-  expect(placeOf('/agents/protocol')?.next).toBeUndefined();
+  expect(placeOf('/agents/protocol')?.next?.href).toBe('/agents/versions-and-relay-address');
+  expect(placeOf('/agents/errors-and-events')?.next).toBeUndefined();
 });
 
 test('placeOf is undefined for a page outside the sidebar', () => {
@@ -82,6 +83,6 @@ test('the Agent Docs index starts its sidebar', () => {
 });
 
 test('sidebarPaths lists a surface in reading order', () => {
-  expect(sidebarPaths('agents')).toEqual(['/agents/', '/agents/protocol']);
+  expect(sidebarPaths('agents')).toEqual(['/agents/', '/agents/protocol', '/agents/versions-and-relay-address', '/agents/limits', '/agents/errors-and-events']);
   expect(sidebarPaths('docs')[0]).toBe('/docs/overview/introduction');
 });

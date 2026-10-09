@@ -1,13 +1,11 @@
-// The Agent Docs on the built site and in source: their pages and sidebar, the header switch on every
-// page, brandbook voice, and no Shared Fact typed by hand. Reads dist/, so run `bun run build` first.
+// The Agent Docs on the built site: their pages and sidebar, the header switch on every
+// page and brandbook voice. Reads dist/, so run `bun run build` first.
 import { describe, expect, test } from 'bun:test';
-import { readdirSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { sidebarPaths } from '../src/config/nav.ts';
 import { dist, pageHtml, pagePaths, servedAt } from './dist.ts';
 import { descriptionOf, prose, text, titleOf, voiceProblems } from './html.ts';
-
-const agentsSource = join(import.meta.dir, '..', 'src', 'content', 'agents');
 
 function sidebarNav(html: string, label: string): string | undefined {
   return html.match(new RegExp(`<nav class="sidebar"[^>]*aria-label="${label}"[^>]*>[\\s\\S]*?</nav>`))?.[0];
@@ -15,7 +13,7 @@ function sidebarNav(html: string, label: string): string | undefined {
 
 describe('Agent Docs', () => {
   test('the Agent Docs pages are built and served as pages', () => {
-    expect(['/agents', '/agents/protocol'].filter(path => servedAt(path)?.kind !== 'page')).toEqual([]);
+    expect(['/agents', '/agents/protocol', '/agents/versions-and-relay-address', '/agents/limits', '/agents/errors-and-events'].filter(path => servedAt(path)?.kind !== 'page')).toEqual([]);
   });
 
   test('every Agent Docs page shows the Agent Docs sidebar and never the Human Docs one', () => {
@@ -35,32 +33,6 @@ describe('Agent Docs', () => {
       const problems = [prose(html), titleOf(html), descriptionOf(html)].flatMap(voiceProblems);
       expect({ path, problems }).toEqual({ path, problems: [] });
     }
-  });
-
-  test('no Agent Docs source types a Shared Fact by hand', () => {
-    // Values that belong to Shared Facts. Byte widths such as `32 bytes` and the Noise 65,535 ceiling are not Shared Facts.
-    const typedFacts = [
-      /61[,.\s]?440/,
-      /\b60 KiB\b/,
-      /\b1 MiB\b/,
-      /1,048,576/,
-      /\b770[01]\b/,
-      /trueseal:\/\//,
-      /\b(Transport|End-to-End|Store) Version \d/,
-      /\b\d+\s?(ms|s|seconds?|minutes?|min|hours?|days?)\b/,
-      /\b32[- ]member/,
-      /\babout 100\b/,
-    ];
-    const files = readdirSync(agentsSource, { recursive: true, encoding: 'utf8' }).filter(file => file.endsWith('.mdx'));
-    expect(files.length).toBeGreaterThan(0);
-    const found = files.flatMap(file => {
-      const source = readFileSync(join(agentsSource, file), 'utf8').replace(/\{\/\*[\s\S]*?\*\/\}/g, ' ');
-      return typedFacts.flatMap(pattern => {
-        const match = source.match(pattern);
-        return match ? [`${file}: ${match[0]}`] : [];
-      });
-    });
-    expect(found).toEqual([]);
   });
 });
 

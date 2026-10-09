@@ -2,6 +2,7 @@
 title: Wire Format
 description: Byte-level specification for every message exchanged over a trueseal-protocol connection — framing, types, push body layout, ack semantics.
 ---
+import Fact from '../../../components/mdx/Fact.astro';
 
 # Wire Format
 
@@ -113,7 +114,7 @@ A client that receives an Error removes the blob from its retry queue. Retrying 
 
 ## Envelope size limit
 
-The protocol caps envelope size at **1 MiB (1,048,576 bytes)**. That cap applies to the `envelope` portion of the Push body, i.e. everything after the 32-byte `recipient_pub`.
+The Protocol Size Limit is <Fact id="protocolSizeLimit" /> of `Sync` body: the bytes the caller passes to `send()`. The Envelope that carries it, the `envelope` portion of the Push body after the 32-byte `recipient_pub`, is a little larger, so its fields can grow without changing the public limit.
 
 The check is enforced twice:
 

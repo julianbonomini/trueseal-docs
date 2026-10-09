@@ -2,6 +2,7 @@
 title: What TrueSeal is and what it is not
 description: What TrueSeal does for an app, what stays the app's job, what the relay sees, and the limits of the Developer Preview.
 ---
+import Fact from '../../components/mdx/Fact.astro';
 
 # What TrueSeal is and what it is not
 
@@ -24,7 +25,7 @@ The packages, all Apache-2.0:
 
 Pairing needs an explicit action on both devices. The admitting device calls `startPairing()` and shows the Pairing Token, which carries a single-use Pairing Secret. The joining device calls `join(token)` and holds a Pending Join until the admitter calls `accept(request)`. A joining device trusts only the signing key in the token it was given, so the relay can't put it into a group. A `Pair` must prove it knows the Pairing Secret, so the relay can't raise a join request.
 
-Delivery is at least once to an awaited message handler, in the order each sender sent, within the relay TTL{/* TODO: Shared Fact relayTtlMax */}. The library sends the ack to the relay only after the handler finishes, or after it rejects the Blob. The library dedupes by Message ID, so a handler runs twice for the same message only if the app crashed while handling it. Two exceptions apply: a Blob in a newer End-to-End Version is handled out of order after an upgrade, and a message its sender gave up on leaves a gap.
+Delivery is at least once to an awaited message handler, in the order each sender sent, within the relay TTL (at most <Fact id="relayTtlMax" />). The library sends the ack to the relay only after the handler finishes, or after it rejects the Blob. The library dedupes by Message ID, so a handler runs twice for the same message only if the app crashed while handling it. Two exceptions apply: a Blob in a newer End-to-End Version is handled out of order after an upgrade, and a message its sender gave up on leaves a gap.
 
 Membership changes from any member converge on every device, and each device sees the whole current member list. Any member can call `destroyGroup()`. It ends the group for every device that receives it.
 
@@ -33,7 +34,7 @@ After removal, `leave()` or Destroy Group, the library wipes the namespace and g
 ## What stays the app's job
 
 - Conflict resolution between devices (trueseal-sync ADR-0003). TrueSeal hands each message to the handler and never merges messages.
-- Payloads larger than the Protocol Size Limit{/* TODO: Shared Fact protocolSizeLimit */}. `send()` refuses them with `payloadTooLarge`, and splitting or storing large data elsewhere is up to the app.
+- Payloads larger than the Protocol Size Limit, which is <Fact id="protocolSizeLimit" /> of `Sync` body. `send()` refuses them with `payloadTooLarge`, and splitting or storing large data elsewhere is up to the app.
 - Confirming in the UI that the device asking to join is the one in front of the user, before calling `accept(request)`.
 - Ordering across different senders. TrueSeal orders messages per sender only.
 - A timeout on the message handler, if the app wants one. The library sets none, and a handler that never finishes stalls delivery.
@@ -62,7 +63,7 @@ The relay never logs, stores or uses your IP address. The server it runs on stil
 - Anyone who knows a device's public key can fill that device's Inbox quota and delay its delivery.
 - Any current or former member can trigger Destroy Group, including a stolen device.
 - Destroy Group can't recover or erase anything a stolen device already received or stored, and can't force that device to wipe itself.
-- Destroy Group doesn't reach a device that stays offline longer than the relay TTL{/* TODO: Shared Fact relayTtlMax */}. That device keeps its old group until the user destroys or leaves it there too.
+- Destroy Group doesn't reach a device that stays offline longer than the relay TTL (at most <Fact id="relayTtlMax" />). That device keeps its old group until the user destroys or leaves it there too.
 - Destroy Group doesn't complete while the device that triggered it can't reach the relay.
 - It sends each message in one frame and never splits a message across frames.
 - It runs one Transport Version and one End-to-End Version, and refuses every other. Devices and relays on different versions don't interoperate.

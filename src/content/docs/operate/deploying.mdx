@@ -2,6 +2,30 @@
 title: Deploying
 description: Self-host a trueseal-relay instance — keypair generation, configuration, single-node setup, Docker, and operational notes.
 ---
+import Fact from '../../../components/mdx/Fact.astro';
+import { Code } from 'astro:components';
+import { codeTheme } from '../../../config/shiki';
+import { factText } from '../../../facts/facts';
+
+export const receive = factText('defaultReceivePort').text;
+export const push = factText('defaultPushPort').text;
+export const compose = `services:
+  trueseal-relay:
+    image: trueseal-relay:latest
+    command: ["-no-config"]
+    environment:
+      TRUESEAL_RELAY_KEYPAIR_PATH: /secrets/keypair.hex
+      TRUESEAL_RELAY_STORE_SQLITE_PATH: /data/inbox.db
+    volumes:
+      - ./keypair.hex:/secrets/keypair.hex:ro
+      - relay-data:/data
+    ports:
+      - "${receive}:${receive}"
+      - "${push}:${push}"
+
+volumes:
+  relay-data:
+`;
 
 # Deploying
 
@@ -48,11 +72,11 @@ sqlite_path = "/var/lib/trueseal-relay/inbox.db"
 | Field | Env var | Default | Description |
 |---|---|---|---|
 | `relay.keypair_path` | `TRUESEAL_RELAY_KEYPAIR_PATH` | — | Path to hex-encoded private key. Required. |
-| `relay.listen_push` | `TRUESEAL_RELAY_LISTEN_PUSH` | `:7701` | Push Session listener address. |
-| `relay.listen_receive` | `TRUESEAL_RELAY_LISTEN_RECEIVE` | `:7700` | Receive Session listener address. |
-| `relay.ttl` | `TRUESEAL_RELAY_TTL` | `720h` (30 days) | Blob TTL before reaping. |
+| `relay.listen_push` | `TRUESEAL_RELAY_LISTEN_PUSH` | <code>:<Fact id="defaultPushPort" /></code> | Push Session listener address. |
+| `relay.listen_receive` | `TRUESEAL_RELAY_LISTEN_RECEIVE` | <code>:<Fact id="defaultReceivePort" /></code> | Receive Session listener address. |
+| `relay.ttl` | `TRUESEAL_RELAY_TTL` | <Fact id="relayTtlDefault" /> | Blob TTL before reaping. Can only be lowered; the relay refuses to start above <Fact id="relayTtlMax" />. |
 | `relay.reap_interval` | `TRUESEAL_RELAY_REAP_INTERVAL` | `1h` | How often the reaper runs. |
-| `relay.max_envelope_bytes` | `TRUESEAL_RELAY_MAX_ENVELOPE_BYTES` | `1048576` (1 MiB) | Max envelope size. Larger blobs are rejected with Error. |
+| `relay.max_envelope_bytes` | `TRUESEAL_RELAY_MAX_ENVELOPE_BYTES` | Protocol Size Limit | Max envelope size. Can only be lowered; the protocol allows <Fact id="protocolSizeLimit" /> of `Sync` body. Larger blobs are rejected with Error. |
 | `store.type` | `TRUESEAL_RELAY_STORE_TYPE` | `sqlite` | Storage backend: `sqlite` or `postgres`. |
 | `store.sqlite_path` | `TRUESEAL_RELAY_STORE_SQLITE_PATH` | — | SQLite database file path. Required when `store.type = sqlite`. |
 
@@ -74,31 +98,14 @@ With `-no-config`, every setting has to come from environment variables.
 
 **Example `docker-compose.yml`:**
 
-```yaml
-services:
-  trueseal-relay:
-    image: trueseal-relay:latest
-    command: ["-no-config"]
-    environment:
-      TRUESEAL_RELAY_KEYPAIR_PATH: /secrets/keypair.hex
-      TRUESEAL_RELAY_STORE_SQLITE_PATH: /data/inbox.db
-    volumes:
-      - ./keypair.hex:/secrets/keypair.hex:ro
-      - relay-data:/data
-    ports:
-      - "7700:7700"
-      - "7701:7701"
-
-volumes:
-  relay-data:
-```
+<Code lang="yaml" theme={codeTheme} code={compose} />
 
 ## Graceful shutdown
 
-trueseal-relay handles `SIGINT` and `SIGTERM`. On signal, it stops accepting new connections and waits up to 30 seconds for active sessions to drain cleanly before exiting.
+trueseal-relay handles `SIGINT` and `SIGTERM`. On signal, it stops accepting new connections and waits up to <Fact id="shutdownDrain" /> for active sessions to drain cleanly before exiting.
 
 ## Operational notes
 
-- **Firewall.** Open TCP 7700 (receive) and 7701 (push) to the internet. Devices connect outbound; the relay never initiates connections.
+- **Firewall.** Open TCP <Fact id="defaultReceivePort" /> (receive) and <Fact id="defaultPushPort" /> (push) to the internet. Devices connect outbound; the relay never initiates connections.
 - **Disk.** Size SQLite storage based on your expected group size, blob size, and TTL. A conservative rule of thumb: `devices × blobs_per_day × avg_blob_bytes × ttl_days`.
 - **Logs.** trueseal-relay logs connection events and public keys only. It never logs envelope content. Don't add content logging — doing so would break the zero-knowledge property the whole stack rests on.
