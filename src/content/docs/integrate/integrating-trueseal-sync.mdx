@@ -35,7 +35,6 @@ It does **not** give you:
 - Knowledge of whether a peer device is online.
 - Message history (the relay is a buffer, not a log).
 - Multi-group management in a single session — see [Multiple groups](#multiple-groups-via-namespaces).
-- A "leave quietly" protocol message — see [Revocation in practice](#revocation-in-practice).
 - Conflict resolution, payload ordering beyond FIFO per sender, or storage of processed Message IDs.
 
 Shape of an integration: **construct a session → listen to its event streams → call methods on it → handle the terminal events.**
@@ -223,7 +222,7 @@ On every member event, re-snapshot from `session.members()` instead of maintaini
 | `onMemberJoined(id, name)` | A new device joined the group. |
 | `onMemberLeft(id, name)` | A member was removed. |
 | `onRemovedFromGroup` | **You** were removed by another member. |
-| `onGroupDestroyed` | The group was destroyed — see [Revocation in practice](#revocation-in-practice). |
+| `onGroupDestroyed` | The group was destroyed — see [Removing a device](#removing-a-device). |
 
 `onRemovedFromGroup` and `onGroupDestroyed` are **terminal** — the session can't be used for the current group anymore. Wipe and reinit.
 
@@ -250,48 +249,14 @@ Model these as **two independent signals**. Never conflate them.
 
 **Don't show "you cannot sync" based on relay state alone.** Relay outages are transient. The group relationship is persistent.
 
-## Revocation in practice
+## Removing a device
 
-For the protocol-level model see [Revocation](/docs/integrate/revocation). This is the integrator's view.
+TrueSeal has two ways to take a device out of a group, and they protect against different things.
 
-trueseal exposes two operations. They're **not interchangeable** — they have very different costs and threat models.
+- `remove(memberId)` takes out a device you still trust, such as an old phone you've wiped. The removed device wipes itself when it receives the new manifest. A hostile device can ignore it.
+- `destroyGroup()` ends the group for every device that receives it. Use it when a device is lost or stolen. Every device that receives it starts over with a new identity, and the user pairs the devices again.
 
-### Soft removal
-
-Routine: a teammate left, a phone was upgraded, a laptop got decommissioned.
-
-```
-session.removeMember(memberId)
-```
-
-That's the entire integration. The new manifest propagates and remaining members start filtering the removed device's blobs. Cooperative, not cryptographic — fine for routine use.
-
-### Destroy group
-
-Security incident: a device was stolen, a key was compromised, you no longer trust a member.
-
-```
-session.destroyGroup()
-```
-
-When `onGroupDestroyed` fires on **any** device:
-
-1. Stop all stream listeners.
-2. Delete the storage directory.
-3. Reinitialise the session — fresh keypair, new identity, solo mode.
-4. Talk to the legitimate members out-of-band and re-pair.
-
-Every member has to re-pair. That's the price of cryptographic exclusion, and it's intentional.
-
-### Leave quietly (no protocol primitive)
-
-There's no "leave quietly" operation that removes you without notifying the group. To leave:
-
-1. Delete local storage and reinitialise — that rotates your keypair.
-2. Your old node ID becomes a ghost member in the other devices' manifests.
-3. Other devices then have to manually remove the ghost entry.
-
-A graceful-leave protocol might land in a future trueseal-sync version. It isn't there today.
+A device leaves on its own with `leave()`. [Membership](/docs/integrate/membership) and [Destroy Group](/docs/integrate/destroy-group) describe each operation.
 
 ## Storage scoping
 

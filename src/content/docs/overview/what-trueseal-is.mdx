@@ -14,7 +14,7 @@ TrueSeal is the sync with the privacy already inside. It's an end-to-end encrypt
 The SDK does the parts of private sync that every app would otherwise build by hand:
 
 - Pairing. One device shows a Pairing Token, the other reads it, and the first device accepts the request. See [Pairing](/docs/integrate/pairing).
-- Membership. Any member can admit, remove or leave, and every device ends up with the same member list. See [Sync Groups](/docs/integrate/sync-groups).
+- Membership. Any member can admit, remove or leave, and every device ends up with the same member list. See [Membership](/docs/integrate/membership).
 - End-to-end encrypted delivery. Each message is sealed separately to each member's key before it leaves the device.
 - An offline outbox. `send()` writes the message to a local outbox and returns. The SDK delivers it when the relay is reachable, including after a restart.
 - Deduplication and ordering. Messages from one device reach your handler in the order that device sent them, and the SDK drops duplicates before your handler sees them. See [Delivery Guarantees](/docs/integrate/delivery-guarantees).

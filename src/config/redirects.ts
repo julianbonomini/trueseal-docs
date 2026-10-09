@@ -23,8 +23,10 @@ export const redirects: Record<string, string> = {
   '/docs/guides/integrating-trueseal-sync':             '/docs/integrate/integrating-trueseal-sync',
   '/docs/concepts/device-identity':                     '/docs/integrate/device-identity',
   '/docs/concepts/pairing':                             '/docs/integrate/pairing',
-  '/docs/concepts/sync-groups':                         '/docs/integrate/sync-groups',
-  '/docs/concepts/revocation':                          '/docs/integrate/revocation',
+  '/docs/concepts/sync-groups':                         '/docs/integrate/membership',
+  '/docs/concepts/revocation':                          '/docs/integrate/destroy-group',
+  '/docs/integrate/sync-groups':                        '/docs/integrate/membership',
+  '/docs/integrate/revocation':                         '/docs/integrate/destroy-group',
   '/docs/components/trueseal-sync/delivery-guarantees': '/docs/integrate/delivery-guarantees',
 
   '/docs/components/trueseal-relay/deploying':     '/docs/operate/deploying',

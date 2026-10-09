@@ -1,0 +1,61 @@
+---
+title: Membership
+description: Who can change a Sync Group, how every device ends up with the same member list, the group size limit, and what happens to a device that is removed or leaves.
+---
+
+# Membership
+
+A family shares locations. Mum removes her old phone at the same moment as Dad adds the new tablet, and both phones are offline when they do it. When they reconnect, every device should agree on who is in the group, and neither change should be lost. TrueSeal handles that merge for you. Your app calls one method per change and shows the member list it gets back.
+
+## Every current member is trusted
+
+Any current member can admit a device, remove one or leave. There is no admin and no owner, and no device has more rights than another. If your app needs roles, such as only parents removing devices, enforce them in your app before it calls TrueSeal.
+
+That trust has a cost you should design for. A hostile device that is still a member can remove every other device. A removed device that doesn't cooperate can still change the member list on devices that haven't yet heard of its removal. TrueSeal defends against neither. When a device is stolen or can't be trusted, use [Destroy Group](/docs/integrate/destroy-group).
+
+## The calls
+
+- Admit a device with `accept(request)`, as [Pairing](/docs/integrate/pairing) describes.
+- Remove a device with `remove(memberId)`, using an `id` from `members`. It fails with `memberNotFound` when that device isn't in the group.
+- Leave with `leave()`.
+
+`me` is this device, with its `id` and `name`, and `members` lists every other member. Each change arrives as a `membersChanged(members)` event that carries the whole current list.
+
+## Every device ends up with the same list
+
+Each change produces a new Group Manifest, the signed list of members. A manifest names the manifest it was built on and carries a version one higher. Devices rank manifests by version, and on equal versions the one with the lower hash wins, so every device picks the same winner.
+
+When two members change the group at the same time, one change loses that ranking. The device that made the losing change notices and makes it again on top of the winner. It keeps a record of each change until a newer manifest includes it or a later change undoes it on purpose, and that record survives a restart. A device that was offline makes its change again after it reconnects. Your app never has to repeat a membership change.
+
+The promise:
+
+> Once every member has received the same set of Group Manifests, all members hold an identical manifest. A membership change from an honest member is never lost, unless that member was itself removed concurrently.
+
+## The member list can flicker
+
+While a device makes a lost change again, other devices can briefly see a member leave and come back. Render `members` as it is now, and don't treat a single `membersChanged` event as a permanent fact. For example, avoid showing "Tablet left the group" notifications that fire on every change.
+
+## Group size
+
+A group holds at most 32 members{/* TODO: Shared Fact maxGroupSize */}, the Maximum Group Size. The SDK exposes it as the constant `maxGroupSize`. `accept(request)` fails with `groupFull{max}` when the group is full.
+
+Two devices can each admit a device at once and push the group past the limit. The change that loses is dropped, and the device that made it reports `admissionDropped(name, reason)`{/* TODO: the values of admissionDropped's reason; ADR-0027 and ADR-0028 name the event but not its reasons. */}. The device that was being admitted stays in `pendingJoin`.
+
+## Removal and leaving wipe the device
+
+A device that is removed wipes itself. The library deletes the namespace's group state, its outbox and its record of handled messages, generates a fresh identity, and reports `statusChanged(notJoined, removed)`. Messages it hadn't sent yet are dropped. The same `TrueSeal` object stays usable and can pair again.
+
+`leave()` moves the device to `leaving`. In that state it sends no app messages and runs no message handler. It stays connected until the relay has accepted every push of the manifest that removes it. Then it wipes in the same way and reports `statusChanged(notJoined, left)`. If the app crashes or goes offline while leaving, it carries on leaving at the next start. `send()` in `leaving` fails with `notMember{status}`.
+
+The wipe covers TrueSeal's state only. Your app's own copy of the shared data stays where your app stored it, so delete it when the status changes to `notJoined` if your app should forget it.
+
+## A device that loses a race keeps waiting
+
+A device counts itself removed only when the manifest that leaves it out was built on one that included it. A manifest built at the same moment by someone who hadn't seen this device join also leaves it out, and the device treats that as a race it lost. The device keeps that manifest as its current view, doesn't wipe, and waits for the device that admitted it to make the admission again. The usual case is a device that joined a moment ago and lost a race with another change.
+
+## What stays your app's job
+
+- Roles and permissions, if your app has them.
+- Rendering the current member list and tolerating the flicker.
+- Deleting your app's data on `notJoined`, when it should.
+- Choosing [Destroy Group](/docs/integrate/destroy-group) over `remove(memberId)` when a device is lost or stolen. A hostile device can ignore its removal, while Destroy Group gives every device that receives it a new identity.

@@ -48,7 +48,7 @@ Every envelope is signed by the sender's Ed25519 signing key. The signature cove
 
 **Sender binding.** The sender's `author_pub` lives inside the encrypted payload. When the recipient decrypts, they pull `author_pub` out and check the signature against it. Device B can't pretend to be device A: if B encrypts a payload and labels it as A's, the signature was made with B's key, so verification fails.
 
-After signature verification, the sender is checked against the current Group Manifest. Anything from a key that isn't a member gets discarded. The manifest is the authoritative trusted-device list — see [Sync Groups](/docs/integrate/sync-groups) for how it's managed.
+After signature verification, the sender is checked against the current Group Manifest. Anything from a key that isn't a member gets discarded. The manifest is the authoritative trusted-device list — see [Membership](/docs/integrate/membership) for how it's managed.
 
 ## What the relay knows
 
@@ -62,4 +62,4 @@ Zero trust covers a malicious or compromised relay. It does not cover:
 
 - **A compromised device.** If an attacker has a device's private key, they can decrypt anything addressed to that device and forge messages as it. Device security is on the OS, the platform, and the application — not on us.
 - **Network-level traffic analysis.** The relay sees which IPs connect when. Anyone watching the network can observe connection patterns without reading any payload. trueseal doesn't run over a mix network and doesn't pretend to give you timing anonymity.
-- **Blobs already received before removal.** If a device gets kicked from a group, it can't decrypt anything new — but anything it already received and decrypted is its forever. See [Revocation](/docs/integrate/revocation).
+- **Blobs already received before removal.** If a device gets kicked from a group, it can't decrypt anything new — but anything it already received and decrypted is its forever. See [Destroy Group](/docs/integrate/destroy-group).

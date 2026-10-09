@@ -44,11 +44,11 @@ The result is eventual consistency with no consensus protocol involved. Higher v
 
 **Adding a member.** After pairing, the admitting device issues a new manifest that includes the joiner and pushes it to every existing member. The joiner also receives the current manifest as part of the join flow, so it has a complete view of the group from the moment it lands.
 
-**Soft removal.** The removing device issues a new manifest that excludes the target. Remaining members update their local copy and start filtering the removed device's messages. The removed device, when it eventually receives the new manifest, fires `onRemovedFromGroup()`.
+**Removal.** The removing device issues a new manifest that excludes the target. Remaining members update their local copy and start filtering the removed device's messages. The removed device, when it receives the new manifest, wipes its group state, generates a fresh identity and reports `statusChanged(notJoined, removed)`.
 
-**Destroy Group.** Any member calls `destroyGroup()`. A `Revoke` message goes out to every known member. Every device wipes its local state and rotates its keypair on next launch. The manifest is gone, the group no longer exists.
+**Destroy Group.** Any member calls `destroyGroup()`. A `Revoke` goes out to every member it knows about, and each device that receives it passes it on, wipes its group state and starts over with a fresh identity.
 
-For the full semantics of each operation, see [Revocation](/docs/integrate/revocation).
+For the full semantics of each operation, see [Membership](/docs/integrate/membership) and [Destroy Group](/docs/integrate/destroy-group).
 
 ## Inbound filtering
 
