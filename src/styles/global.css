@@ -1,6 +1,6 @@
 /*
  * Site-wide styles on the Design tokens: the reset, the base, markdown prose,
- * the shared Landing section look (.section-display),
+ * the shared Landing section look (.section-display), tables that stack on a phone (.stacked-table),
  * and the styles of Islands that can't scope their own (CodeBlock, ThemeToggle).
  */
 
@@ -177,6 +177,36 @@ code, kbd, samp, pre {
 
 .prose strong {
   font-weight: 600;
+}
+
+/* ─── Stacked table ─────────────────────────────────────── */
+/* A table that stays a table from 660px and turns each row into one block on a phone, so the reader
+   never scrolls sideways. `table.stacked-table` has the same specificity as `.prose table`, so it
+   beats that scrolling block only because it comes later: keep this section below .prose. */
+
+table.stacked-table {
+  display: table;
+}
+
+@media (max-width: 659px) {
+  table.stacked-table thead {
+    display: none;
+  }
+
+  table.stacked-table,
+  table.stacked-table tbody,
+  table.stacked-table tr,
+  table.stacked-table td {
+    display: block;
+  }
+
+  table.stacked-table tr {
+    border-bottom: 1px solid var(--rule);
+  }
+
+  table.stacked-table td {
+    border-bottom: 0;
+  }
 }
 
 /* ─── Section display ───────────────────────────────────── */

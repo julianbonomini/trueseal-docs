@@ -6,20 +6,15 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { formatLocation, START_POINT } from '../src/components/landing/sealDemo.ts';
 import { findBannedTerms } from './banned-terms.ts';
-import { builtPages, decodeEntities, dist } from './dist.ts';
+import { builtPages, decodeEntities, dist, visibleText } from './dist.ts';
 
 const indexPath = join(dist, 'index.html');
 if (!existsSync(indexPath)) throw new Error('dist/index.html is missing. Run bun run build first.');
 const html = readFileSync(indexPath, 'utf8');
 
-/** The visible text: no scripts, styles or tags, entities decoded. */
-function text(source: string): string {
-  return decodeEntities(source.replace(/<(script|style)[\s\S]*?<\/\1>/g, ' ').replace(/<[^>]+>/g, ' '));
-}
-
 /** The visible text outside code blocks. */
 function prose(source: string): string {
-  return text(source.replace(/<pre[\s\S]*?<\/pre>/g, ' '));
+  return visibleText(source.replace(/<pre[\s\S]*?<\/pre>/g, ' '));
 }
 
 const title = decodeEntities(html.match(/<title>([\s\S]*?)<\/title>/)?.[1] ?? '');
@@ -37,13 +32,13 @@ describe('Landing', () => {
       .filter(tag => tag.includes('type="radio"') && tag.includes('name="integrate-code"'));
     expect(radios).toHaveLength(3);
     expect(radios.filter(tag => /\bchecked\b/.test(tag))).toHaveLength(1);
-    const labels = [...html.matchAll(/<label[^>]*>([\s\S]*?)<\/label>/g)].map(m => text(m[1]).trim());
+    const labels = [...html.matchAll(/<label[^>]*>([\s\S]*?)<\/label>/g)].map(m => visibleText(m[1]).trim());
     expect(labels).toEqual(expect.arrayContaining(['Swift', 'Kotlin', 'TypeScript']));
 
     const panels = [...html.matchAll(/<pre[^>]*class="[^"]*code-tabs__panel[^"]*"[^>]*>([\s\S]*?)<\/pre>/g)];
     expect(panels).toHaveLength(3);
     expect(panels.filter(m => /\bhidden\b/.test(m[0].slice(0, m[0].indexOf('>'))))).toEqual([]);
-    const code = panels.map(m => text(m[1]));
+    const code = panels.map(m => visibleText(m[1]));
     expect(code[0]).toContain('import TruesealSync');
     expect(code[1]).toContain('import dev.trueseal.sync.TrueSeal');
     expect(code[2]).toContain("from '@trueseal/sync'");
@@ -51,13 +46,13 @@ describe('Landing', () => {
   });
 
   test('the Trust section uses the brandbook IP sentence verbatim', () => {
-    expect(text(html).replace(/\s+/g, ' ')).toContain(
+    expect(visibleText(html).replace(/\s+/g, ' ')).toContain(
       'The relay never logs, stores or uses your IP address. The server it runs on still sees the connection, as with any internet service. To hide your IP from the server too, use a VPN or Tor.',
     );
   });
 
   test('no banned term appears in the text, title or meta description', () => {
-    const all = [text(html), title, description].join(' ');
+    const all = [visibleText(html), title, description].join(' ');
     expect(findBannedTerms(all)).toEqual([]);
     // Brandbook section 5 words the site-wide list leaves out, because the Reference still uses "Anonymous Push Session".
     const lower = all.toLowerCase();
@@ -75,7 +70,7 @@ describe('Landing', () => {
   });
 
   test('the Seal Demo is readable with JS off', () => {
-    const visible = text(html).replace(/\s+/g, ' ');
+    const visible = visibleText(html).replace(/\s+/g, ' ');
     for (const s of [
       "Mum's phone",
       'The relay',

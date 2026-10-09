@@ -1,5 +1,6 @@
 // The words and figures no TrueSeal page may use (trueseal-roadmap#16, brandbook section 5, sync ADR-0024/0025),
 // and what to write instead. tests/banned-terms.test.ts holds src/ to it.
+import { standardWording } from '../src/config/threatModel.ts';
 
 /** A word or figure no page may use. */
 export interface BannedTerm {
@@ -11,8 +12,6 @@ export interface BannedTerm {
   instead: string;
 }
 
-const standardWording =
-  "end-to-end encrypted; the relay can't read or forge messages; here is exactly what it does see (trueseal-roadmap#16)";
 const sizeLimit = 'The Protocol Size Limit from src/config/sharedFacts.ts';
 
 export const bannedTerms: BannedTerm[] = [

@@ -63,3 +63,9 @@ export function decodeEntities(html: string): string {
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&');
 }
+
+/** The visible text of `html`: each <script> and <style> block and each tag replaced by a space, entities
+ *  decoded. Whitespace is kept as it is; callers collapse it when they need to. */
+export function visibleText(html: string): string {
+  return decodeEntities(html.replace(/<(script|style)[\s\S]*?<\/\1>/g, ' ').replace(/<[^>]+>/g, ' '));
+}

@@ -13,7 +13,7 @@ Each row is a Release Manifest: a TrueSeal Release and the relay and noise versi
 ## Reading the table
 
 - **Transport Version and End-to-End Version:** the relay and every device speak exactly one Transport Version, and every device speaks exactly one End-to-End Version. When either changes, every device and the relay upgrade together (sync ADR-0022).
-- **Session State Store Version and Migration floor:** a TrueSeal Release migrates Session State forward from any release since the migration floor. An older store is wiped, and the device has to pair again. A store written by a newer release is refused and left unchanged (sync ADR-0032).
+- **Session State Store Version and Migration floor:** a TrueSeal Release migrates Session State forward from any release since the migration floor. A store from before the floor is wiped, so the device gets a new identity and has to pair again. A store written by a newer release is refused and left unchanged (sync ADR-0032).
 - **Relay Store Version:** the relay migrates `inbox.db` forward when it starts. It refuses to start on a store written by a newer release (relay ADR-0013).
 
 The Agent Docs version is at [/agents/compatibility-table](/agents/compatibility-table).

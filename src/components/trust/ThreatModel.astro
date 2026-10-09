@@ -67,7 +67,7 @@ const breakable = (name: string) => name.replace(/&/g, '&amp;').replace(/</g, '&
     {properties.map(property => (
       <>
         <h3 id={slug(property)}>{property}</h3>
-        <table class="claims">
+        <table class="claims stacked-table">
           <thead>
             <tr>
               <th>Claim</th>
@@ -126,7 +126,6 @@ const breakable = (name: string) => name.replace(/&/g, '&amp;').replace(/</g, '&
   }
 
   .claims {
-    display: table;
     table-layout: fixed;
   }
 
@@ -176,24 +175,8 @@ const breakable = (name: string) => name.replace(/&/g, '&amp;').replace(/</g, '&
   }
 
   @media (max-width: 659px) {
-    .claims thead {
-      display: none;
-    }
-
-    .claims,
-    .claims tbody,
-    .claims tr,
     .claims td {
-      display: block;
-    }
-
-    .claims td {
-      border-bottom: 0;
       padding-right: 0;
-    }
-
-    .claims tr {
-      border-bottom: 1px solid var(--rule);
     }
 
     .claims td + td {

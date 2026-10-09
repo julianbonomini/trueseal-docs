@@ -131,3 +131,11 @@ describe('Section display', () => {
     expect(global).toContain('.section-display__lede');
   });
 });
+
+describe('Stacked table', () => {
+  test('the phone stacking is written once, in global.css', () => {
+    const globalPath = 'src/styles/global.css';
+    expect(hits(cssTexts, /thead\s*\{\s*display:\s*none/, [globalPath])).toEqual([]);
+    expect(readFileSync(join(root, globalPath), 'utf8')).toContain('table.stacked-table');
+  });
+});
