@@ -37,6 +37,8 @@ Two things it needs to do its job:
 
 It also sees each blob's size and time, and which devices receive the same messages. A single send fans out to every group member in one connection, with matching sizes and timing, from the sender's network address. A relay operator can therefore infer which devices likely share a group. TrueSeal does not hide group structure from the relay. It often sees which device pushed a blob, by IP address or timing, and which end-to-end protocol version each device runs. It can't read content, and stored blobs carry no sender identity.
 
+The full list, with what TrueSeal doesn't defend against, is in the [Threat Model](/docs/trust/threat-model#what-the-relay-sees).
+
 ## Self-hosting and operator trust
 
 Because the relay can't read or forge your messages, who operates it doesn't change what it can read. Your own $5 VPS or a friend's box sees the same metadata listed above. The operator does decide whether your messages arrive.

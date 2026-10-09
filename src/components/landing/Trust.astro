@@ -1,9 +1,9 @@
 ---
 // The Trust part of the Journey: what the relay can and can't see.
 import LandingSection from './LandingSection.astro';
+import { ipWording } from '../../config/threatModel';
 
-// Wording follows the resolution of trueseal-roadmap#16 (the Threat Model page, written by the preview-trust Goal).
-// The IP sentence is brandbook section 10, verbatim.
+// Wording follows the resolution of trueseal-roadmap#16. The IP sentence is `ipWording` in src/config/threatModel.ts.
 const cant = [
   'Read a message. Only the device it is addressed to can decrypt it.',
   'Forge, change or re-address a message.',
@@ -40,10 +40,7 @@ const can = [
         <ul class="sees__list">{can.map(item => <li>{item}</li>)}</ul>
       </div>
     </div>
-    <p class="ip">
-      The relay never logs, stores or uses your IP address. The server it runs on still sees the connection, as with
-      any internet service. To hide your IP from the server too, use a VPN or Tor.
-    </p>
+    <p class="ip">{ipWording}</p>
   </div>
 </LandingSection>
 

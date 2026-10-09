@@ -1,0 +1,34 @@
+---
+title: Threat Model
+description: What TrueSeal claims about security, the test behind each claim, and what it doesn't defend against.
+---
+import ThreatModel from '../../../components/trust/ThreatModel.astro';
+import { standardWording } from '../../../config/threatModel.ts';
+
+# Threat Model
+
+<p>{standardWording}</p>
+
+Every claim below names the tests that prove it, by repository and test name, at a pinned commit. CI fails when a named test disappears. Anything without a test is listed under Limitations or Not defended against, never as a claim.
+
+## Adversaries
+
+<ThreatModel part="adversaries" />
+
+## Claims
+
+<ThreatModel part="claims" />
+
+## Limitations
+
+<ThreatModel part="limitations" />
+
+## Not defended against
+
+<ThreatModel part="not-defended" />
+
+## Vocabulary
+
+<ThreatModel part="vocabulary" />
+
+The Agent Docs version is at [/agents/threat-model](/agents/threat-model).

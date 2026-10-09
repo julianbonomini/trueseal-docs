@@ -54,6 +54,7 @@ export const docsNav: NavSection[] = [
   {
     title: 'Trust',
     items: [
+      { title: 'Threat Model',   slug: 'trust/threat-model' },
       { title: 'Encryption',     slug: 'trust/encryption' },
       { title: 'The Dumb Relay', slug: 'trust/the-dumb-relay' },
     ],

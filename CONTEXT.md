@@ -60,6 +60,10 @@ _Avoid_: pages, content folder
 The active visual mode — `light` or `dark`. Switched via a `data-theme` attribute on `<html>`. Both themes are fully supported and share the same design token names; the values differ per theme.
 _Avoid_: mode, color scheme (use theme)
 
+**Threat Model**
+The one page under Trust, with its Agent Docs counterpart, that states TrueSeal's security claims, each naming the tests that prove it at a pinned commit, plus its limitations and what it doesn't defend against. Both render from `src/config/threatModel.ts` (trueseal-roadmap#16).
+_Avoid_: security page, security model
+
 ## Relationships
 
 - The **Landing**, **Human Docs** and **Agent Docs** live in the same Astro project and share the same design token system and component library.

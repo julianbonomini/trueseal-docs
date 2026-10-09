@@ -47,6 +47,16 @@ bun run screenshot /tmp/shots / /docs/overview/introduction
 
 The mascot artwork is `brand/mascot/mascot.svg`. After changing it, run `bun run export-mascot` to regenerate the PNG exports beside it.
 
+### Threat Model check
+
+Every claim on the Threat Model names tests in the sibling repos, listed in `src/config/threatModel.ts`. This script checks each one exists at the commit pinned in `src/config/threatModelPins.json`:
+
+```bash
+GITHUB_TOKEN=$(gh auth token) bun scripts/check-threat-model.ts
+```
+
+It prints each missing test and exits 1 when any is missing, and exits 2 when it can't fetch a file. `.github/workflows/threat-model.yml` runs it on every pull request and push to `main`, with the `SIBLING_REPOS_TOKEN` secret: a token with read access to trueseal-sync, trueseal-noise, trueseal-relay and trueseal-e2e (trueseal-e2e is private). To bump a pin, put the repo's new full commit SHA in `threatModelPins.json`. The job lists tests the sibling repos haven't written yet, so it isn't a required check until the pins point at commits that have them.
+
 ---
 
 ## Deployment
@@ -92,13 +102,17 @@ src/
     docs/         # Sidebar
     layout/       # Navbar, Wordmark, Footer
     mdx/          # Reusable MDX components
+    trust/        # The Threat Model parts both surfaces render
     ui/           # Buttons, theme toggle, mascot
-  config/         # nav.ts (sidebar and reading order), redirects.ts (moved URLs), site.ts (version label), sharedFacts.ts (Shared Facts)
+  config/         # nav.ts (sidebar and reading order), redirects.ts (moved URLs), site.ts (version label), sharedFacts.ts (Shared Facts),
+                  # threatModel.ts (Threat Model claims and limitations) and threatModelPins.json (the commits its tests are checked at)
   content/
     docs/         # All documentation markdown
+    agents/       # Agent Docs pages
   layouts/        # BaseLayout, DocsLayout, LandingLayout
   pages/          # Astro routes
   styles/         # tokens.css, global.css
+scripts/          # check-threat-model.ts and its core declared-tests.ts, screenshot.ts, export-mascot.ts
 ```
 
-`tests/` holds the brand checks on the source, the banned-terms check on every file under `src/`, the Landing checks, the mascot and 404 checks, the redirect, link and docs-sidebar checks and the Shared Facts check on the built site, run by `bun test`.
+`tests/` holds the brand checks on the source, the banned-terms check on every file under `src/`, the Landing checks, the mascot and 404 checks, the redirect, link and docs-sidebar checks and the Shared Facts check on the built site, the Threat Model data checks, the check core's fixture tests and the Threat Model page checks, run by `bun test`.

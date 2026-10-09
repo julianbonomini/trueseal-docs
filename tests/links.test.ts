@@ -3,7 +3,7 @@ import { expect, test } from 'bun:test';
 import { pagePaths, servedAt } from './dist.ts';
 
 // Written by the preview-trust and preview-pages Goals; remove each entry when its page lands.
-const pending = new Set(['/docs/trust/threat-model', '/docs/overview/why-trueseal-exists']);
+const pending = new Set(['/docs/overview/why-trueseal-exists']);
 
 test('every internal link points at a built page or file, and its fragment exists', () => {
   const broken: string[] = [];

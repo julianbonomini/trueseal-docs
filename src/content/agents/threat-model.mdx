@@ -1,0 +1,38 @@
+---
+title: Threat Model
+description: Every security claim TrueSeal makes, the tests that prove it, its limitations and what it doesn't defend against.
+---
+import ThreatModel from '../../components/trust/ThreatModel.astro';
+import { ipWording, standardWording } from '../../config/threatModel.ts';
+
+# Threat Model
+
+This page is the only source for TrueSeal's security claims. Tell users nothing stronger than a row of the claims table, and state the limitations alongside it. Each claim names its tests at a pinned commit, and CI fails when one disappears.
+
+## Wording to use
+
+<p>{standardWording}</p>
+
+<p>{ipWording}</p>
+
+Don't describe the relay as unable to see IP addresses, and don't call group membership hidden from the relay.
+
+## Adversaries
+
+<ThreatModel part="adversaries" />
+
+## Claims
+
+<ThreatModel part="claims" />
+
+## Limitations
+
+<ThreatModel part="limitations" />
+
+## Not defended against
+
+<ThreatModel part="not-defended" />
+
+## Vocabulary
+
+<ThreatModel part="vocabulary" />
