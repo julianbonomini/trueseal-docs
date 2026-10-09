@@ -2,6 +2,7 @@
 title: Sending and receiving
 description: What send() does with a message, when the relay may delete it, how often your handler sees it, and the order messages arrive in.
 ---
+import Fact from '../../../components/mdx/Fact.astro';
 
 # Sending and receiving
 
@@ -17,13 +18,13 @@ Two exceptions apply, and [Delivery issues](/docs/integrate/delivery-issues) cov
 
 `send(bytes)` takes your message body and returns its Message ID once the message is in the outbox. Your app can call it while the device is offline or still connecting.
 
-- It fails at once with `payloadTooLarge{max}` when the body is over the Protocol Size Limit of 61,440 bytes{/* TODO: Shared Fact protocolSizeLimit */}, or over a lower `maxPayloadBytes` you passed to `open()`. An oversize body never enters the outbox.
+- It fails at once with `payloadTooLarge{max}` when the body is over the Protocol Size Limit of <Fact id="protocolSizeLimit" />, or over a lower `maxPayloadBytes` you passed to `open()`. An oversize body never enters the outbox.
 - It fails with `notMember{status}` when `status` isn't `member`.
 - Otherwise it writes one outbox entry per recipient and returns. If the app crashes before the write, `send()` never returned, so your app knows the message wasn't sent.
 
-From the outbox, the library pushes each entry to the relay and deletes it when the relay confirms that it has written the message to disk. When a push fails or the relay refuses it for now, the library retries it with backoff from 1 second up to 5 minutes{/* TODO: Shared Fact retryBackoff */} while the device is connected, and again straight after a reconnect. Entries for one recipient go out in the order you sent them, and a later message never overtakes one that is waiting to be retried.
+From the outbox, the library pushes each entry to the relay and deletes it when the relay confirms that it has written the message to disk. When a push fails or the relay refuses it for now, the library retries it with backoff <Fact id="retryBackoff" /> while the device is connected, and again straight after a reconnect. Entries for one recipient go out in the order you sent them, and a later message never overtakes one that is waiting to be retried.
 
-A message that can't be delivered is removed from the outbox and reported as `sendFailed`. That happens when the relay refuses it for good, or when it is still undelivered 30 days{/* TODO: Shared Fact outboxExpiry */} after `send()`. Pairing, membership and Destroy Group messages use the same outbox and never expire.
+A message that can't be delivered is removed from the outbox and reported as `sendFailed`. That happens when the relay refuses it for good, or when it is still undelivered <Fact id="outboxExpiry" /> after `send()`. Pairing, membership and Destroy Group messages use the same outbox and never expire.
 
 ## Receiving
 
@@ -38,13 +39,13 @@ The handler is async, and it receives a `Message` with an `id` (the Message ID),
 
 Because the acknowledgement waits for your handler, a crash inside the handler leaves the message on the relay. The relay delivers it again on the next connection, and your handler runs again. Apart from the retries after your handler throws, that is the only way your handler sees a message twice.
 
-If your handler throws, the library runs it again, up to 5 attempts in total{/* TODO: Shared Fact handlerAttempts */}. After the last one it acknowledges and drops the message and reports `handlerGaveUp`. The library sets no timeout. A handler that never finishes stops delivery until the connection ends, so put a timeout in your handler if it calls anything that can hang.
+If your handler throws, the library runs it again, up to <Fact id="handlerAttempts" /> in total. After the last one it acknowledges and drops the message and reports `handlerGaveUp`. The library sets no timeout. A handler that never finishes stops delivery until the connection ends, so put a timeout in your handler if it calls anything that can hang.
 
 The relay can see how long your handler takes, because the acknowledgement waits for it. The acknowledgement doesn't tell the relay whether a message was handled or dropped, because the library acknowledges every message it can't use as well.
 
 ## Duplicates and Message IDs
 
-The Message ID stays the same on every delivery of a message. The library keeps each handled Message ID for at least 60 days{/* TODO: Shared Fact replayWindow */} and drops any message sent more than 60 days ago, so a message never reaches your handler twice unless your app crashed while handling it or your handler threw.
+The Message ID stays the same on every delivery of a message. The library keeps each handled Message ID for at least <Fact id="replayWindow" /> and drops any message sent more than <Fact id="replayWindow" /> ago, so a message never reaches your handler twice unless your app crashed while handling it or your handler threw.
 
 To make that crash case harmless, store `message.id` in the same database transaction as the change your handler makes, and skip a message whose ID you already stored. If your handler's write is idempotent anyway, for example it sets a value rather than adding to one, you don't need to. Don't dedupe by body: two separate sends can carry the same bytes.
 

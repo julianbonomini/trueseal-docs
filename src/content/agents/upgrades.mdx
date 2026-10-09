@@ -2,6 +2,7 @@
 title: Upgrades
 description: Store Version, forward migration, End-to-End Version re-seal, automatic Store Reset with storeReset, rollback refusal with storeTooNew, crash points, and the relay store.
 ---
+import Fact from '../../components/mdx/Fact.astro';
 
 # Upgrades
 
@@ -10,7 +11,7 @@ This page states upgrades in the Developer Preview as trueseal-sync ADR-0032 dec
 ## Store Version
 
 - Session State records the Store Version that wrote it.
-- The first preview release, 0.6.0, writes Store Version 1{/* TODO: Shared Fact sessionStoreVersion */}.
+- The first preview release, 0.6.0, writes Store Version <Fact id="sessionStoreVersion" />.
 - The Compatibility Table lists each release's Store Version and migration floor.
 
 ## Migration
@@ -27,7 +28,7 @@ This page states upgrades in the Developer Preview as trueseal-sync ADR-0032 dec
 - In the migration transaction, the library rebuilds and re-seals every outbox entry under the new End-to-End Version: `Sync`, Pair, Group Manifest and Revoke.
 - Sequence order is unchanged. A re-sealed `Sync` entry keeps its Message ID, and its Sender Timestamp and 30-day outbox expiry, both counted from `send()`.
 - Nothing is lost. `undeliverableAfterUpgrade` doesn't exist (ADR-0034).
-- Peers still on the old release leave the re-sealed Blobs unacked on the relay and raise `heldForUpgrade(version)` until they upgrade, up to about 100 per device{/* TODO: Shared Fact heldBlobCap */}. Past that, the oldest is dropped as `unreadable(droppedWhileHeld)`.
+- Peers still on the old release leave the re-sealed Blobs unacked on the relay and raise `heldForUpgrade(version)` until they upgrade, up to <Fact id="heldBlobCap" />. Past that, the oldest is dropped as `unreadable(droppedWhileHeld)`.
 - An upgraded device drops a Blob in the older End-to-End Version and raises `unreadable(senderOutdated)`.
 - A Transport Version bump: a client the relay doesn't support gets `connection = relayVersionUnsupported{min, max}` and keeps its outbox queued.
 
@@ -56,7 +57,7 @@ This page states upgrades in the Developer Preview as trueseal-sync ADR-0032 dec
 
 ## Relay store
 
-- `inbox.db` records its Store Version. The first preview relay writes Store Version 1{/* TODO: Shared Fact relayStoreVersion */}.
+- `inbox.db` records its Store Version. The first preview relay writes Store Version <Fact id="relayStoreVersion" />.
 - The relay migrates any older preview Store Version forward in one transaction on start. A crash leaves the old store intact; the next start retries.
 - A store from a newer release, or one the relay can't migrate, makes the relay refuse to start. The store is unchanged, and one log line names both Store Versions.
 - On a declared relay Store Reset release, the relay refuses an older store until the Operator passes the reset flag. With it, the relay drops every inbox and keeps the keypair. No product-owner approval is needed.

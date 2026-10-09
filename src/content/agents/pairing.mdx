@@ -83,7 +83,7 @@ A Pending Join with no reply never resolves by itself. The app must offer `cance
 ## Limits
 
 - Anyone who sees the Pairing Token while the window is open can send a valid join request.
-- `JoinRequest.name` is a label chosen by the joining device. It is not authentication.
+- The `name` on a `JoinRequest` is a label chosen by the joining device. It is not authentication.
 - There is no short authentication string.
 - The app must have the admitting user confirm that a request comes from the device in front of them before calling `accept(request)`.
 - A new member receives only messages sent after other members accept the manifest that adds it. History is the app's job.

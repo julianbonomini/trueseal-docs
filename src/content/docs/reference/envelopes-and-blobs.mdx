@@ -2,6 +2,7 @@
 title: Envelopes and Blobs
 description: The sealed Envelope of the Developer Preview, what the relay can read in it, how it's encrypted and signed, the four message types, the Message ID and the Replay Window.
 ---
+import Fact from '../../../components/mdx/Fact.astro';
 
 # Envelopes and Blobs
 
@@ -74,7 +75,7 @@ Inside the sealed plaintext, a message type says what the body is. The relay nev
 | `GroupManifest` | A signed [Group Manifest](/docs/reference/group-manifest) | The library |
 | `Revoke` | Ends the group, as [Destroy Group](/docs/integrate/destroy-group) describes | The library |
 
-A device leaving a group sends a `GroupManifest` that leaves it out. Every type, a 32-member Group Manifest included, has to fit in one frame.
+A device leaving a group sends a `GroupManifest` that leaves it out. Every type, a Group Manifest at the Maximum Group Size included, has to fit in one frame.
 
 {/* TODO: the byte values of the message types in the preview format, and the exact Pair body. sync ADR-0031 leaves the byte layouts to the test vectors (trueseal-sync#94), and ADR-0023 doesn't fix the Pair body. */}
 
@@ -90,16 +91,16 @@ Apps treat it as an opaque string and never parse or rebuild it. The relay's `bl
 
 ## Replay Window
 
-A recipient drops any message whose Sender Timestamp is more than 60 days{/* TODO: Shared Fact replayWindow */} older than its own clock, acknowledges it so the relay deletes it, and reports `unreadable(expired)`. A timestamp in the future is accepted, so a sender whose clock runs fast still gets through.
+A recipient drops any message whose Sender Timestamp is more than <Fact id="replayWindow" /> older than its own clock, acknowledges it so the relay deletes it, and reports `unreadable(expired)`. A timestamp in the future is accepted, so a sender whose clock runs fast still gets through.
 
-A recipient keeps each handled Message ID until 60 days after its Sender Timestamp or after the time it handled the message, whichever is later. A copy of a `Sync` message can't reach the handler after its Message ID has been forgotten, whatever the relay does with it.
+A recipient keeps each handled Message ID until <Fact id="replayWindow" /> after its Sender Timestamp or after the time it handled the message, whichever is later. A copy of a `Sync` message can't reach the handler after its Message ID has been forgotten, whatever the relay does with it.
 
 The Sender Timestamp is set differently by type:
 
 - A `Sync` message is stamped once, at `send()`. Every re-seal keeps that timestamp, so every copy ages out of the window together.
 - A control message (`Pair`, `GroupManifest`, `Revoke`) is stamped each time it's sealed, because it never expires from the outbox. Replaying an old control message changes nothing. An old manifest loses to the current one, a `Pair` for a closed pairing window is dropped, and a `Revoke` for a destroyed group finds a fresh identity.
 
-The window is 60 days because a `Sync` message can wait up to 30 days{/* TODO: Shared Fact outboxExpiry */} in the sender's outbox and then up to 30 days{/* TODO: Shared Fact relayTtlMax */} on the relay. That's why the relay refuses to start with a TTL over 30 days.
+The window is <Fact id="replayWindow" /> because a `Sync` message can wait up to <Fact id="outboxExpiry" /> in the sender's outbox and then up to <Fact id="relayTtlMax" /> on the relay. That's why the relay refuses to start with a TTL over <Fact id="relayTtlMax" />.
 
 ## Where today's code differs
 

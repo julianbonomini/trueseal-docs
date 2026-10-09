@@ -1,0 +1,9 @@
+---
+// Text with its Markdown-backticked spans as code, as split by meaningParts.
+import type { FactPart } from '../../facts/facts';
+
+interface Props {
+  parts: FactPart[];
+}
+---
+{Astro.props.parts.map(part => (part.code ? <code>{part.text}</code> : part.text))}

@@ -1,22 +1,23 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
-import { createCssVariablesTheme } from 'shiki';
 import { redirects } from './src/config/redirects.ts';
+import { codeTheme } from './src/config/shiki.ts';
+import { siteUrl } from './src/config/site.ts';
+import { writeMarkdownFiles } from './src/markdown/markdown.ts';
 
 export default defineConfig({
-  site: 'https://trueseal.dev',
+  site: siteUrl,
   redirects,
   integrations: [
     react(),
     mdx(),
     sitemap(),
+    { name: 'markdown-files', hooks: { 'astro:build:done': ({ dir }) => writeMarkdownFiles(fileURLToPath(dir)) } },
   ],
   markdown: {
-    shikiConfig: {
-      // Colours come from the --shiki-* variables in src/styles/tokens.css, so code follows the Theme.
-      theme: createCssVariablesTheme({ name: 'trueseal', variablePrefix: '--shiki-', variableDefaults: {}, fontStyle: true }),
-    },
+    shikiConfig: { theme: codeTheme },
   },
 });

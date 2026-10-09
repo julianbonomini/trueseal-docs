@@ -2,6 +2,7 @@
 title: Pairing
 description: How a device joins a Sync Group, with explicit admission on both sides, every join state, and what happens on failure and restart.
 ---
+import Fact from '../../../components/mdx/Fact.astro';
 
 # Pairing
 
@@ -24,7 +25,7 @@ A device that is in no group drops every `Sync` and `Revoke` message it receives
 
 If this device wasn't in a group yet, the first `accept(request)` starts a new group with both devices in it.
 
-`accept(request)` fails with `pairingClosed` when the window is no longer open, and with `groupFull{max}` when the group already has the Maximum Group Size of 32 members{/* TODO: Shared Fact maxGroupSize */}. A window admits one device. To add another, call `startPairing()` again, which makes a new token.
+`accept(request)` fails with `pairingClosed` when the window is no longer open, and with `groupFull{max}` when the group already has the Maximum Group Size of <Fact id="maxGroupSize" />. A window admits one device. To add another, call `startPairing()` again, which makes a new token.
 
 There is no reject call, because the protocol sends no decline. A request you don't accept gets no reply, and it disappears when the window closes. `cancelPairing()` closes the window.
 

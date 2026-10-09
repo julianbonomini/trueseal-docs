@@ -1,0 +1,18 @@
+---
+title: Agent Snippet
+description: A block to paste into the AGENTS.md of an app that uses TrueSeal, with the integration pitfalls, where the Agent Docs are, and how to install the TrueSeal Skills.
+---
+import CodeBlock from '../../components/mdx/CodeBlock';
+import { agentSnippet } from '../../agent-snippet/agent-snippet';
+
+# Agent Snippet
+
+Paste this block into the `AGENTS.md` of the app that uses TrueSeal. It names the mistakes agents make most often when they integrate TrueSeal, and points them at these Agent Docs for everything else.
+
+<CodeBlock client:load lang="markdown" code={agentSnippet} wrap />
+
+## Where each line comes from
+
+- The handler and `MessageId` lines follow the delivery contract (trueseal-sync ADR-0026). See [`onMessage`](/agents/api#api-onmessage) and [`MessageId`](/agents/api#api-messageid).
+- The pairing line follows trueseal-sync ADR-0023. See [`accept`](/agents/api#api-accept) and [`join`](/agents/api#api-join).
+- The skills line follows docs ADR-0005. The skills link to these Agent Docs for every API name and limit, and copy none of them.

@@ -2,6 +2,7 @@
 title: Relay limits and quotas
 description: The relay's default abuse limits and refusal codes, its deadlines and heartbeat, the TTL and reaping, which limits can only be lowered, the configuration variables, and the accepted quota attack.
 ---
+import Fact from '../../components/mdx/Fact.astro';
 
 # Relay limits and quotas
 
@@ -19,13 +20,13 @@ This page states the relay's limits in the Developer Preview as trueseal-relay A
 
 | Limit | Default | When exceeded | Kind |
 |---|---|---|---|
-| Blobs per Inbox | 10,000 | `inbox full` | Temporary |
-| Bytes per Inbox | 256 MiB | `inbox full` | Temporary |
+| Blobs per Inbox | <Fact id="inboxMaxBlobs" /> | `inbox full` | Temporary |
+| Bytes per Inbox | <Fact id="inboxMaxBytes" /> | `inbox full` | Temporary |
 | Push rate per recipient | Token bucket, 20/s sustained, burst 500 | `rate limited` | Temporary |
 | Concurrent connections per listener | 1,000 | Connection closed | |
 | Concurrent Receive Sessions per Device key | 4 | New session refused | |
-| Envelope size | Derived from the Protocol Size Limit, 61,440 bytes of `send()` body{/* TODO: Shared Fact protocolSizeLimit */} | `too large` | Permanent |
-| TTL | 30 days{/* TODO: Shared Fact relayTtlDefault */} | Blob reaped | |
+| Envelope size | Derived from the Protocol Size Limit, <Fact id="protocolSizeLimit" /> of `send()` body | `too large` | Permanent |
+| TTL | <Fact id="relayTtlDefault" /> | Blob reaped | |
 
 - Refusal codes carry no content.
 - On a temporary refusal the client keeps the outbox entry and retries with backoff. No delivery issue is raised.
@@ -35,10 +36,10 @@ This page states the relay's limits in the Developer Preview as trueseal-relay A
 
 | Item | Value |
 |---|---|
-| Noise handshake deadline, both listeners | 10 s |
-| Push Session deadline, accept to close | 30 s |
-| Client heartbeat on a Receive Session | Every 25 s; the relay echoes it |
-| Receive Session idle close | 75 s with no frame received |
+| Noise handshake deadline, both listeners | <Fact id="handshakeDeadline" /> |
+| Push Session deadline, accept to close | <Fact id="pushSessionDeadline" /> |
+| Client heartbeat on a Receive Session | Every <Fact id="heartbeatInterval" />; the relay echoes it |
+| Receive Session idle close | <Fact id="receiveIdleTimeout" /> with no frame received |
 
 The client starts heartbeats. The relay does not.
 
@@ -53,7 +54,7 @@ The client starts heartbeats. The relay does not.
 - The Operator can change every value.
 - The envelope size limit (the Relay Size Limit) and the TTL can only be lowered.
 - The relay refuses to start with a size limit above the Protocol Size Limit.
-- The relay refuses to start with a TTL above 30 days. 30 days is the Replay Window (60 days) minus the client Outbox expiry (30 days), so a message pushed on its last outbox day still arrives inside the Replay Window.
+- The relay refuses to start with a TTL above <Fact id="relayTtlMax" />: the Replay Window (<Fact id="replayWindow" />) minus the client Outbox expiry (<Fact id="outboxExpiry" />), so a message pushed on its last outbox day still arrives inside the Replay Window.
 - An app using a relay with a lower Relay Size Limit passes a matching lower `maxPayloadBytes` to `open()`. `maxPayloadBytes` counts the body; the Relay Size Limit counts the sealed envelope.
 
 | Setting | Variable | Format |

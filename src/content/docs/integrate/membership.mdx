@@ -2,6 +2,7 @@
 title: Membership
 description: Who can change a Sync Group, how every device ends up with the same member list, the group size limit, and what happens to a device that is removed or leaves.
 ---
+import Fact from '../../../components/mdx/Fact.astro';
 
 # Membership
 
@@ -37,7 +38,7 @@ While a device makes a lost change again, other devices can briefly see a member
 
 ## Group size
 
-A group holds at most 32 members{/* TODO: Shared Fact maxGroupSize */}, the Maximum Group Size. The SDK exposes it as the constant `maxGroupSize`. `accept(request)` fails with `groupFull{max}` when the group is full.
+A group holds at most <Fact id="maxGroupSize" />, the Maximum Group Size. The SDK exposes it as the constant `maxGroupSize`. `accept(request)` fails with `groupFull{max}` when the group is full.
 
 Two devices can each admit a device at once and push the group past the limit. The change that loses is dropped, and the device that made it reports `admissionDropped(name, reason)`{/* TODO: the values of admissionDropped's reason; ADR-0027 and ADR-0028 name the event but not its reasons. */}. The device that was being admitted stays in `pendingJoin`.
 

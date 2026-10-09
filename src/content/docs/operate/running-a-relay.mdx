@@ -2,6 +2,31 @@
 title: Running a relay
 description: Run trueseal-relay on one Docker host from an exact image tag, check it with /healthz, read its logs, and upgrade it without losing queued messages.
 ---
+import Fact from '../../../components/mdx/Fact.astro';
+import { Code } from 'astro:components';
+import { codeTheme } from '../../../config/shiki';
+import { factText } from '../../../facts/facts';
+
+export const receive = factText('defaultReceivePort').text;
+export const push = factText('defaultPushPort').text;
+export const compose = `# docker-compose.yml
+services:
+  relay:
+    image: ghcr.io/julianbonomini/trueseal-relay:v0.2.0
+    restart: unless-stopped
+    command: ["-no-config"]
+    ports:
+      - "${receive}:${receive}"
+      - "${push}:${push}"
+    volumes:
+      - relay-data:/data
+    environment:
+      TRUESEAL_RELAY_KEYPAIR_PATH: /data/keypair.hex
+      TRUESEAL_RELAY_STORE_SQLITE_PATH: /data/inbox.db
+
+volumes:
+  relay-data:
+`;
 
 import Callout from '../../../components/mdx/Callout.astro';
 
@@ -15,25 +40,7 @@ The Developer Preview supports one way to run it: a single host, the relay in on
 
 Pin the image to an exact version. A floating tag can bring in a release with a newer Store Version or Transport Version the next time anyone pulls the image, and you want that to happen when you choose.
 
-```yaml
-# docker-compose.yml
-services:
-  relay:
-    image: ghcr.io/julianbonomini/trueseal-relay:v0.2.0
-    restart: unless-stopped
-    command: ["-no-config"]
-    ports:
-      - "7700:7700"
-      - "7701:7701"
-    volumes:
-      - relay-data:/data
-    environment:
-      TRUESEAL_RELAY_KEYPAIR_PATH: /data/keypair.hex
-      TRUESEAL_RELAY_STORE_SQLITE_PATH: /data/inbox.db
-
-volumes:
-  relay-data:
-```
+<Code lang="yaml" theme={codeTheme} code={compose} />
 
 {/* TODO: v0.2.0 is the first preview relay version in the release spec and is not released yet. Take the tag from the Compatibility Table, or Shared Facts, once the relay ships. */}
 
@@ -49,8 +56,8 @@ On its first start the container writes a new keypair to `/data/keypair.hex` and
 
 | Port | Used for | Open to |
 |---|---|---|
-| 7700 | Receive Sessions, where a device holds a connection open to collect its messages | The internet |
-| 7701 | Push Sessions, where a device drops off messages for other devices | The internet |
+| <Fact id="defaultReceivePort" /> | Receive Sessions, where a device holds a connection open to collect its messages | The internet |
+| <Fact id="defaultPushPort" /> | Push Sessions, where a device drops off messages for other devices | The internet |
 | 7702 | `/healthz` | The host only. Leave it unpublished. |
 
 Devices always connect to the relay; the relay never connects out to them. Both ports carry Noise over plain TCP, so a proxy in front of them must pass the TCP stream through unchanged.
@@ -116,6 +123,6 @@ A release that changes the Transport Version needs every device and the relay to
 
 - Choosing the tag and when to move it.
 - Backing up the keypair once. See [Backups](/docs/operate/backups).
-- Keeping ports 7700 and 7701 reachable and 7702 private.
+- Keeping ports <Fact id="defaultReceivePort" /> and <Fact id="defaultPushPort" /> reachable and 7702 private.
 - Any per-IP limiting, at your firewall or reverse proxy.
 - Reading the release notes before an upgrade, and deciding when to pass the reset flag.

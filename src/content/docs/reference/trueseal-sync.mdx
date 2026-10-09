@@ -2,6 +2,7 @@
 title: trueseal-sync
 description: The Rust core behind every TrueSeal SDK, what it owns, what it leaves to the app, and how it is built and released in the Developer Preview.
 ---
+import Fact from '../../../components/mdx/Fact.astro';
 
 # trueseal-sync
 
@@ -23,7 +24,7 @@ trueseal-sync is the Rust library that does the work behind every TrueSeal SDK. 
 - Resolving two conflicting changes. Messages from one device arrive in the order it sent them, and there is no order across devices.
 - Sending history to a new member. A new member receives only messages sent after the others learn it joined.
 - Roles and permissions. Every current member can admit, remove and destroy the group.
-- Splitting data larger than the Protocol Size Limit of 61,440 bytes{/* TODO: Shared Fact protocolSizeLimit */}.
+- Splitting data larger than the Protocol Size Limit of <Fact id="protocolSizeLimit" />.
 
 ## API
 

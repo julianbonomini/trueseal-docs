@@ -1,0 +1,28 @@
+---
+title: Versions and Relay Address
+description: The TrueSeal Release, the Transport, End-to-End and Store Versions, and the Relay Address format with its default ports.
+---
+import Fact from '../../components/mdx/Fact.astro';
+import FactTable from '../../components/mdx/FactTable.astro';
+
+# Versions and Relay Address
+
+Values follow the accepted ADRs for the Developer Preview.
+
+## Versions
+
+<FactTable group="versions" />
+
+A component speaks exactly one Transport Version and one End-to-End Version and negotiates nothing. Version 0 is reserved. See [Protocol and wire format](/agents/protocol#protocol-versions) for how each version is rejected. Each SDK reports `sdkVersion`, `transportVersion` and `endToEndVersion` in `TrueSeal.info`.
+
+## Relay Address
+
+A Relay Address is one string: <Fact id="relayAddressFormat" />.
+
+<FactTable group="relayAddress" />
+
+- `TrueSeal.open` accepts the string or the typed form `RelayAddress(host, publicKey, receivePort, pushPort)`.
+- A port missing from the string takes its default; a port given is never dropped.
+- The relay public key is the relay's 32-byte X25519 public key in hex. The preview has no relay key rotation; changing the key breaks every client's Relay Address.
+
+Sources: trueseal-sync ADR-0028 and trueseal-relay ADR-0012.

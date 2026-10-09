@@ -130,17 +130,9 @@ A message waits in the relay's Inbox until your phone acknowledges it after your
 
 ## What the relay sees
 
-The relay can't read or forge messages. It does see some metadata:
-
-- each device's public key, and when each device is online;
-- which device each message is addressed to, its size and when it arrived;
-- which devices receive messages together, so it can work out which devices likely share a group;
-- the End-to-End Version on each message;
-- often which device pushed a message, from the network address and timing of the connection.
+The relay can't read or forge messages. It does see some metadata, such as which device each message is addressed to, its size and when it arrived. The Threat Model lists [everything the relay sees](/docs/trust/threat-model#what-the-relay-sees), every claim with the test behind it, and what TrueSeal doesn't defend against.
 
 The relay never logs, stores or uses your IP address. The server it runs on still sees the connection, as with any internet service. To hide your IP from the server too, use a VPN or Tor.
-
-The [Threat Model](/docs/trust/threat-model) lists every claim with the test behind it, and what TrueSeal doesn't defend against.
 
 ## Where TrueSeal stops
 

@@ -2,6 +2,7 @@
 title: Session State
 description: What trueseal-sync stores on each device in the Developer Preview, including the identity, the outbox, the handled Message IDs and the membership state, and how it survives crashes, wipes and upgrades.
 ---
+import Fact from '../../../components/mdx/Fact.astro';
 
 # Session State
 
@@ -23,14 +24,14 @@ Every change that spans several records is written in one database transaction, 
 | Pending Membership Changes | Admissions, removals and leaves this device issued and still has to see through | Each one is satisfied, superseded or dropped |
 | Outbox | One entry per message per recipient, in sequence order | The relay acknowledges the push, or the message fails |
 | Sequence | The device's send counter | With the identity |
-| Handled Message IDs | Each handled Message ID and when it expires | 60 days after the later of handling and the Sender Timestamp |
+| Handled Message IDs | Each handled Message ID and when it expires | <Fact id="replayWindow" /> after the later of handling and the Sender Timestamp |
 | Store Version | The format version of this database | Never; a migration updates it |
 
 The device keeps old manifests because a `Revoke` is honoured from any device that appears in any manifest it has held for the group. [Destroy Group](/docs/integrate/destroy-group) explains why.
 
 ## The outbox
 
-`send()` writes one outbox entry per recipient before it returns, so a message that `send()` returned for survives a crash. The library pushes entries for each recipient in sequence order and never lets a later one go before an earlier one that's waiting for a retry. An entry leaves the outbox when the relay acknowledges it, when the relay refuses it for good, or 30 days{/* TODO: Shared Fact outboxExpiry */} after `send()` for a `Sync` message. `Pair`, Group Manifest and `Revoke` entries never expire.
+`send()` writes one outbox entry per recipient before it returns, so a message that `send()` returned for survives a crash. The library pushes entries for each recipient in sequence order and never lets a later one go before an earlier one that's waiting for a retry. An entry leaves the outbox when the relay acknowledges it, when the relay refuses it for good, or <Fact id="outboxExpiry" /> after `send()` for a `Sync` message. `Pair`, Group Manifest and `Revoke` entries never expire.
 
 The outbox keeps the plaintext body of a `Sync` message until the relay has accepted it, so the library can seal it again after an End-to-End Version bump. [Sending and receiving](/docs/integrate/sending-and-receiving) has the retry rules and the delivery promise.
 
@@ -44,7 +45,7 @@ Removal, leaving and Destroy Group all end in the same wipe. The library deletes
 
 ## Upgrades
 
-Session State records the Store Version that wrote it. The first preview release, 0.6.0, writes Store Version 1. Each later release migrates any older preview store forward, in one transaction, the first time it opens it.
+Session State records the Store Version that wrote it. The first preview release, 0.6.0, writes Store Version <Fact id="sessionStoreVersion" />. Each later release migrates any older preview store forward, in one transaction, the first time it opens it.
 
 | Store found by `open()` | What happens |
 |---|---|

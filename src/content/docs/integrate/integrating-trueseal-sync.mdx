@@ -2,6 +2,7 @@
 title: Integrating trueseal-sync
 description: How an app opens TrueSeal, points it at a relay, reads its state, registers its handlers and closes it, in the same shape for the Swift, Kotlin and TypeScript SDKs.
 ---
+import Fact from '../../../components/mdx/Fact.astro';
 
 # Integrating trueseal-sync
 
@@ -15,10 +16,10 @@ All three SDKs expose one object, `TrueSeal`, with the same operations, names, e
 trueseal = await TrueSeal.open(relay, storage, namespace = "default")
 ```
 
-- `relay` is the Relay Address, one string with the relay's host, ports and public key: `trueseal://<key>@host[:receivePort][?push=pushPort]`. Ship it as a build-time constant. [Relay Address and keypair](/docs/operate/relay-address-and-keypair) explains where it comes from.
-- `storage` is the directory for [Session State](/docs/reference/session-state). Use a directory that belongs to your app, so no other app shares its identity. On Android, `Storage.android(context)` gives you one.
+- `relay` is the Relay Address, one string with the relay's host, ports and public key: <Fact id="relayAddressFormat" />. Ship it as a build-time constant. [Relay Address and keypair](/docs/operate/relay-address-and-keypair) explains where it comes from.
+- `storage` is the directory for [Session State](/docs/reference/session-state). Use a directory that belongs to your app, so no other app shares its identity. On Android, build the `Storage` from your app's context; the [API reference](/agents/api) has each platform's spelling.
 - `namespace` selects one independent identity and group inside that directory. One namespace holds one group, so an app that needs a device in two groups opens two objects with two namespaces.
-- `maxPayloadBytes` is optional. Pass a value lower than 61,440{/* TODO: Shared Fact protocolSizeLimit */} if your relay's Operator set a lower Relay Size Limit.
+- `maxPayloadBytes` is optional. Pass a value lower than the Protocol Size Limit (<Fact id="protocolSizeLimit" />) if your relay's Operator set a lower Relay Size Limit.
 
 `open()` returns before the relay connection is up and connects in the background. Once the device is a member, `send()` works whether the relay is reachable or not, and messages wait in the outbox until it is. Don't write reconnect logic; the library retries on its own.
 

@@ -2,6 +2,7 @@
 title: Delivery issues
 description: The cases where a message isn't delivered or handled, how the library reports each one, and what your app should do about it.
 ---
+import Fact from '../../../components/mdx/Fact.astro';
 
 # Delivery issues
 
@@ -19,11 +20,11 @@ Issues stay on the device and are never sent to another device or to the relay. 
 |---|---|---|
 | `unreadable(malformed)` | A message couldn't be decoded or authenticated. The library acknowledged and dropped it. | Nothing. Log it if you collect diagnostics. |
 | `unreadable(senderOutdated)` | Another device sent a message in an older protocol version than this device supports. It was dropped. | Tell the user one of their devices needs an update. |
-| `unreadable(expired)` | The message was sent more than 60 days ago{/* TODO: Shared Fact replayWindow */}, so it is outside the Replay Window. It was dropped. | Nothing. The data is lost on this device. If it matters, your app can ask another device to send its current state again. |
-| `unreadable(droppedWhileHeld)` | More than about 100 newer-version messages{/* TODO: Shared Fact heldBlobCap */} were waiting for this device, and the oldest one was dropped to make room. | Ask the user to update the app now. Messages are already being lost. |
+| `unreadable(expired)` | The message was sent more than <Fact id="replayWindow" /> ago, so it is outside the Replay Window. It was dropped. | Nothing. The data is lost on this device. If it matters, your app can ask another device to send its current state again. |
+| `unreadable(droppedWhileHeld)` | More newer-version messages than the cap (<Fact id="heldBlobCap" />) were waiting for this device, and the oldest one was dropped to make room. | Ask the user to update the app now. Messages are already being lost. |
 | `unauthorized` | The message failed the pairing or membership rules, for example its sender isn't a member. It was dropped. | Nothing. Log it if you collect diagnostics. |
 | `heldForUpgrade(version)` | A message in a newer protocol version is waiting on the relay, unacknowledged, until this device upgrades. | Tell the user to update the app. After the upgrade the message is handled, out of order with the messages around it. |
-| `handlerGaveUp(messageId, error)` | Your handler threw on all 5 attempts{/* TODO: Shared Fact handlerAttempts */}. The message was acknowledged and dropped. | Treat it as a bug in your handler and report `error`. If the data matters, ask the sending device to send it again. |
+| `handlerGaveUp(messageId, error)` | Your handler threw on all <Fact id="handlerAttempts" />. The message was acknowledged and dropped. | Treat it as a bug in your handler and report `error`. If the data matters, ask the sending device to send it again. |
 
 `heldForUpgrade` is the first exception to the delivery promise. A held message reaches your handler after messages that were sent later. `unreadable(droppedWhileHeld)` is what happens if the device doesn't upgrade in time.
 
@@ -35,7 +36,7 @@ The relay answers a refused push with a typed code that carries no content. A te
 |---|---|---|
 | `sendFailed(messageId, tooLarge)` | The relay refused the message for good, because it is over the relay's own size limit. An Operator may set that limit lower than the Protocol Size Limit. | Tell the user the message wasn't delivered. Send smaller messages, or pass a matching lower `maxPayloadBytes` to `open()` so `send()` refuses them up front. [Limits and quotas](/docs/operate/limits-and-quotas#changing-the-limits) explains why the two numbers differ. |
 | `sendFailed(messageId, malformed)` | The relay refused the message for good, because it couldn't parse it. | Treat it as a bug and report it. |
-| `sendFailed(messageId, expired)` | The message was still in the outbox 30 days{/* TODO: Shared Fact outboxExpiry */} after `send()`, for example because the device was offline all that time. It was removed. | Tell the user it wasn't delivered, and send it again if it still matters. |
+| `sendFailed(messageId, expired)` | The message was still in the outbox <Fact id="outboxExpiry" /> after `send()`, for example because the device was offline all that time. It was removed. | Tell the user it wasn't delivered, and send it again if it still matters. |
 
 `sendFailed` is the second exception to the delivery promise. The recipient never gets that message, and the messages sent after it still arrive, so the recipient sees a gap.
 
@@ -47,13 +48,13 @@ These are thrown by the call, before anything enters the outbox, so they never a
 
 | Error | What happened | What your app should do |
 |---|---|---|
-| `payloadTooLarge{max}` | The body is over `max`, the Protocol Size Limit of 61,440 bytes{/* TODO: Shared Fact protocolSizeLimit */} or the lower `maxPayloadBytes` your app passed to `open()`. | Split the data or send a reference to it. |
+| `payloadTooLarge{max}` | The body is over `max`, the Protocol Size Limit of <Fact id="protocolSizeLimit" /> or the lower `maxPayloadBytes` your app passed to `open()`. | Split the data or send a reference to it. |
 | `notMember{status}` | `status` isn't `member`. | Wait until the device has joined, or hide the send action while it hasn't. |
 | `closed` | The app called `close()` on this `TrueSeal` object. | Open a new one. |
 
 ## What isn't reported
 
-- A message that waits on the relay longer than its TTL, 30 days by default{/* TODO: Shared Fact relayTtlDefault */}, is deleted by the relay. The sender saw the relay accept it, and the recipient never sees it, so neither device gets an issue. See [Limits and quotas](/docs/operate/limits-and-quotas).
+- A message that waits on the relay longer than its TTL, <Fact id="relayTtlDefault" /> by default, is deleted by the relay. The sender saw the relay accept it, and the recipient never sees it, so neither device gets an issue. See [Limits and quotas](/docs/operate/limits-and-quotas).
 - A duplicate is dropped without an issue.
 - Messages a device hadn't sent when it was removed, or when its group was destroyed, are dropped without an issue. See [Membership](/docs/integrate/membership) and [Destroy Group](/docs/integrate/destroy-group).
 

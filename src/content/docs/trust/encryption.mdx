@@ -1,0 +1,56 @@
+---
+title: Encryption
+description: How TrueSeal encrypts and signs every message, and what the relay still sees.
+---
+
+# Encryption
+
+TrueSeal is end-to-end encrypted. The relay can't read or forge your messages, and it holds no keys, whoever runs it. It does see some metadata, listed in the [Threat Model](/docs/trust/threat-model#what-the-relay-sees).
+
+## TL;DR
+
+- **Layer 1 — Addressed encryption.** Each blob is encrypted on the device for one specific recipient. Only that recipient's private key opens it.
+- **Layer 2 — Noise sessions.** The transport channel between device and relay is encrypted and forward-secret against network observers.
+- **No end-to-end forward secrecy.** A stolen device key decrypts every message ever addressed to that device, including any a malicious relay kept.
+- **Signatures.** Every envelope is Ed25519-signed; tampering and impersonation both fail verification.
+- **What the relay sees.** Device keys and online times, recipients, sizes and timing, fan-out, and often which device pushed. [The full list](/docs/trust/threat-model#what-the-relay-sees).
+
+## Two layers of encryption
+
+trueseal encrypts at two different layers for two different reasons. They're independent. Layer 1 protects the blob at rest, even if someone walks off with the relay's database. Layer 2 protects the channel in transit, even if someone is sitting on the network.
+
+### Layer 1 — Addressed encryption (at rest)
+
+Before a blob leaves the sender's device, it gets encrypted separately for each recipient. The blob is addressed to a specific public key, and only the holder of that key's private half can decrypt it.
+
+The mechanics: X25519 key agreement combined with ChaCha20-Poly1305 authenticated encryption. The sender does a Diffie-Hellman against the recipient's static public key to derive a shared secret, then encrypts with it. End result:
+
+- Only the intended recipient can decrypt.
+- The relay, any middlebox, any other device — none of them can read it.
+- Tampering breaks the authentication tag, so it just won't decrypt.
+
+The sender's identity (`author_pub`) isn't a visible field on the envelope. It's prepended *inside* the plaintext before encryption, so a stored message carries no sender identity. The relay sees only who it's going to.
+
+None of this depends on a live connection. A blob encrypted this way can sit on the relay for a while and still decrypt cleanly when the recipient finally shows up.
+
+### Layer 2 — Noise sessions (in transit)
+
+The transport between a device and the relay is wrapped in the [Noise Protocol Framework](https://noiseprotocol.org/). Two session shapes, two handshake patterns:
+
+**Receive Sessions** use `Noise XX` — mutual auth. Device and relay each verify the other's static public key. The result is a forward-secret authenticated channel: even if a session key leaks later, past traffic stays unreadable. This protects the connection against network observers. It doesn't give end-to-end forward secrecy between devices.
+
+**Push Sessions** use `Noise NK` — the device verifies the relay's static public key, and the handshake gives the relay no device key. A throwaway ephemeral keypair is generated for each push, and the session is closed the moment the blobs are sent.
+
+## Signatures
+
+Every envelope is signed by the sender's Ed25519 signing key. The signature covers the sequence number, parent hashes, recipient public key, and ciphertext. That gets you two things:
+
+**Tamper detection.** Change anything, such as a byte of ciphertext or the recipient, and the signature stops matching. The recipient drops the envelope. A replayed envelope is dropped by the Replay Window, so it reaches your handler at most once.
+
+**Sender binding.** The sender's `author_pub` lives inside the encrypted payload. When the recipient decrypts, they pull `author_pub` out and check the signature against it. Device B can't pretend to be device A: if B encrypts a payload and labels it as A's, the signature was made with B's key, so verification fails.
+
+After signature verification, the sender is checked against the current Group Manifest. Anything from a key that isn't a member gets discarded. The manifest is the authoritative trusted-device list — see [Membership](/docs/integrate/membership) for how it's managed.
+
+## What encryption doesn't cover
+
+Encryption stops a malicious or compromised relay from reading or forging messages. What it leaves open, from forward secrecy to what the relay sees, is listed in the [Threat Model](/docs/trust/threat-model#limitations).

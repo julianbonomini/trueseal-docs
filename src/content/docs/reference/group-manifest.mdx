@@ -2,6 +2,7 @@
 title: Group Manifest
 description: The signed, parent-linked membership record of a Sync Group in the Developer Preview, its fields, the rules a device checks before accepting one, and how concurrent changes converge.
 ---
+import Fact from '../../../components/mdx/Fact.astro';
 
 # Group Manifest
 
@@ -24,7 +25,7 @@ A member's name is a label derived from its signing key, two words such as `Swif
 
 A manifest travels as a `GroupManifest` message inside an ordinary sealed [Envelope](/docs/reference/envelopes-and-blobs), one per member, through the same outbox as every other message. Manifest messages never expire from the outbox. The relay can't read the message type, though it sees a manifest go out to every member at once.
 
-A group holds at most 32 members{/* TODO: Shared Fact maxGroupSize */}, so that the largest manifest still fits in one frame. An admission that would go over fails with `groupFull{max}`.
+A group holds at most <Fact id="maxGroupSize" />, so that the largest manifest still fits in one frame. An admission that would go over fails with `groupFull{max}`.
 
 ## Accepting a manifest
 
@@ -52,7 +53,7 @@ When a member admits, removes or leaves, it records a Pending Membership Change 
 | Descends from a manifest that carried the change | Clears it. A later, deliberate change undid it. |
 | Neither, so it was built concurrently | Re-applies the change on top, as a new manifest one version higher |
 | Leaves the issuer out | Drops the change, because the issuer is no longer a member |
-| Would go over 32 members if the admission were re-applied | Drops the change and reports `admissionDropped(name, reason)`; the joiner stays in Pending Join |
+| Would go over the Maximum Group Size (<Fact id="maxGroupSize" />) if the admission were re-applied | Drops the change and reports `admissionDropped(name, reason)`; the joiner stays in Pending Join |
 
 Pending Membership Changes survive a restart. An issuer that was offline re-applies after it reconnects.
 

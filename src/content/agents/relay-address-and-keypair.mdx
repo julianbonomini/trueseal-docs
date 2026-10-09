@@ -2,6 +2,10 @@
 title: Relay Address and keypair
 description: The relay keypair, the pubkey command, bringing your own key, the Relay Address format and its port defaults, no key rotation, and what a leaked private key exposes.
 ---
+import Fact from '../../components/mdx/Fact.astro';
+import { Code } from 'astro:components';
+import { codeTheme } from '../../config/shiki';
+import { factText } from '../../facts/facts';
 
 # Relay Address and keypair
 
@@ -17,13 +21,9 @@ This page states the relay's identity in the Developer Preview as trueseal-relay
 
 ## Relay Address
 
-{/* TODO: render the format from Shared Facts once the agent-docs Goal is merged. */}
+<Code lang="text" theme={codeTheme} code={factText('relayAddressFormat').text} />
 
-```
-trueseal://<relay public key hex>@host[:receivePort][?push=pushPort]
-```
-
-- `receivePort` defaults to 7700; `pushPort` defaults to 7701.
+- The receive port defaults to <Fact id="defaultReceivePort" /> and the push port to <Fact id="defaultPushPort" />.
 - The typed form is `RelayAddress(host, publicKey, receivePort, pushPort)`. `open()` accepts either form.
 - `invalidRelayAddress` is the error case for a malformed Relay Address.{/* TODO: which call raises it; ADR-0028 lists the case without saying. */}
 - A port is never dropped silently.

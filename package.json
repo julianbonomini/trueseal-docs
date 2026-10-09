@@ -9,6 +9,7 @@
     "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",
     "check": "ASTRO_TELEMETRY_DISABLED=1 astro check && bun run build && bun test --pass-with-no-tests",
     "screenshot": "bun scripts/screenshot.ts",
+    "check:references": "bun scripts/check-references.ts",
     "export-mascot": "bun scripts/export-mascot.ts"
   },
   "dependencies": {
@@ -20,11 +21,19 @@
     "astro": "^5.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "shiki": "^3.21.0"
+    "rehype-parse": "^9.0.1",
+    "rehype-remark": "^10.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-parse": "^11.0.0",
+    "remark-stringify": "^11.0.0",
+    "shiki": "^3.21.0",
+    "unified": "^11.0.5"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
     "@types/bun": "^1.4.2",
+    "@types/hast": "3.0.4",
+    "@types/mdast": "^4.0.4",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "pagefind": "^1.0.0",

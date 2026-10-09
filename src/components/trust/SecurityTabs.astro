@@ -1,0 +1,17 @@
+---
+// The Security tab of each public TrueSeal repository, where private vulnerability reporting lives. Both
+// Reporting a vulnerability pages place it. trueseal-e2e is private, so it isn't listed.
+const repos = [
+  'trueseal-sync',
+  'trueseal-noise',
+  'trueseal-relay',
+  'trueseal-sync-swift',
+  'trueseal-sync-kotlin',
+  'trueseal-sync-ts',
+  'trueseal-docs',
+];
+---
+
+<ul>
+  {repos.map(repo => <li><a href={`https://github.com/julianbonomini/${repo}/security`}>{repo}</a></li>)}
+</ul>

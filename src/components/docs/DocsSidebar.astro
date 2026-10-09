@@ -1,38 +1,36 @@
 ---
-// The Human Docs sidebar, drawn from docsNav. A page's children show only while the
-// page or one of its children is the current page.
-import { docsNav, slugOf } from '../../config/nav';
+// A documentation sidebar, for the surface of the current page. nav.ts decides which links
+// it holds, which is current and which children show.
+import { sidebarOf } from '../../config/nav';
 
-const currentSlug = slugOf(Astro.url.pathname);
-const isCurrent = (slug: string) => slug === currentSlug;
+const sidebar = sidebarOf(Astro.url.pathname);
 ---
 
-<nav class="sidebar" aria-label="Docs">
-  {docsNav.map(section => (
-    <div class="sidebar__section">
-      <p class="sidebar__group">{section.title}</p>
-      <ul>
-        {section.items.map(item => {
-          const expanded = item.children && (isCurrent(item.slug) || item.children.some(c => isCurrent(c.slug)));
-          return (
+{sidebar && (
+  <nav class="sidebar" aria-label={sidebar.label}>
+    {sidebar.sections.map(section => (
+      <div class="sidebar__section">
+        <p class="sidebar__group">{section.title}</p>
+        <ul>
+          {section.links.map(link => (
             <li>
-              <a href={`/docs/${item.slug}`} aria-current={isCurrent(item.slug) ? 'page' : undefined}>{item.title}</a>
-              {expanded && (
+              <a href={link.href} aria-current={link.current ? 'page' : undefined}>{link.title}</a>
+              {link.children.length > 0 && (
                 <ul class="sidebar__children">
-                  {item.children!.map(child => (
+                  {link.children.map(child => (
                     <li>
-                      <a href={`/docs/${child.slug}`} aria-current={isCurrent(child.slug) ? 'page' : undefined}>{child.title}</a>
+                      <a href={child.href} aria-current={child.current ? 'page' : undefined}>{child.title}</a>
                     </li>
                   ))}
                 </ul>
               )}
             </li>
-          );
-        })}
-      </ul>
-    </div>
-  ))}
-</nav>
+          ))}
+        </ul>
+      </div>
+    ))}
+  </nav>
+)}
 
 <style>
   .sidebar__section {

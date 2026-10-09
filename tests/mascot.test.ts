@@ -2,8 +2,8 @@
 // `bun run build` first. How the seal looks can only be checked by screenshot.
 import { describe, expect, test } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
-import { join, relative } from 'node:path';
-import { builtPages, dist, indexedUrls } from './dist.ts';
+import { join } from 'node:path';
+import { dist, htmlDocuments, indexedUrls } from './dist.ts';
 
 const root = join(import.meta.dir, '..');
 const mascotDir = join(root, 'brand', 'mascot');
@@ -57,10 +57,11 @@ describe('404 page', () => {
 
 describe('Mascot placement', () => {
   test('the mascot appears only on pages the brandbook allows', () => {
-    const allowed = ['404.html', 'docs/overview/why-trueseal-exists/index.html'];
-    const withMascot = builtPages()
-      .filter(path => readFileSync(path, 'utf8').includes('class="mascot"'))
-      .map(path => relative(dist, path));
+    const allowed = ['/404.html', '/docs/overview/why-trueseal-exists'];
+    const withMascot = htmlDocuments()
+      .filter(doc => doc.html.includes('class="mascot"'))
+      .map(doc => doc.path)
+      .sort();
     expect(withMascot).toEqual(allowed);
   });
 });

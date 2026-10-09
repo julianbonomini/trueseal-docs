@@ -2,6 +2,30 @@
 title: Running a relay
 description: The one supported relay deployment, the pinned image, ports, /healthz, normal and dev logging, the IP wording, shutdown, Store Version migration and the reset flag.
 ---
+import Fact from '../../components/mdx/Fact.astro';
+import { Code } from 'astro:components';
+import { codeTheme } from '../../config/shiki';
+import { factText } from '../../facts/facts';
+
+export const receive = factText('defaultReceivePort').text;
+export const push = factText('defaultPushPort').text;
+export const compose = `services:
+  relay:
+    image: ghcr.io/julianbonomini/trueseal-relay:v0.2.0
+    restart: unless-stopped
+    command: ["-no-config"]
+    ports:
+      - "${receive}:${receive}"
+      - "${push}:${push}"
+    volumes:
+      - relay-data:/data
+    environment:
+      TRUESEAL_RELAY_KEYPAIR_PATH: /data/keypair.hex
+      TRUESEAL_RELAY_STORE_SQLITE_PATH: /data/inbox.db
+
+volumes:
+  relay-data:
+`;
 
 # Running a relay
 
@@ -18,24 +42,7 @@ This page states relay operation in the Developer Preview as trueseal-relay ADR-
 - `ghcr.io/julianbonomini/trueseal-relay:v0.2.0`{/* TODO: v0.2.0 is the first preview relay version in the release spec and is not released yet; take the tag from the Compatibility Table or Shared Facts once it ships. */}
 - Always pin an exact version tag. A floating tag can move the Store Version or the Transport Version on the next image pull.
 
-```yaml
-services:
-  relay:
-    image: ghcr.io/julianbonomini/trueseal-relay:v0.2.0
-    restart: unless-stopped
-    command: ["-no-config"]
-    ports:
-      - "7700:7700"
-      - "7701:7701"
-    volumes:
-      - relay-data:/data
-    environment:
-      TRUESEAL_RELAY_KEYPAIR_PATH: /data/keypair.hex
-      TRUESEAL_RELAY_STORE_SQLITE_PATH: /data/inbox.db
-
-volumes:
-  relay-data:
-```
+<Code lang="yaml" theme={codeTheme} code={compose} />
 
 - `-no-config` reads every setting from `TRUESEAL_RELAY_*` environment variables.
 - On first start the entrypoint generates `/data/keypair.hex` (mode 0600) and prints the public key.
@@ -44,8 +51,8 @@ volumes:
 
 | Port | Purpose | Exposure |
 |---|---|---|
-| 7700 | Receive Sessions (Noise XX) | Public |
-| 7701 | Push Sessions (Noise NK) | Public |
+| <Fact id="defaultReceivePort" /> | Receive Sessions (Noise XX) | Public |
+| <Fact id="defaultPushPort" /> | Push Sessions (Noise NK) | Public |
 | 7702 | `/healthz` | Unpublished; used by the Docker `HEALTHCHECK` |
 
 - Noise over plain TCP. A proxy in front must pass TCP through unchanged.
@@ -84,7 +91,7 @@ volumes:
 On `SIGTERM`:
 
 1. Stop accepting connections on every listener.
-2. Let pushes already writing commit and send their Ack, for at most 10 s.
+2. Let pushes already writing commit and send their Ack, for at most <Fact id="shutdownDrain" />.
 3. Cancel every Receive Session. Unacked Blobs stay in their Inbox and are redelivered on reconnect; client dedup drops the repeat.
 4. Close the store.
 
@@ -114,6 +121,6 @@ A push cut off before its Ack is retried by the sender.
 
 - Choosing and moving the pinned tag.
 - Backing up the keypair.
-- Keeping 7700 and 7701 reachable and 7702 private.
+- Keeping <Fact id="defaultReceivePort" /> and <Fact id="defaultPushPort" /> reachable and 7702 private.
 - Per-IP limits, outside the relay.
 - Reading release notes before upgrading, and deciding when to pass the reset flag.

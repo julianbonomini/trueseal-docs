@@ -2,6 +2,7 @@
 title: Destroy Group
 description: Destroy Group's public wording, its authority rule, the destroying state, Revoke forwarding, the state table, crash points, and what it does not do.
 ---
+import Fact from '../../components/mdx/Fact.astro';
 
 # Destroy Group
 
@@ -16,7 +17,7 @@ Use this wording when describing Destroy Group to users, and claim nothing beyon
 > **What it does not do:**
 > - It can't recover or erase anything the stolen device already received or stored.
 > - It can't force the stolen device to wipe itself.
-> - It doesn't reach a device that stays offline longer than the relay's message lifetime{/* TODO: Shared Fact relayTtlDefault */}. That device keeps its old group until the user destroys or leaves it there too.
+> - It doesn't reach a device that stays offline longer than the relay's message lifetime (<Fact id="relayTtlDefault" /> by default). That device keeps its old group until the user destroys or leaves it there too.
 > - It doesn't complete while your device can't reach the relay. Your device shows "destroying" until it can.
 > - Any current or former member can trigger it. That includes a stolen device, which can end your group, though that cuts it off from the group as well.
 

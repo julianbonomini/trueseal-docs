@@ -1,0 +1,26 @@
+# Checks that every test the Threat Model names exists in its repo at the pinned commit
+# (src/config/threatModelPins.json). It lists tests the sibling repos haven't written yet, so it isn't
+# a required check until the pins point at commits that have them.
+name: Threat Model
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  named-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install --frozen-lockfile
+      - run: bun scripts/check-threat-model.ts
+        env:
+          GITHUB_TOKEN: ${{ secrets.SIBLING_REPOS_TOKEN }}

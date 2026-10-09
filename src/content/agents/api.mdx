@@ -1,0 +1,57 @@
+---
+title: SDK API reference
+description: Every public type, method and property of the TrueSeal API in Swift, Kotlin and TypeScript, what each fails with, and what the API does not do.
+---
+import ApiEntries from '../../components/mdx/ApiEntries.astro';
+
+# SDK API reference
+
+The three SDKs expose one API (trueseal-sync ADR-0028). Each entry gives the shared signature, then each platform's spelling where it differs. Swift uses `async throws`, Kotlin uses `suspend` with exceptions, and TypeScript uses Promises. Errors, events and delivery issues are on [Errors and events](/agents/errors-and-events). Values are on [Limits](/agents/limits) and [Versions and Relay Address](/agents/versions-and-relay-address).
+
+## Opening and closing
+
+<ApiEntries section="open" />
+
+## State
+
+<ApiEntries section="state" />
+
+## Receiving
+
+<ApiEntries section="receive" />
+
+## Sending
+
+<ApiEntries section="send" />
+
+## Pairing
+
+Pairing needs an explicit action on both devices. The admitting device calls `startPairing()` and `accept(request)`, and the joining device calls `join(token)`.
+
+<ApiEntries section="pairing" />
+
+## Membership
+
+<ApiEntries section="membership" />
+
+## Events and delivery issues
+
+<ApiEntries section="subscribe" />
+
+## Version and limits
+
+<ApiEntries section="info" />
+
+## What the API does not do
+
+- Conflict resolution is the app's job. The library delivers every message and never merges them (trueseal-sync ADR-0003).
+- Application payload versioning is the app's job. Bodies are opaque bytes, and the Transport and End-to-End Versions cover the protocol only (trueseal-sync ADR-0003, trueseal-sync ADR-0022).
+- Ordering holds per sender only (trueseal-sync ADR-0026).
+- The library sets no handler timeout (trueseal-sync ADR-0026).
+- The app never acks a message. The library acks after the handler returns (trueseal-sync ADR-0026).
+- A join request has no reject call. An unaccepted request disappears when the pairing window closes (trueseal-sync ADR-0028).
+- Events and delivery issues arrive through handlers, and the SDKs offer no native streams (trueseal-sync ADR-0028).
+- `send()` takes bytes only and has no text overloads (trueseal-sync ADR-0028).
+- The library never splits a message across frames (trueseal-sync ADR-0025).
+- Versions are never negotiated (trueseal-sync ADR-0022).
+- The Developer Preview has no public Rust API (trueseal-sync ADR-0030).

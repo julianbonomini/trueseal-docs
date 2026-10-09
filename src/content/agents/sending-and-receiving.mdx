@@ -2,6 +2,7 @@
 title: Sending and receiving
 description: The delivery promise, the sender's outbox state machine, the relay's push and ack rules, the recipient's serial handling with ack after the handler, dedup by Message ID, per-sender order, and crash points.
 ---
+import Fact from '../../components/mdx/Fact.astro';
 
 # Sending and receiving
 
@@ -23,7 +24,7 @@ Exceptions:
 | `send(bytes)` | Returns the `MessageId` once the message is in the outbox. Works before the connection is up. Fails with `payloadTooLarge{max}` or `notMember{status}`, and with `closed` after `close()`. |
 | `onMessage(handler)` | Registers the single message handler. Registering it starts receiving. A second call fails with `messageHandlerAlreadySet`. Returns a cancel handle. |
 | handler | Async and awaited. Receives `Message{id, from: Member, body: bytes}`. `from.id` is the same identifier as in `members`. |
-| `maxPayloadBytes` | The Protocol Size Limit, 61,440 bytes{/* TODO: Shared Fact protocolSizeLimit */}, a constant. `open(…, maxPayloadBytes?)` accepts a lower value. A higher value is clamped to the constant. |
+| `maxPayloadBytes` | The Protocol Size Limit, <Fact id="protocolSizeLimit" />, a constant. `open(…, maxPayloadBytes?)` accepts a lower value. A higher value is clamped to the constant. |
 
 There is no text overload of `send()` and no `ack(messageId)` call.
 
@@ -36,10 +37,10 @@ Per outbox entry, per recipient:
 - `send()` checks the body against `maxPayloadBytes` before anything is written, and throws `payloadTooLarge{max}`. An oversize body never enters the outbox.
 - Otherwise `send()` writes one entry per recipient to the outbox before it returns.
 - An entry is `Delivered` only when the relay's persisted push ack arrives. Delivered rows are deleted.
-- Network failure or a temporary refusal: back to `Queued`. Retried while connected with exponential backoff from 1 s to a 5 min cap{/* TODO: Shared Fact retryBackoff */}, and immediately on reconnect. A success to that recipient resets the backoff for the entries behind it.
+- Network failure or a temporary refusal: back to `Queued`. Retried while connected with exponential backoff <Fact id="retryBackoff" />, and immediately on reconnect. A success to that recipient resets the backoff for the entries behind it.
 - Head of line: entries for one recipient are pushed in Sequence order. A later entry never goes out while an earlier one is queued for retry.
 - Permanent refusal: `Failed`. The entry is removed and `sendFailed(messageId, tooLarge | malformed)` is raised.
-- Expiry: a `Sync` entry still undelivered 30 days{/* TODO: Shared Fact outboxExpiry */} after `send()` is removed with `sendFailed(messageId, expired)`. Pair, Group Manifest, Leave and Revoke entries never expire.
+- Expiry: a `Sync` entry still undelivered <Fact id="outboxExpiry" /> after `send()` is removed with `sendFailed(messageId, expired)`. Pair, Group Manifest, Leave and Revoke entries never expire.
 - An unsupported Transport Version affects the whole connection: `connection` becomes `relayVersionUnsupported{min, max}` and entries stay queued until the library is upgraded. No `sendFailed` is raised.
 - A `Sync` message is stamped with its Sender Timestamp once, at `send()`. Every re-seal keeps it (ADR-0034).
 
@@ -51,16 +52,16 @@ Per outbox entry, per recipient:
 - Refuses a push with a typed code that carries no content.
   - Permanent: too large, malformed.
   - Temporary: inbox full, rate limited, unavailable, internal error.
-- Deletes a Blob still undelivered after the relay TTL, 30 days by default and at most 30 days{/* TODO: Shared Fact relayTtlDefault, relayTtlMax */}. Neither device is told.
+- Deletes a Blob still undelivered after the relay TTL, <Fact id="relayTtlDefault" /> by default and at most <Fact id="relayTtlMax" />. Neither device is told.
 
 ## Recipient
 
 Per Blob, one at a time:
 
 1. Nothing is pulled from the inbox until `onMessage(handler)` is registered. Events raised before their listener exists are buffered.
-2. Check the End-to-End Version. A newer version stays unacked, up to about 100 per device{/* TODO: Shared Fact heldBlobCap */}, and raises `heldForUpgrade(version)`. An older version is acked and dropped as `unreadable(senderOutdated)`.
+2. Check the End-to-End Version. A newer version stays unacked, up to <Fact id="heldBlobCap" />, and raises `heldForUpgrade(version)`. An older version is acked and dropped as `unreadable(senderOutdated)`.
 3. Decrypt, verify the signature, check the Replay Window, and apply the pairing and membership rules (ADR-0023, ADR-0027). Then look the Message ID up in the dedup table. On any failure, ack, drop and raise a delivery issue. A duplicate is acked with no issue.
-4. Run the handler and await it. If it throws, retry in memory with backoff, 5 attempts in total{/* TODO: Shared Fact handlerAttempts */}. Then ack, drop and raise `handlerGaveUp(messageId, error)`. The library sets no timeout. A handler that never finishes stalls delivery for that Receive Session.
+4. Run the handler and await it. If it throws, retry in memory with backoff, <Fact id="handlerAttempts" /> in total. Then ack, drop and raise `handlerGaveUp(messageId, error)`. The library sets no timeout. A handler that never finishes stalls delivery for that Receive Session.
 5. Record the Message ID in the dedup table, then send DeliverAck.
 
 Pair, Group Manifest, Leave and Revoke follow the same path with the library as the handler, without the dedup lookup (ADR-0034).
@@ -68,8 +69,8 @@ Pair, Group Manifest, Leave and Revoke follow the same path with the library as 
 ## Dedup and the Replay Window
 
 - The dedup table lives in Session State and holds handled Message IDs.
-- A Message ID is kept until 60 days{/* TODO: Shared Fact replayWindow */} after the later of the handling time and the message's Sender Timestamp (ADR-0031).
-- A message whose Sender Timestamp is more than 60 days before the receiver's clock is acked, dropped and reported as `unreadable(expired)`. A future timestamp is accepted.
+- A Message ID is kept until <Fact id="replayWindow" /> after the later of the handling time and the message's Sender Timestamp (ADR-0031).
+- A message whose Sender Timestamp is more than <Fact id="replayWindow" /> before the receiver's clock is acked, dropped and reported as `unreadable(expired)`. A future timestamp is accepted.
 - Together these mean no copy of a `Sync` message reaches the handler after its dedup record is gone, whatever the relay does.
 - Control messages are not in the dedup table. Replaying one changes no state (ADR-0034).
 - The Message ID is stable across re-delivery. Apps dedupe by `message.id`, never by body, because two sends can carry identical bytes.

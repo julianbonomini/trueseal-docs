@@ -2,6 +2,10 @@
 title: Relay Address and keypair
 description: The relay's keypair, how to read its public key and Relay Address, how to bring your own key, and why the key can't change.
 ---
+import Fact from '../../../components/mdx/Fact.astro';
+import { Code } from 'astro:components';
+import { codeTheme } from '../../../config/shiki';
+import { factText } from '../../../facts/facts';
 
 # Relay Address and keypair
 
@@ -23,11 +27,9 @@ To bring a key you generated elsewhere, set `TRUESEAL_RELAY_KEYPAIR_HEX` to the 
 
 The Relay Address is one string your app passes to `open()`:
 
-```
-trueseal://<relay public key hex>@host[:receivePort][?push=pushPort]
-```
+<Code lang="text" theme={codeTheme} code={factText('relayAddressFormat').text} />
 
-The receive port defaults to 7700 and the push port to 7701, so a relay on the default ports needs neither. The relay's CLI prints its Relay Address.
+The receive port defaults to <Fact id="defaultReceivePort" /> and the push port to <Fact id="defaultPushPort" />, so a relay on the default ports needs neither. The relay's CLI prints its Relay Address.
 
 {/* TODO: the name of the relay CLI command that prints the Relay Address; trueseal-sync ADR-0028 decides the command exists but doesn't name it. */}
 {/* TODO: render the Relay Address format from Shared Facts once the agent-docs Goal is merged. */}

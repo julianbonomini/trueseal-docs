@@ -2,6 +2,7 @@
 title: Protocol
 description: The TrueSeal protocol in the Developer Preview, its two layers and two versions, and the Push Session and Receive Session every device opens to the relay.
 ---
+import Fact from '../../../components/mdx/Fact.astro';
 
 # Protocol
 
@@ -18,12 +19,12 @@ The protocol has two layers, and each carries its own version number.
 | Transport | Device and relay | The Noise handshake, the frames inside it, acks, refusals and heartbeats | Transport Version |
 | End-to-end | Device and device | The sealed Envelope, addressed encryption, signatures and the Group Manifest | End-to-End Version |
 
-Both versions start at 1, and 0 is reserved. In the preview each one is 1{/* TODO: Shared Fact transportVersion, endToEndVersion */}. Each version is bound into the cryptography as well as sent as a number. The Transport Version goes into the Noise prologue, and the End-to-End Version goes into the key derivation, the AEAD associated data and every signing input.
+Both versions start at 1, and 0 is reserved. In the preview the Transport Version is <Fact id="transportVersion" /> and the End-to-End Version is <Fact id="endToEndVersion" />. Each version is bound into the cryptography as well as sent as a number. The Transport Version goes into the Noise prologue, and the End-to-End Version goes into the key derivation, the AEAD associated data and every signing input.
 
 There is no negotiation. A component speaks exactly one version of each layer and rejects anything else:
 
 - A relay that gets a Transport Version it doesn't speak replies with a plaintext `unsupported min..max` and closes the connection. The SDK reports it as `connection` = `relayVersionUnsupported{min, max}`.
-- A device that receives a message in a newer End-to-End Version leaves it unacknowledged on the relay, so it can be handled after the app upgrades. It holds about 100 such messages{/* TODO: Shared Fact heldBlobCap */}, then acknowledges and drops the oldest.
+- A device that receives a message in a newer End-to-End Version leaves it unacknowledged on the relay, so it can be handled after the app upgrades. It holds up to <Fact id="heldBlobCap" />, then acknowledges and drops the oldest.
 - A device that receives a message in an older End-to-End Version, or one it can't decode, acknowledges and drops it.
 
 The device reports each case to its own app, and nothing is sent back to the device that sent the message. A version bump means every device upgrades together, and a Transport Version bump means the relay upgrades with them; [Upgrading](/docs/operate/upgrades) covers what that does to queued messages.
@@ -37,7 +38,7 @@ Devices never connect to each other. Each device opens two kinds of outbound con
 | Purpose | Hand messages to the relay | Take messages from the device's Inbox |
 | Noise pattern | [NK](/docs/reference/nk-pattern) | [XX](/docs/reference/xx-pattern) |
 | Device key sent | None. A fresh ephemeral key per session. | The device's static X25519 key |
-| Default port | 7701 | 7700 |
+| Default port | <Fact id="defaultPushPort" /> | <Fact id="defaultReceivePort" /> |
 | Length | Short. The relay closes it after 30 seconds. | Open as long as the device is online |
 
 ## Push Session
@@ -62,7 +63,7 @@ A device keeps one Receive Session open while it's online.
 3. The device handles each message, then replies `DeliverAck`. The relay deletes the message only then, and only from that device's own Inbox.
 4. The device sends a `Heartbeat` every 25 seconds and the relay echoes it. The relay closes a Receive Session when it has received nothing from the device for 75 seconds.
 
-The relay sends each message once per Receive Session. A message without a `DeliverAck` stays in the Inbox and is delivered again on the next Receive Session. The relay allows 4 Receive Sessions per device key at once{/* TODO: Shared Fact receiveSessionsPerKey */}.
+The relay sends each message once per Receive Session. A message without a `DeliverAck` stays in the Inbox and is delivered again on the next Receive Session. The relay allows <Fact id="maxReceiveSessionsPerDevice" /> per device key at once.
 
 [Sending and receiving](/docs/integrate/sending-and-receiving) gives the delivery promise this adds up to. [Limits and quotas](/docs/operate/limits-and-quotas) lists the relay's limits and the refusal each one causes.
 

@@ -2,6 +2,7 @@
 title: Membership
 description: Membership authority and its trust boundary, manifest ordering and convergence, Pending Membership Changes, the event flicker, the Maximum Group Size, and the wipe on removal or leave.
 ---
+import Fact from '../../components/mdx/Fact.astro';
 
 # Membership
 
@@ -29,7 +30,7 @@ This page states membership in the Developer Preview as trueseal-sync ADR-0027 d
 | `admissionDropped(name, reason)` event | A re-applied admission was dropped because it would exceed `maxGroupSize`.{/* TODO: the values of admissionDropped's reason; ADR-0027 and ADR-0028 name the event but not its reasons. */} |
 | `statusChanged(notJoined, removed)` | This device was deliberately removed and has wiped. |
 | `statusChanged(notJoined, left)` | This device finished leaving and has wiped. |
-| `maxGroupSize` | The Maximum Group Size{/* TODO: Shared Fact maxGroupSize */}, a constant. |
+| `maxGroupSize` | The Maximum Group Size, <Fact id="maxGroupSize" />, a constant. |
 
 {/* TODO: the error remove() and leave() raise when status is not `member`; no ADR states it. */}
 
@@ -71,7 +72,7 @@ Pending changes survive restarts. An offline issuer re-applies after it reconnec
 
 ## Maximum Group Size
 
-- The group holds at most `maxGroupSize` members{/* TODO: Shared Fact maxGroupSize */}.
+- The group holds at most `maxGroupSize` members, <Fact id="maxGroupSize" />.
 - `accept(request)` past the limit fails locally with `groupFull{max}`.
 - A manifest at the limit fits in one frame (ADR-0025).
 

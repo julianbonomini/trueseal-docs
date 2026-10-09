@@ -2,6 +2,7 @@
 title: Wire Format
 description: The bytes a device and a relay exchange in the Developer Preview, from the version prefix and Noise framing to every frame type, the refusal codes and the size limits.
 ---
+import Fact from '../../../components/mdx/Fact.astro';
 
 # Wire Format
 
@@ -82,7 +83,7 @@ The relay sends each message once per Receive Session, in the order it arrived i
 [blob_id: u64 BE]
 ```
 
-The device sends `DeliverAck` after the app's handler has finished with the message, or once the library has decided it can't use the message. It doesn't send one for a message in a newer End-to-End Version, which waits on the relay until the app upgrades. Once about 100 such messages{/* TODO: Shared Fact heldBlobCap */} are waiting, it acknowledges and drops the oldest. The relay deletes the message only if `blob_id` belongs to the Inbox of the device that sent the `DeliverAck`.
+The device sends `DeliverAck` after the app's handler has finished with the message, or once the library has decided it can't use the message. It doesn't send one for a message in a newer End-to-End Version, which waits on the relay until the app upgrades. Once <Fact id="heldBlobCap" /> are waiting, it acknowledges and drops the oldest. The relay deletes the message only if `blob_id` belongs to the Inbox of the device that sent the `DeliverAck`.
 
 `DeliverAck` carries no outcome. The relay can't tell a handled message from a dropped one. It can see how long the handler took, because the ack waits for it.
 
@@ -92,16 +93,16 @@ The device sends `Heartbeat` on its Receive Session every 25 seconds, and the re
 
 ## Size limits
 
-Every message fits in one frame. The public number is the Protocol Size Limit: 61,440 bytes{/* TODO: Shared Fact protocolSizeLimit */} of `Sync` body, the bytes an app passes to `send()`. The other limits follow from the Noise framing:
+Every message fits in one frame. The public number is the Protocol Size Limit: <Fact id="protocolSizeLimit" /> of `Sync` body, the bytes an app passes to `send()`. The other limits follow from the Noise framing:
 
 | Limit | Value | Where it comes from |
 |---|---|---|
 | Noise message | 65,535 bytes | The 2-byte length prefix |
 | Frame | 65,519 bytes | The Noise message minus its 16-byte tag |
 | Envelope | about 65,482 bytes | The frame minus the 5-byte header and the 32-byte `recipient_pub` |
-| `Sync` body | 61,440 bytes | Set below the Envelope limit, so Envelope fields can grow without changing it |
+| `Sync` body | <Fact id="protocolSizeLimit" /> | Set below the Envelope limit, so Envelope fields can grow without changing it |
 
-`send()` checks the Protocol Size Limit before anything is written to the outbox, and fails with `payloadTooLarge{max}`. The relay checks the Envelope size again on every `Push` and refuses an oversize one as too large. An Operator may set a lower Relay Size Limit but never a higher one, and a relay configured above the protocol ceiling refuses to start. Every message type, a full 32-member Group Manifest included, has to fit in one frame.
+`send()` checks the Protocol Size Limit before anything is written to the outbox, and fails with `payloadTooLarge{max}`. The relay checks the Envelope size again on every `Push` and refuses an oversize one as too large. An Operator may set a lower Relay Size Limit but never a higher one, and a relay configured above the protocol ceiling refuses to start. Every message type, a full Group Manifest at the Maximum Group Size included, has to fit in one frame.
 
 ## Test vectors
 
@@ -118,7 +119,7 @@ The code in the sibling repos still implements the format from before the previe
 
 - There is no version prefix and no `unsupported` reply (trueseal-relay#42, trueseal-sync#93).
 - The `Error` body is empty, with no reason code, and the relay drops an unknown or malformed frame without replying (trueseal-relay#42).
-- `send()` checks a 1 MiB envelope limit instead of the Protocol Size Limit, so it accepts a message the relay will refuse, and the device retries it forever (trueseal-sync#100). The relay accepts a configured size limit above the protocol ceiling (trueseal-relay#45).
+- `send()` checks a far larger envelope limit (`MAX_ENVELOPE_BYTES`) instead of the Protocol Size Limit, so it accepts a message the relay will refuse, and the device retries it forever (trueseal-sync#100). The relay accepts a configured size limit above the protocol ceiling (trueseal-relay#45).
 - The device echoes the relay's heartbeats but doesn't send its own every 25 seconds (trueseal-sync#108).
 - The device sends `DeliverAck` as soon as a `Deliver` frame arrives, before decrypting it (trueseal-sync#97).
 - The relay resends every message in the Inbox each time a new one arrives, instead of once per session (trueseal-relay#44).

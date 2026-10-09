@@ -13,19 +13,27 @@ The developer documentation surface at `/docs/...`, written for people: short pa
 _Avoid_: documentation site, wiki, reference, Docs (on its own, now ambiguous)
 
 **Agent Docs**
-The documentation surface written for AI coding agents: dense, exhaustive pages that say exactly what TrueSeal is and what it is not, including the full SDK API reference. It is authored separately from the Human Docs, has its own `llms.txt`, and is the canonical reference when the two differ (ADR-0003).
+The documentation surface written for AI coding agents: dense, exhaustive pages that say exactly what TrueSeal is and what it is not, including the full SDK API reference. It is authored separately from the Human Docs, has its own `llms.txt` and `llms-full.txt`, generated from the Agent Docs sidebar, and is the canonical reference when the two differ (ADR-0003). The SDK API reference renders from one data file, `src/api/api-reference.ts`, which also lists the API names the reference check reads.
 _Avoid_: LLM docs, AI docs, llms.txt (that is one file within the Agent Docs)
 
+**Markdown version**
+The `.md` file the build writes beside every Human Docs and Agent Docs page, at the page URL plus `.md`; what Copy as Markdown copies and what `llms.txt` links to.
+_Avoid_: twin, raw page
+
 **Agent Snippet**
-The short block an app developer pastes into their own project's `AGENTS.md`: the integration pitfalls and a pointer to the Agent Docs. It lives in the developer's repo, not in TrueSeal's.
+The short block an app developer pastes into their own project's `AGENTS.md`: the integration pitfalls and a pointer to the Agent Docs. It lives in the developer's repo, not in TrueSeal's. TrueSeal keeps its text in `src/agent-snippet/agent-snippet.ts`. It is the first Agent Docs page, at `/agents/`, and the Landing's Integrate section renders the same text. Besides the pitfalls, it names the Agent Docs `llms.txt` and the TrueSeal Skills install commands, and states no Shared Fact.
 _Avoid_: rules file, prompt
+
+**Reference check**
+The check that fails `bun run check` when a Human Docs or Agent Docs page, the Agent Snippet or a skill names a page, API name, error or event case, or Shared Fact that doesn't exist (ADR-0003). It reads source Markdown and resolves against the built site, `apiNames()` and Shared Facts; `bun run check:references` runs it on any folder.
+_Avoid_: link checker, lint
 
 **TrueSeal Skills**
 The Agent Skills TrueSeal publishes for coding agents: Integrate, Pairing and Relay, one per workflow, shipped from the `trueseal-skills` repo as the `trueseal` plugin. They teach steps and pitfalls and link to the Agent Docs for every API name and fact (ADR-0005).
 _Avoid_: prompts, agent docs (a different surface), plugin (the package, not the skills)
 
 **Shared Facts**
-The values both the Human Docs and the Agent Docs state and that must never differ between them: error cases, event cases, limits, protocol versions and the Relay Address format. They come from one generated source.
+The values both the Human Docs and the Agent Docs state and that must never differ between them: error cases, event cases, limits, protocol versions and the Relay Address format; error, event and delivery-issue cases carry what the app should do. They come from one source, `src/facts/shared-facts.ts`, rendered on both surfaces by the `Fact` and `FactTable` Astro components, and the cases by `ApiEntries`; trueseal-sync will later generate that file from the core (SYNC-21).
 _Avoid_: constants (too code-specific)
 
 **Journey**
@@ -53,12 +61,20 @@ A static `.astro` file — no client-side JS, no hydration. Used for layouts, na
 _Avoid_: component (use Astro component vs Island to be explicit)
 
 **Content collection**
-Astro's typed system for organizing and querying markdown/MDX content files. The existing docs markdown files map into a single content collection.
+Astro's typed system for organizing and querying markdown/MDX content files. The Human Docs map to the `docs` collection (`src/content/docs/`) and the Agent Docs to the `agents` collection (`src/content/agents/`).
 _Avoid_: pages, content folder
 
 **Theme**
 The active visual mode — `light` or `dark`. Switched via a `data-theme` attribute on `<html>`. Both themes are fully supported and share the same design token names; the values differ per theme.
 _Avoid_: mode, color scheme (use theme)
+
+**Threat Model**
+The one page under Trust, with its Agent Docs counterpart, that states TrueSeal's security claims, each naming the tests that prove it at a pinned commit, plus its limitations and what it doesn't defend against. Both render from `src/config/threatModel.ts` (trueseal-roadmap#16).
+_Avoid_: security page, security model
+
+**Compatibility Table**
+The Reference page, with its Agent Docs counterpart, that lists which TrueSeal Release, relay and noise versions go together, with their Transport and End-to-End Versions, Store Versions and migration floor. Both render from `src/config/compatibility.json`, which the Release Conductor updates (trueseal-e2e ADR-0002).
+_Avoid_: version matrix, support matrix
 
 ## Relationships
 
