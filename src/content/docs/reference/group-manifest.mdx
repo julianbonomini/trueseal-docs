@@ -66,7 +66,7 @@ While a change is being re-applied, a device can see a member leave and come bac
 
 A device counts itself removed only when the manifest that leaves it out has a `parent` the device holds, or has held, that includes it. It then wipes its group state, outbox and handled Message IDs, generates a fresh identity, and reports `statusChanged(notJoined, removed)`.
 
-A manifest that leaves the device out but was built concurrently, on a manifest that never included it, is not a removal. The device keeps it as its current view, stays alive, and waits for its admitter to re-apply the admission. A new member whose admission lost a tie is the usual case.
+When a manifest that leaves the device out was built concurrently, on a manifest that never included it, the device treats it as a race it lost. It keeps that manifest as its current view, stays alive, and waits for its admitter to re-apply the admission. A new member whose admission lost a tie is the usual case.
 
 A leaving device issues a manifest without itself and moves to `leaving`. It stays connected until the relay has accepted every one of its manifest pushes, then wipes in the same way and reports `statusChanged(notJoined, left)`.
 

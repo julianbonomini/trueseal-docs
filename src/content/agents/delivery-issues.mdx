@@ -26,7 +26,7 @@ This page states the delivery-issue stream in the Developer Preview as trueseal-
 | `unauthorized` | The Blob failed the pairing or membership rules. | Acked and dropped. | None. Log it. |
 | `heldForUpgrade(version)` | A Blob in a newer End-to-End Version. | Left unacked on the relay. Handled after this device upgrades, out of order. | Prompt the user to update. |
 | `handlerGaveUp(messageId, error)` | The handler threw on all 5 attempts{/* TODO: Shared Fact handlerAttempts */}. | Acked and dropped. | Report `error` as a handler bug. Ask the sender for the data again if it matters. |
-| `sendFailed(messageId, tooLarge)` | The relay refused the push permanently: over its Relay Size Limit, which may be below the Protocol Size Limit. | Outbox entry removed. | Tell the user the message wasn't delivered. Pass the relay's limit as `maxPayloadBytes` to `open()`. |
+| `sendFailed(messageId, tooLarge)` | The relay refused the push permanently: over its Relay Size Limit, which may be below the Protocol Size Limit. | Outbox entry removed. | Tell the user the message wasn't delivered. Pass a matching lower `maxPayloadBytes` to `open()`. `maxPayloadBytes` counts the body; the Relay Size Limit counts the sealed envelope (see [Relay limits and quotas](/agents/relay-limits-and-quotas)). |
 | `sendFailed(messageId, malformed)` | The relay refused the push permanently as malformed. | Outbox entry removed. | Report it as a bug. |
 | `sendFailed(messageId, expired)` | A `Sync` entry still undelivered 30 days{/* TODO: Shared Fact outboxExpiry */} after `send()`. | Outbox entry removed. | Tell the user the message wasn't delivered; resend if it still matters. |
 

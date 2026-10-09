@@ -40,7 +40,7 @@ The preview has no way to rotate the relay key. Changing it breaks every install
 
 ## If the private key leaks
 
-Someone holding the private key can pose as your relay to any device that reaches them instead of your server. They can't read messages, because each one is sealed end to end. They can't change or re-address one either, because its signature is sealed inside it. They can see what your relay sees (device keys, online times, recipients, sizes and timing), and they can hold back messages so they never arrive. [The Dumb Relay](/docs/trust/the-dumb-relay) has the full list of what the relay sees.
+Someone holding the private key can pose as your relay to any device that reaches them instead of your server. They can't read messages, because each one is sealed end to end. They can't change or re-address one either, because its signature is sealed inside it. They can see what your relay sees (device keys, online times, recipients, sizes and timing), and they can hold back messages so they never arrive. [How it works](/docs/overview/how-it-works#what-the-relay-sees) has the full list of what the relay sees.
 
 Since the key can't rotate in the preview, recovering from a leak means a new key and a new Relay Address in a new release of your app.
 

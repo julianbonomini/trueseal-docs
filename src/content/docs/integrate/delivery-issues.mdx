@@ -33,7 +33,7 @@ The relay answers a refused push with a typed code that carries no content. A te
 
 | Issue | What happened | What your app should do |
 |---|---|---|
-| `sendFailed(messageId, tooLarge)` | The relay refused the message for good, because it is over the relay's own size limit. An Operator may set that limit lower than the Protocol Size Limit. | Tell the user the message wasn't delivered. Send smaller messages, or pass the relay's limit as `maxPayloadBytes` to `open()` so `send()` refuses them up front. |
+| `sendFailed(messageId, tooLarge)` | The relay refused the message for good, because it is over the relay's own size limit. An Operator may set that limit lower than the Protocol Size Limit. | Tell the user the message wasn't delivered. Send smaller messages, or pass a matching lower `maxPayloadBytes` to `open()` so `send()` refuses them up front. [Limits and quotas](/docs/operate/limits-and-quotas#changing-the-limits) explains why the two numbers differ. |
 | `sendFailed(messageId, malformed)` | The relay refused the message for good, because it couldn't parse it. | Treat it as a bug and report it. |
 | `sendFailed(messageId, expired)` | The message was still in the outbox 30 days{/* TODO: Shared Fact outboxExpiry */} after `send()`, for example because the device was offline all that time. It was removed. | Tell the user it wasn't delivered, and send it again if it still matters. |
 
