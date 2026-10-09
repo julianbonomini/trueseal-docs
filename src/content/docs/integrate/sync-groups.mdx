@@ -36,7 +36,7 @@ If two members issue conflicting updates at roughly the same time — A removes 
 
 When a device calls `send()`, trueseal-sync reads the current manifest and produces one encrypted blob per member, each addressed individually to that member's noise public key. The relay receives N independent blobs and drops each into the right Inbox.
 
-From the relay's point of view, there's no group — just N blobs going to N public keys. It doesn't know they're related or that the parties share any membership.
+The relay has no concept of a group. It sees N blobs going to N public keys. It can, however, observe which devices receive messages together. A single send fans out to every group member in one connection, with matching sizes and timing, from the sender's network address. A relay operator can therefore infer which devices likely share a group. [Here is exactly what the relay sees](/docs/trust/threat-model#what-the-relay-sees).
 
 ## Receiving and filtering
 

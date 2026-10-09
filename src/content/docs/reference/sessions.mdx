@@ -12,7 +12,7 @@ trueseal-relay handles two distinct session types. Each uses a different Noise h
 
 A Push Session is short-lived and anonymous. A device opens one, drops off some blobs, closes it.
 
-**Handshake:** Noise NK. The device verifies the relay's static public key (confirming it's talking to the real relay). The relay never learns the device's identity. A fresh ephemeral X25519 keypair is generated for each Push Session and thrown away the instant it's done. The relay has no way to link a Push Session to any device or to any Receive Session.
+**Handshake:** Noise NK. The device verifies the relay's static public key (confirming it's talking to the real relay). A fresh ephemeral X25519 keypair is generated for each Push Session and thrown away the instant it's done. The handshake gives the relay no device key to link a Push Session to a device or a Receive Session. It can still often link them by IP address or timing.
 
 **Flow:**
 1. Device opens a TCP connection to the push listener (default <code>:<Fact id="defaultPushPort" /></code>).

@@ -13,23 +13,25 @@ All SDKs expose a stable opaque Message ID with each received blob. Relay delive
 
 ## Available
 
+All three SDKs are in the Developer Preview. They share one API shape and one core build, release together, and their API may change before 1.0.
+
 | SDK | Status | Repo |
 |---|---|---|
-| **Swift** | Production-ready | [github.com/julianbonomini/trueseal-sync-swift](https://github.com/julianbonomini/trueseal-sync-swift) |
-| **Kotlin** | Available | [github.com/julianbonomini/trueseal-sync-kotlin](https://github.com/julianbonomini/trueseal-sync-kotlin) |
-| **TypeScript** | Available | [github.com/julianbonomini/trueseal-sync-ts](https://github.com/julianbonomini/trueseal-sync-ts) |
+| **Swift** | Developer Preview | [github.com/julianbonomini/trueseal-sync-swift](https://github.com/julianbonomini/trueseal-sync-swift) |
+| **Kotlin** (Android) | Developer Preview | [github.com/julianbonomini/trueseal-sync-kotlin](https://github.com/julianbonomini/trueseal-sync-kotlin) |
+| **TypeScript** | Developer Preview | [github.com/julianbonomini/trueseal-sync-ts](https://github.com/julianbonomini/trueseal-sync-ts) |
 
 ### Swift
 
-iOS and macOS, distributed via Swift Package Manager. Wraps the Rust xcframework through UniFFI. This is the most mature SDK — it's what trueseal-clip ships on both platforms.
+iOS and macOS, distributed through Swift Package Manager. Wraps the Rust xcframework through UniFFI. The Hush example apps use it on iOS and macOS.
 
 ### Kotlin
 
-Android and JVM, distributed via Gradle. Same UniFFI bindings against the same Rust core.
+Android only, distributed through Maven Central as `dev.trueseal:trueseal-sync`. Same UniFFI bindings against the same Rust core. Kotlin outside Android isn't a supported target in the preview. The Hush example app uses it on Android.
 
 ### TypeScript
 
-Node.js and Electron, with native bindings — not WASM. Browser is **not** a target. The protocol speaks raw TCP to the relay, and browsers can't open raw TCP sockets.
+Node.js 20 or later, with native bindings rather than WASM. Browser is **not** a target. The protocol speaks raw TCP to the relay, and browsers can't open raw TCP sockets.
 
 ## Rust
 

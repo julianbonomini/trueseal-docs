@@ -85,6 +85,20 @@ bun run screenshot /tmp/shots / /docs/overview/introduction
 
 The mascot artwork is `brand/mascot/mascot.svg`. After changing it, run `bun run export-mascot` to regenerate the PNG exports beside it.
 
+### Threat Model check
+
+Every claim on the Threat Model names tests in the sibling repos, listed in `src/config/threatModel.ts`. This script checks each one exists at the commit pinned in `src/config/threatModelPins.json`:
+
+```bash
+GITHUB_TOKEN=$(gh auth token) bun scripts/check-threat-model.ts
+```
+
+It prints each missing test and exits 1 when any is missing, and exits 2 when it can't fetch a file. `.github/workflows/threat-model.yml` runs it on every pull request and push to `main`, with the `SIBLING_REPOS_TOKEN` secret: a token with read access to trueseal-sync, trueseal-noise, trueseal-relay and trueseal-e2e (trueseal-e2e is private). To bump a pin, put the repo's new full commit SHA in `threatModelPins.json`. The job lists tests the sibling repos haven't written yet, so it isn't a required check until the pins point at commits that have them.
+
+### Compatibility Table
+
+The Compatibility Table renders from `src/config/compatibility.json`. A release adds one object to `releases` with the fields in `ReleaseManifest` (`src/config/compatibility.ts`), and replaces the planned row when that release ships. The build fails on a malformed row. The Release Conductor (trueseal-e2e ADR-0002) edits only this file.
+
 ---
 
 ## Deployment
@@ -144,8 +158,12 @@ src/
     docs/         # Sidebar
     layout/       # Navbar, Wordmark, Footer
     mdx/          # Reusable MDX components
+    reference/    # The Compatibility Table both surfaces render
+    trust/        # The Threat Model parts and the Security tab links both surfaces render
     ui/           # Buttons, theme toggle, mascot
-  config/         # nav.ts (both sidebars, reading order and which path belongs to which surface), redirects.ts (moved URLs), shiki.ts (code theme), site.ts (site URL, description, version label)
+  config/         # nav.ts (both sidebars, reading order and which path belongs to which surface), redirects.ts (moved URLs), shiki.ts (code theme), site.ts (site URL, description, version label),
+                  # threatModel.ts (Threat Model claims and limitations), threatModelPins.json (the commits its tests are checked at),
+                  # compatibility.json (the Compatibility Table's Release Manifests) and compatibility.ts (reads and checks it)
   content/
     docs/         # Human Docs
     agents/       # Agent Docs
@@ -155,7 +173,7 @@ src/
   pages/          # Astro routes
   references/     # references.ts (the reference check)
   styles/         # tokens.css, global.css
-scripts/          # check-references.ts (the reference check CLI), screenshot.ts, export-mascot.ts
+scripts/          # check-references.ts (the reference check CLI), check-threat-model.ts and its core declared-tests.ts, screenshot.ts, export-mascot.ts
 ```
 
-`tests/` holds the brand checks on the source and the Landing checks, the mascot and 404 checks, the redirect, link and docs-sidebar checks on the built site, the Agent Docs and header-switch checks, the Agent Snippet checks, the SDK API reference checks, the Shared Facts checks, including a build of a copy with a changed fact, the Markdown version, `llms.txt` and Copy as Markdown checks, the reference check on its fixtures, the real content and its CLI, and the CI workflow check, run by `bun test`.
+`tests/` holds the brand checks on the source and the Landing checks, the mascot and 404 checks, the redirect, link and docs-sidebar checks on the built site, the Agent Docs and header-switch checks, the Agent Snippet checks, the SDK API reference checks, the Shared Facts checks, including a build of a copy with a changed fact, the Markdown version, `llms.txt` and Copy as Markdown checks, the reference check on its fixtures, the real content and its CLI, the CI workflow check, the banned-terms check on every file under `src/`, the Threat Model data checks, the check core's fixture tests and the Threat Model page checks, the Compatibility Table data and page checks, and the vulnerability-reporting checks, run by `bun test`.

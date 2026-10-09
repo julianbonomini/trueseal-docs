@@ -27,7 +27,8 @@ export const redirects: Record<string, string> = {
   '/docs/components/trueseal-relay/overview':      '/docs/operate/trueseal-relay',
   '/docs/components/trueseal-relay/inbox-and-ttl': '/docs/operate/inbox-and-ttl',
 
-  '/docs/concepts/zero-trust-and-encryption': '/docs/trust/zero-trust-and-encryption',
+  '/docs/concepts/zero-trust-and-encryption': '/docs/trust/encryption',
+  '/docs/trust/zero-trust-and-encryption':    '/docs/trust/encryption',
   '/docs/concepts/the-dumb-relay':            '/docs/trust/the-dumb-relay',
 
   '/docs/protocol/overview':                                 '/docs/reference/protocol',

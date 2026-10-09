@@ -24,7 +24,7 @@ test('the Human Docs sidebar sections follow the Journey, none empty', () => {
 test('the Agent Docs sidebar is its own', () => {
   const sidebar = sidebarOf('/agents/protocol')!;
   expect(sidebar.label).toBe('Agent Docs');
-  expect(sidebar.sections.map(section => section.title)).toEqual(['Start', 'Reference']);
+  expect(sidebar.sections.map(section => section.title)).toEqual(['Start', 'Reference', 'Trust']);
   const links = sidebar.sections.flatMap(section => section.links);
   expect(links[0].href).toBe('/agents/');
   expect(links.filter(link => !link.href.startsWith('/agents'))).toEqual([]);
@@ -61,9 +61,10 @@ test('children follow their parent in reading order, in its section', () => {
 });
 
 test('the last page of a surface has no next link, so links never cross surfaces', () => {
-  expect(placeOf('/docs/reference/nk-pattern')?.next).toBeUndefined();
+  expect(placeOf('/docs/reference/compatibility-table')?.next).toBeUndefined();
   expect(placeOf('/agents/protocol')?.next?.href).toBe('/agents/versions-and-relay-address');
-  expect(placeOf('/agents/errors-and-events')?.next).toBeUndefined();
+  expect(placeOf('/agents/errors-and-events')?.next?.href).toBe('/agents/compatibility-table');
+  expect(placeOf('/agents/reporting-a-vulnerability')?.next).toBeUndefined();
 });
 
 test('placeOf is undefined for a page outside the sidebar', () => {
@@ -84,14 +85,14 @@ test('the Agent Docs index starts its sidebar', () => {
 });
 
 test('sidebarPaths lists a surface in reading order', () => {
-  expect(sidebarPaths('agents')).toEqual(['/agents/', '/agents/what-trueseal-is', '/agents/api', '/agents/protocol', '/agents/versions-and-relay-address', '/agents/limits', '/agents/errors-and-events']);
+  expect(sidebarPaths('agents')).toEqual(['/agents/', '/agents/what-trueseal-is', '/agents/api', '/agents/protocol', '/agents/versions-and-relay-address', '/agents/limits', '/agents/errors-and-events', '/agents/compatibility-table', '/agents/threat-model', '/agents/reporting-a-vulnerability']);
   expect(sidebarPaths('docs')[0]).toBe('/docs/overview/introduction');
 });
 
 test('sidebarPages gives each sidebar page its section, in sidebarPaths order', () => {
   const pages = sidebarPages('agents');
   expect(pages.map(page => page.link.href)).toEqual(sidebarPaths('agents'));
-  expect([...new Set(pages.map(page => page.section))]).toEqual(['Start', 'Reference']);
+  expect([...new Set(pages.map(page => page.section))]).toEqual(['Start', 'Reference', 'Trust']);
 });
 
 test('markdownPathOf drops a trailing slash and adds .md', () => {

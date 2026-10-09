@@ -47,3 +47,20 @@ export function indexedUrls(): string[] {
     return JSON.parse(text.replace(/^pagefind_dcd/, '')).url as string;
   });
 }
+
+/** `html` with the entities Astro escapes in text decoded, so it can be matched against source strings. */
+export function decodeEntities(html: string): string {
+  return html
+    .replace(/&#39;|&#x27;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&');
+}
+
+/** The visible text of `html`: each <script> and <style> block and each tag replaced by a space, entities
+ *  decoded. Whitespace is kept as it is; callers collapse it when they need to. */
+export function visibleText(html: string): string {
+  return decodeEntities(html.replace(/<(script|style)[\s\S]*?<\/\1>/g, ' ').replace(/<[^>]+>/g, ' '));
+}

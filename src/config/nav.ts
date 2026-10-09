@@ -79,8 +79,10 @@ const docsNav: NavSection<DocsNavItem>[] = [
   {
     title: 'Trust',
     items: [
-      { title: 'Zero Trust & Encryption', slug: 'trust/zero-trust-and-encryption', agents: 'what-trueseal-is' },
-      { title: 'The Dumb Relay',          slug: 'trust/the-dumb-relay',            agents: 'what-trueseal-is' },
+      { title: 'Threat Model',              slug: 'trust/threat-model',              agents: 'threat-model' },
+      { title: 'Encryption',                slug: 'trust/encryption',                agents: 'what-trueseal-is' },
+      { title: 'The Dumb Relay',            slug: 'trust/the-dumb-relay',            agents: 'what-trueseal-is' },
+      { title: 'Reporting a vulnerability', slug: 'trust/reporting-a-vulnerability', agents: 'reporting-a-vulnerability' },
     ],
   },
   {
@@ -109,6 +111,7 @@ const docsNav: NavSection<DocsNavItem>[] = [
           { title: 'NK Pattern',            slug: 'reference/nk-pattern',            agents: 'protocol' },
         ],
       },
+      { title: 'Compatibility Table', slug: 'reference/compatibility-table', agents: 'compatibility-table' },
     ],
   },
 ];
@@ -124,6 +127,14 @@ const agentsNav: NavSection[] = [
       { title: 'Versions and Relay Address', slug: 'versions-and-relay-address' },
       { title: 'Limits',                     slug: 'limits' },
       { title: 'Errors and events',          slug: 'errors-and-events' },
+      { title: 'Compatibility Table',        slug: 'compatibility-table' },
+    ],
+  },
+  {
+    title: 'Trust',
+    items: [
+      { title: 'Threat Model',              slug: 'threat-model' },
+      { title: 'Reporting a vulnerability', slug: 'reporting-a-vulnerability' },
     ],
   },
 ];

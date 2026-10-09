@@ -5,6 +5,7 @@ import { describe, expect, test } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { formatLocation, START_POINT } from '../src/components/landing/sealDemo.ts';
+import { findBannedTerms } from './banned-terms.ts';
 import { dist, htmlDocuments } from './dist.ts';
 import { bannedTermsIn, descriptionOf, prose, text, titleOf, voiceProblems } from './html.ts';
 
@@ -47,7 +48,9 @@ describe('Landing', () => {
   });
 
   test('no banned term appears in the text, title or meta description', () => {
-    expect([text(html), title, description].flatMap(bannedTermsIn)).toEqual([]);
+    const all = [text(html), title, description];
+    expect(all.flatMap(bannedTermsIn)).toEqual([]);
+    expect(findBannedTerms(all.join(' '))).toEqual([]);
   });
 
   test('prose and title have no dashes or banned terms', () => {

@@ -90,3 +90,11 @@ describe('Shared Facts', () => {
     }
   }, 120_000);
 });
+
+test('the Threat Model renders its day counts and size limit from Shared Facts', () => {
+  const facts = [...new Set(['replayWindow', 'relayTtlDefault', 'relayTtlMax', 'protocolSizeLimit'].map(id => factText(id).text))];
+  for (const path of ['/docs/trust/threat-model', '/agents/threat-model']) {
+    const page = text(pageHtml(path));
+    expect({ path, missing: facts.filter(fact => !page.includes(fact)) }).toEqual({ path, missing: [] });
+  }
+});

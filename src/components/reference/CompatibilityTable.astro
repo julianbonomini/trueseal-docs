@@ -1,0 +1,34 @@
+---
+// The Compatibility Table, rendered from src/config/compatibility.ts. The Human Docs and Agent Docs pages
+// both place it, so a data edit changes both and no MDX holds a version.
+import { compatibilityTable } from '../../config/compatibility';
+
+const { columns, rows } = compatibilityTable();
+---
+
+{rows.length === 0 ? (
+  <p>No TrueSeal Release has shipped yet. The first row appears here when one does.</p>
+) : (
+  <table class="compat stacked-table">
+    <thead>
+      <tr>{columns.map(column => <th>{column}</th>)}</tr>
+    </thead>
+    <tbody>
+      {rows.map(row => (
+        <tr>{row.map((cell, i) => <td data-label={columns[i]}>{cell}</td>)}</tr>
+      ))}
+    </tbody>
+  </table>
+)}
+
+<style>
+  /* On a phone each cell is labelled with its column, since the stacked table hides the header. */
+  @media (max-width: 659px) {
+    .compat td::before {
+      content: attr(data-label);
+      display: block;
+      font-size: var(--text-label);
+      color: var(--ink-muted);
+    }
+  }
+</style>

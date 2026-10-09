@@ -63,7 +63,7 @@ The zero nonce is fine here because the symmetric key is derived from an ephemer
 
 `author_pub` — the sender's Ed25519 signing key — is *inside* the encrypted payload, not in the cleartext Envelope header. This is on purpose.
 
-If `author_pub` were in the header, the relay would observe `(author_pub → recipient_pub)` pairs for every Envelope it routes. That's a full communication graph, served up for free. With `author_pub` inside the ciphertext, the relay sees only `recipient_pub`. It can't tell who sent anything.
+If `author_pub` were in the header, the relay would observe `(author_pub → recipient_pub)` pairs for every Envelope it routes. That's a full communication graph, served up for free. With `author_pub` inside the ciphertext, the Envelope shows the relay only `recipient_pub`. The relay can still often tell which device pushed, by IP address or timing.
 
 Recipients pull `author_pub` out after decryption, then verify the Envelope signature with that key. If the claimed `author_pub` doesn't match the actual signer, verification fails — devices can't impersonate each other.
 

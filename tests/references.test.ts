@@ -15,10 +15,8 @@ const pending = new Set([
     'session.publish()', 'onMemberJoined', 'removeMember', 'onRemovedFromGroup', 'onGroupDestroyed', 'session.pairingToken()',
     'acceptRequest()', 'onMemberRequest', 'senderNoisePub', 'onMemberJoined(id, name)', 'onMemberLeft(id, name)',
   ].map(name => `src/content/docs/integrate/integrating-trueseal-sync.mdx: ${name}`),
-  ...['removeMember()', 'onRemovedFromGroup()', 'onGroupDestroyed()'].map(name => `src/content/docs/integrate/revocation.mdx: ${name}`),
   'src/content/docs/integrate/delivery-guarantees.mdx: onMemberJoined',
   'src/content/docs/reference/trueseal-sync.mdx: onMemberJoined',
-  'src/content/docs/reference/group-manifest.mdx: onRemovedFromGroup()',
 ]);
 
 describe('the broken fixtures', () => {

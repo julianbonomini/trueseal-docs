@@ -11,7 +11,7 @@ export const receive = factText('defaultReceivePort').text;
 export const push = factText('defaultPushPort').text;
 export const compose = `services:
   trueseal-relay:
-    image: trueseal-relay:latest
+    image: ghcr.io/julianbonomini/trueseal-relay:0.2.0
     command: ["-no-config"]
     environment:
       TRUESEAL_RELAY_KEYPAIR_PATH: /secrets/keypair.hex
@@ -50,7 +50,7 @@ relay public key (share with clients): a1b2c3d4...
 
 **Guard the private key.** Anyone with it can impersonate your relay — devices verify the relay's identity using this key on every handshake. The public key is safe to share around: bake it into your client binary, publish it on a landing page, drop it in your self-hosting README.
 
-> **Note:** Relay impersonation doesn't compromise data security. Everything is end-to-end encrypted before it reaches the relay, so an impersonator gets ciphertext they can't decrypt. The damage is limited to delivery — blobs pushed to a rogue relay never reach their recipients. No data is exposed.
+> **Note:** An impersonator can't read or forge messages, because everything is end-to-end encrypted before it reaches the relay. It does see the metadata any relay sees, and blobs pushed to it never reach their recipients.
 
 ## Configuration
 
@@ -69,6 +69,8 @@ sqlite_path = "/var/lib/trueseal-relay/inbox.db"
 
 **Full reference:**
 
+{/* TODO: the relay's default envelope byte value derived from the Protocol Size Limit isn't set by sync ADR-0025 or relay ADR-0012. */}
+
 | Field | Env var | Default | Description |
 |---|---|---|---|
 | `relay.keypair_path` | `TRUESEAL_RELAY_KEYPAIR_PATH` | — | Path to hex-encoded private key. Required. |
@@ -76,8 +78,8 @@ sqlite_path = "/var/lib/trueseal-relay/inbox.db"
 | `relay.listen_receive` | `TRUESEAL_RELAY_LISTEN_RECEIVE` | <code>:<Fact id="defaultReceivePort" /></code> | Receive Session listener address. |
 | `relay.ttl` | `TRUESEAL_RELAY_TTL` | <Fact id="relayTtlDefault" /> | Blob TTL before reaping. Can only be lowered; the relay refuses to start above <Fact id="relayTtlMax" />. |
 | `relay.reap_interval` | `TRUESEAL_RELAY_REAP_INTERVAL` | `1h` | How often the reaper runs. |
-| `relay.max_envelope_bytes` | `TRUESEAL_RELAY_MAX_ENVELOPE_BYTES` | Protocol Size Limit | The Relay Size Limit, in Envelope bytes. Can only be lowered; the protocol allows <Fact id="protocolSizeLimit" /> of `Sync` body. Larger blobs are rejected with Error. |
-| `store.type` | `TRUESEAL_RELAY_STORE_TYPE` | `sqlite` | Storage backend: `sqlite` or `postgres`. |
+| `relay.max_envelope_bytes` | `TRUESEAL_RELAY_MAX_ENVELOPE_BYTES` | Protocol Size Limit | The Relay Size Limit, in Envelope bytes, for a `Sync` body of at most <Fact id="protocolSizeLimit" /> (the Protocol Size Limit). You can lower it, never raise it. A relay set higher refuses to start. Larger blobs are refused permanently as too large. |
+| `store.type` | `TRUESEAL_RELAY_STORE_TYPE` | `sqlite` | Storage backend. `sqlite` is the only supported backend. `postgres` is experimental. |
 | `store.sqlite_path` | `TRUESEAL_RELAY_STORE_SQLITE_PATH` | — | SQLite database file path. Required when `store.type = sqlite`. |
 
 ## Single-node deployment
@@ -98,6 +100,8 @@ With `-no-config`, every setting has to come from environment variables.
 
 **Example `docker-compose.yml`:**
 
+{/* TODO: check the tag against the first relay release. The relay restarts at 0.2.0 (trueseal-sync ADR-0030). */}
+
 <Code lang="yaml" theme={codeTheme} code={compose} />
 
 ## Graceful shutdown
@@ -108,4 +112,4 @@ trueseal-relay handles `SIGINT` and `SIGTERM`. On signal, it stops accepting new
 
 - **Firewall.** Open TCP <Fact id="defaultReceivePort" /> (receive) and <Fact id="defaultPushPort" /> (push) to the internet. Devices connect outbound; the relay never initiates connections.
 - **Disk.** Size SQLite storage based on your expected group size, blob size, and TTL. A conservative rule of thumb: `devices × blobs_per_day × avg_blob_bytes × ttl_days`.
-- **Logs.** trueseal-relay logs connection events and public keys only. It never logs envelope content. Don't add content logging — doing so would break the zero-knowledge property the whole stack rests on.
+- **Logs.** In normal mode trueseal-relay logs lifecycle events (startup, listener addresses, its own public key, shutdown) and errors, and nothing about clients. Dev mode (`-dev`) may also log key prefixes, sizes and Blob IDs. No mode logs payload bytes or IP addresses (relay ADR-0012).

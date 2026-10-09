@@ -1,0 +1,186 @@
+---
+// One part of the Threat Model, rendered from src/config/threatModel.ts. The Human Docs and Agent Docs
+// pages both place every part, so the two surfaces can't state different claims.
+import {
+  adversaries,
+  claims,
+  evidenceOf,
+  limitations,
+  notDefendedAgainst,
+  pinnedCommits,
+  pinnedCommitUrl,
+  properties,
+  testLocation,
+  vocabulary,
+  type Repo,
+} from '../../config/threatModel';
+
+interface Props {
+  part: 'adversaries' | 'claims' | 'limitations' | 'not-defended' | 'vocabulary';
+}
+
+const { part } = Astro.props;
+
+const slug = (property: string) => property.toLowerCase().replace(/ /g, '-');
+
+const sideLabel = { inside: 'Inside the limit:', outside: 'Past the limit:' };
+
+// A test name may break after each underscore, so a long snake_case name wraps between words.
+const breakable = (name: string) => name.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/_/g, '_<wbr>');
+---
+
+{part === 'adversaries' && (
+  <dl class="terms">
+    {adversaries.map(({ name, can }) => (
+      <>
+        <dt>{name}</dt>
+        <dd>{can}</dd>
+      </>
+    ))}
+  </dl>
+)}
+
+{part === 'not-defended' && <ul>{notDefendedAgainst.map(item => <li>{item}</li>)}</ul>}
+
+{part === 'vocabulary' && (
+  <dl class="terms">
+    {vocabulary.map(({ term, meaning }) => (
+      <>
+        <dt>{term}</dt>
+        <dd>{meaning}</dd>
+      </>
+    ))}
+  </dl>
+)}
+
+{part === 'limitations' &&
+  limitations.map(({ id, title, points, note }) => (
+    <>
+      <h3 id={id}>{title}</h3>
+      <ul>{points.map(point => <li>{point}</li>)}</ul>
+      {note && <p>{note}</p>}
+    </>
+  ))}
+
+{part === 'claims' && (
+  <>
+    {properties.map(property => (
+      <>
+        <h3 id={slug(property)}>{property}</h3>
+        <table class="claims stacked-table">
+          <thead>
+            <tr>
+              <th>Claim</th>
+              <th>Proved by</th>
+            </tr>
+          </thead>
+          <tbody>
+            {claims
+              .filter(claim => claim.property === property)
+              .map(row => (
+                <tr>
+                  <td>
+                    {row.claim}
+                    <p class="claims__source">{row.decision}</p>
+                    {row.limit && <p class="claims__limit">Limit: {row.limit.value}</p>}
+                  </td>
+                  <td>
+                    <ul class="claims__tests">
+                      {evidenceOf(row).map(({ ref, side }) => (
+                        <li>
+                          {side && <span class="claims__side">{sideLabel[side]}</span>}
+                          <span class="claims__repo">{ref.repo}</span>{' '}
+                          <a href={testLocation(ref).url}>
+                            <code set:html={breakable(ref.name)} />
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </>
+    ))}
+    <p class="claims__pins">Each test is named at its repo's commit below, and CI fails when one is missing.</p>
+    <ul>
+      {Object.entries(pinnedCommits).map(([repo, sha]) => (
+        <li>
+          <span class="claims__repo">{repo}</span>{' '}
+          <a href={pinnedCommitUrl(repo as Repo)}><code>{sha.slice(0, 7)}</code></a>
+        </li>
+      ))}
+    </ul>
+  </>
+)}
+
+<style>
+  .terms dt {
+    font-weight: 600;
+  }
+
+  .terms dd {
+    margin: 0 0 var(--space-md);
+    color: var(--ink-muted);
+  }
+
+  .claims {
+    table-layout: fixed;
+  }
+
+  .claims th:first-child {
+    width: 55%;
+  }
+
+  .claims__source,
+  .claims__limit {
+    margin: var(--space-sm) 0 0;
+    font-size: var(--text-label);
+    color: var(--ink-muted);
+  }
+
+  .claims__tests {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-sm);
+  }
+
+  .claims__tests li {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .claims__side {
+    display: block;
+    font-size: var(--text-label);
+  }
+
+  .claims__repo {
+    font-family: var(--font-mono);
+    font-size: var(--text-meta);
+    color: var(--ink-muted);
+  }
+
+  /* Inline code doesn't wrap site-wide, but a test name must wrap inside its cell. */
+  .claims__tests code {
+    background: none;
+    border: 0;
+    padding: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  @media (max-width: 659px) {
+    .claims td {
+      padding-right: 0;
+    }
+
+    .claims td + td {
+      padding-top: 0;
+    }
+  }
+</style>
