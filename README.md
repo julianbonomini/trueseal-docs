@@ -42,7 +42,7 @@ Type-checks with `astro check`, builds, then runs `bun test`. Some tests read th
 To screenshot built pages in both themes at desktop and phone width (run `bunx playwright install chromium` once first):
 
 ```bash
-bun run screenshot /tmp/shots / /docs/overview/introduction
+bun run screenshot /tmp/shots / /docs/overview/what-trueseal-is
 ```
 
 The mascot artwork is `brand/mascot/mascot.svg`. After changing it, run `bun run export-mascot` to regenerate the PNG exports beside it.

@@ -45,20 +45,19 @@ describe('404 page', () => {
     expect(mascots[0]).not.toContain('<style');
     expect(mascots[0]).not.toMatch(hexPattern);
     expect(html).toContain('href="/"');
-    expect(html).toContain('href="/docs/overview/introduction"');
+    expect(html).toContain('href="/docs/overview/what-trueseal-is"');
   });
 
   test('is left out of the search index', () => {
     const urls = indexedUrls();
-    expect(urls).toContain('/docs/overview/introduction/');
+    expect(urls).toContain('/docs/overview/what-trueseal-is/');
     expect(urls).not.toContain('/404.html');
   });
 });
 
 describe('Mascot placement', () => {
   test('the mascot appears only on pages the brandbook allows', () => {
-    // The preview-pages Goal adds the Why TrueSeal exists page here when it writes it.
-    const allowed = ['404.html'];
+    const allowed = ['404.html', 'docs/overview/why-trueseal-exists/index.html'];
     const withMascot = builtPages()
       .filter(path => readFileSync(path, 'utf8').includes('class="mascot"'))
       .map(path => relative(dist, path));

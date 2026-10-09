@@ -24,11 +24,12 @@ export const docsNav: NavSection[] = [
   {
     title: 'Overview',
     items: [
-      { title: 'Introduction',            slug: 'overview/introduction' },
-      { title: 'Architecture',            slug: 'overview/architecture' },
-      { title: 'Principles & Boundaries', slug: 'overview/principles-and-boundaries' },
-      { title: 'Roadmap & Research',      slug: 'overview/roadmap' },
-      { title: 'License',                 slug: 'overview/license' },
+      { title: 'What TrueSeal is',         slug: 'overview/what-trueseal-is' },
+      { title: 'How it works',             slug: 'overview/how-it-works' },
+      { title: 'Is it right for my app?',  slug: 'overview/is-it-right-for-my-app' },
+      { title: 'Why TrueSeal exists',      slug: 'overview/why-trueseal-exists' },
+      { title: 'Roadmap & Research',       slug: 'overview/roadmap' },
+      { title: 'License',                  slug: 'overview/license' },
     ],
   },
   {

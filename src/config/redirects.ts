@@ -5,15 +5,19 @@
 /** Every URL that moved or was removed → its new home. Keys and values are root-relative paths with
  *  no trailing slash. Passed to Astro's `redirects`; a target is always a built page, never another key. */
 export const redirects: Record<string, string> = {
-  '/docs': '/docs/overview/introduction',
+  '/docs': '/docs/overview/what-trueseal-is',
   '/relay': '/docs/operate/deploying',
   '/showcase': '/',
 
-  '/docs/introduction':              '/docs/overview/introduction',
-  '/docs/architecture':              '/docs/overview/architecture',
-  '/docs/principles-and-boundaries': '/docs/overview/principles-and-boundaries',
+  '/docs/introduction':              '/docs/overview/what-trueseal-is',
+  '/docs/architecture':              '/docs/overview/how-it-works',
+  '/docs/principles-and-boundaries': '/docs/overview/is-it-right-for-my-app',
   '/docs/future':                    '/docs/overview/roadmap',
   '/docs/license':                   '/docs/overview/license',
+
+  '/docs/overview/introduction':              '/docs/overview/what-trueseal-is',
+  '/docs/overview/architecture':              '/docs/overview/how-it-works',
+  '/docs/overview/principles-and-boundaries': '/docs/overview/is-it-right-for-my-app',
 
   '/docs/sdks':                                         '/docs/integrate/sdks',
   '/docs/guides/integrating-trueseal-sync':             '/docs/integrate/integrating-trueseal-sync',

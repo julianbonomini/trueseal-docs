@@ -1,0 +1,44 @@
+---
+title: What TrueSeal is
+description: TrueSeal is a private sync primitive, an end-to-end encrypted sync SDK for Swift, Kotlin and TypeScript with a relay you run yourself.
+---
+
+# What TrueSeal is
+
+You're building an app where a few devices share something personal: a family's locations, the passwords on your own phone and laptop, a clipboard. The app needs sync. Doing it privately means pairing devices, sharing keys, queueing messages for devices that are offline and tracking who is in the group, and that looks like a protocol project. So the usual move is to ship sync that whoever runs the server can read.
+
+TrueSeal is the sync with the privacy already inside. It's an end-to-end encrypted sync SDK for Swift, Kotlin (Android) and TypeScript (Node), with a relay you run yourself in Docker. Your app hands it bytes, and the other devices in the group get those bytes. The relay in between can't read or forge them.
+
+## What you get
+
+The SDK does the parts of private sync that every app would otherwise build by hand:
+
+- Pairing. One device shows a Pairing Token, the other reads it, and the first device accepts the request. See [Pairing](/docs/integrate/pairing).
+- Membership. Any member can admit, remove or leave, and every device ends up with the same member list. See [Sync Groups](/docs/integrate/sync-groups).
+- End-to-end encrypted delivery. Each message is sealed separately to each member's key before it leaves the device.
+- An offline outbox. `send()` writes the message to a local outbox and returns. The SDK delivers it when the relay is reachable, including after a restart.
+- Deduplication and ordering. Messages from one device reach your handler in the order that device sent them, and the SDK drops duplicates before your handler sees them. See [Delivery Guarantees](/docs/integrate/delivery-guarantees).
+
+The same API, with the same names and the same error cases, covers all three languages. Each SDK wraps one shared core written in Rust.
+
+## What stays your app's job
+
+TrueSeal moves opaque bytes between the devices in a group. It has no opinion about what those bytes mean, so these stay with your app:
+
+- Your data model. Pick any format for the payload.
+- Conflict resolution. When two offline devices change the same thing, your app decides who wins or how to merge. I left this out on purpose, because the right answer is different for a location, a note and a password.
+- Your pairing screens. TrueSeal gives you the token and the join requests. Your app shows the QR code, and your user confirms the device in front of them.
+- History for new devices. Pairing adds a device to the group from that moment on. If a new device needs earlier data, your app sends it.
+- People and roles. A device is a keypair. Linking devices to a person, or giving one member more rights than another, happens in your app.
+
+## The pieces
+
+- trueseal-sync is the Rust core with identity, pairing, membership, sealing and the outbox. The Swift, Kotlin and TypeScript SDKs are thin wrappers over it, and they release together as one TrueSeal Release.
+- trueseal-relay is a Go server that holds sealed messages for devices that are offline and passes them on when the devices connect. It stores them in SQLite.
+- trueseal-noise is the Rust library the core uses to encrypt its connections to the relay. It wraps the `snow` implementation of the [Noise Protocol Framework](https://noiseprotocol.org/).
+
+[How it works](/docs/overview/how-it-works) follows one message through all three. [Is it right for my app?](/docs/overview/is-it-right-for-my-app) says when TrueSeal is the wrong choice.
+
+## A developer preview
+
+TrueSeal is in a developer preview. Every package is `0.x`, and any release may break the API, the wire format or stored data without notice. Every breaking release comes with upgrade steps. There is no support promise, and TrueSeal has not been independently audited.

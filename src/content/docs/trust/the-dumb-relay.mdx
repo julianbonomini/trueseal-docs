@@ -47,4 +47,4 @@ The relay has its own long-term keypair. Connecting devices verify the relay's i
 
 ## Always in the path
 
-For remote sync the relay is always in the path. No peer-to-peer mode, no NAT traversal, no STUN, no TURN. Both devices connect outbound to the relay and the relay bridges them. The reasoning is in [Not a P2P System](/docs/overview/principles-and-boundaries#not-a-p2p-system) — short version: NAT traversal over the open internet is a swamp, and "real" P2P usually falls back to a relay anyway.
+For remote sync the relay is always in the path. No peer-to-peer mode, no NAT traversal, no STUN, no TURN. Both devices connect outbound to the relay and the relay bridges them. The reasoning is in [Every message goes through the relay](/docs/overview/how-it-works#every-message-goes-through-the-relay) — short version: NAT traversal over the open internet is a swamp, and "real" P2P usually falls back to a relay anyway.

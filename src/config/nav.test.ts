@@ -7,10 +7,10 @@ test('the sidebar sections follow the Journey, none empty', () => {
 });
 
 test('placeOf gives the first page its section and only a next link', () => {
-  const place = placeOf('overview/introduction');
+  const place = placeOf('overview/what-trueseal-is');
   expect(place?.section).toBe('Overview');
   expect(place?.prev).toBeUndefined();
-  expect(place?.next?.href).toBe('/docs/overview/architecture');
+  expect(place?.next?.href).toBe('/docs/overview/how-it-works');
 });
 
 test('previous and next cross section boundaries', () => {

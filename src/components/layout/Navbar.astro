@@ -11,7 +11,7 @@ const onDocs = Astro.url.pathname.startsWith('/docs');
 <header class="navbar">
   <Wordmark />
   <nav class="navbar__surfaces" aria-label="Documentation">
-    <a href="/docs/overview/introduction" aria-current={onDocs ? 'true' : undefined}>Docs</a>
+    <a href="/docs/overview/what-trueseal-is" aria-current={onDocs ? 'true' : undefined}>Docs</a>
     <span class="navbar__soon-surface" aria-disabled="true">Agent Docs <span class="navbar__soon">soon</span></span>
   </nav>
   <span class="navbar__version">{versionLabel}</span>

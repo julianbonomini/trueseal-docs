@@ -1,0 +1,147 @@
+---
+title: How it works
+description: How TrueSeal pairs two devices, seals a message for each member, and delivers it through a relay that can't read it.
+---
+import FlowDiagram from '../../../components/mdx/FlowDiagram.astro';
+
+# How it works
+
+Mum's phone moves, and the family app on your phone should show the new position a moment later. Both phones may be offline at different times, and the server between them should learn as little as possible. This page follows that one location update from her phone to yours.
+
+## Every message goes through the relay
+
+Devices never connect to each other. Each one opens outbound connections to the relay you run, and the relay passes sealed messages between them. A phone behind a home router or a mobile network can open an outbound connection without port forwarding, so there is no peer-to-peer setup to fail.
+
+The relay listens on two ports. Devices push messages on one and receive them on the other. Both connections use the [Noise Protocol Framework](https://noiseprotocol.org/), and the device checks the relay's public key on both, so it only talks to the relay you configured.
+
+## Pairing
+
+Before Mum's phone can send to yours, each device needs the other's public keys. Pairing starts on a channel the relay never sees, such as a QR code on one screen and the camera of the other device. The joining device's keys come back through the relay, sealed.
+
+<FlowDiagram
+  left={{
+    id: "ADMITTING",
+    role: "DEVICE",
+    steps: [
+      { label: "startPairing()" },
+      { label: "Show token as QR" },
+      { label: "accept(request)" },
+    ]
+  }}
+  center={{
+    title: "RELAY",
+    subtitle: "ROUTES SEALED MESSAGES",
+    meta: [
+      { label: "sees", value: "recipient keys" },
+      { label: "never sees", value: "the token" },
+    ]
+  }}
+  right={{
+    id: "JOINING",
+    role: "DEVICE",
+    steps: [
+      { label: "join(token)" },
+      { label: "pendingJoin" },
+      { label: "member" },
+    ]
+  }}
+/>
+
+1. The admitting device calls `startPairing()`. It gets a Pairing Token holding its public keys and a single-use secret, and your app shows the token, for example as a QR code.
+2. The joining device reads the token and calls `join(token)`. It saves a Pending Join and sends a join request to the admitting device through the relay. The request proves it knows the token's secret, so a relay that never saw the token can't raise one.
+3. Your app on the admitting device shows the request, and the user checks that it comes from the device in front of them. Calling `accept(request)` adds the joiner to a new Group Manifest, the signed list of members, and sends it to every member.
+4. The joiner accepts that manifest only if the key from the token signed it. Then it becomes a member.
+
+Admission is explicit on both sides. The admitting user accepts one request, and the joining device trusts only the device whose token it read. A Pending Join survives a restart, and the admitting side closes its pairing window when the app restarts. [Pairing](/docs/integrate/pairing) covers every state and what to do on failure.
+
+## Sending
+
+<FlowDiagram
+  left={{
+    id: "MUM'S PHONE",
+    role: "DEVICE",
+    steps: [
+      { label: "send(bytes)" },
+      { label: "Write to outbox" },
+      { label: "Seal per member" },
+    ]
+  }}
+  center={{
+    title: "RELAY",
+    subtitle: "PUSH SESSION (NOISE NK)",
+    meta: [
+      { label: "stores", value: "sealed messages" },
+      { label: "until", value: "acked or TTL" },
+    ]
+  }}
+  right={{
+    id: "YOUR PHONE",
+    role: "DEVICE",
+    steps: [
+      { label: "Inbox if offline" },
+      { label: "Delivered if online" },
+    ]
+  }}
+/>
+
+1. The app calls `send(bytes)`. The SDK writes the message to its local outbox and returns a Message ID. From here the message survives a crash or a restart.
+2. The SDK seals one copy for each other member. For each copy it makes a fresh X25519 key, agrees a key with the recipient's public key, and encrypts with ChaCha20-Poly1305. The sender's Ed25519 signature, the sequence number and a timestamp go inside the encrypted part.
+3. The SDK opens a Push Session to the relay with a fresh key, so the connection carries no long-term identity of the sending device, and pushes every copy.
+4. The relay writes each copy to the recipient's Inbox on disk before it acknowledges the push. If the recipient is online, it delivers the copy straight away.
+5. Until the relay acknowledges a copy, it stays in the outbox. The SDK retries with backoff while connected and again on reconnect, and a later message to the same recipient never overtakes an earlier one.
+
+## Receiving
+
+<FlowDiagram
+  left={{
+    id: "RELAY",
+    role: "INBOX",
+    steps: [
+      { label: "Held messages" },
+      { label: "Deliver in order" },
+    ]
+  }}
+  center={{
+    title: "RECEIVE SESSION",
+    subtitle: "NOISE XX",
+    meta: [
+      { label: "session", value: "long-lived" },
+      { label: "deleted", value: "after the ack" },
+    ]
+  }}
+  right={{
+    id: "YOUR PHONE",
+    role: "DEVICE",
+    steps: [
+      { label: "Open and verify" },
+      { label: "Drop duplicates" },
+      { label: "Run your handler" },
+      { label: "Ack" },
+    ]
+  }}
+/>
+
+1. Your phone keeps a Receive Session open with its own long-term key, so the relay knows which Inbox to deliver from.
+2. For each message, the SDK decrypts it, checks the signature, and checks that the sender is a member of the group. A message that fails any check never reaches your app.
+3. The SDK drops a message it has already handled, then runs your message handler with the bytes, the sender and the Message ID.
+4. Only after your handler finishes does the SDK acknowledge the message, and only then does the relay delete it. If the app crashes inside the handler, the relay delivers the message again.
+
+A message waits in the relay's Inbox until your phone takes it or its TTL runs out. [Delivery Guarantees](/docs/integrate/delivery-guarantees) has the exact promise and its exceptions.
+
+## What the relay sees
+
+The relay can't read or forge messages. It does see some metadata:
+
+- each device's public key, and when each device is online;
+- which device each message is addressed to, its size and when it arrived;
+- which devices receive messages together, so it can work out which devices likely share a group;
+- the End-to-End Version on each message;
+- often which device pushed a message, from the network address and timing of the connection.
+
+The relay never logs, stores or uses your IP address. The server it runs on still sees the connection, as with any internet service. To hide your IP from the server too, use a VPN or Tor.
+
+The [Threat Model](/docs/trust/threat-model) lists every claim with the test behind it, and what TrueSeal doesn't defend against.
+
+## Where TrueSeal stops
+
+Your handler gets bytes, a sender and a Message ID. What the bytes mean, how two conflicting updates merge, and what your app does with Mum's position stay with your app.
