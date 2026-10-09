@@ -2,6 +2,7 @@
 title: Inbox & TTL
 description: The relay's storage model — per-recipient inboxes, the InboxStore contract, SQLite backend, and TTL reaping.
 ---
+import { relayTtl } from '../../../config/sharedFacts.ts';
 
 # Inbox & TTL
 
@@ -38,6 +39,6 @@ SQLite is opened in WAL mode with `synchronous=FULL`, so every Put is crash-safe
 
 Every blob has a TTL set at Put time. When it expires, the blob becomes eligible for reaping. The reaper runs on a configurable interval (default: 1 hour) and deletes all expired blobs in one sweep.
 
-Default TTL is 30 days, deliberately generous. Reaping is a last resort for permanently offline or abandoned devices, not routine housekeeping. Operators with tighter storage budgets can shorten the TTL.
+Default TTL is {relayTtl.text}, deliberately generous. Reaping is a last resort for permanently offline or abandoned devices, not routine housekeeping. Operators with tighter storage budgets can shorten the TTL.
 
 A device that reconnects after its blobs have already been reaped will miss them permanently. A client crash after acknowledging frame receipt but before committing application state is another boundary. Both are documented in [Delivery Guarantees](/docs/integrate/delivery-guarantees).

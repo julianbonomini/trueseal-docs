@@ -2,7 +2,7 @@
 title: Deploying
 description: Self-host a trueseal-relay instance — keypair generation, configuration, single-node setup, Docker, and operational notes.
 ---
-import { protocolSizeLimit } from '../../../config/sharedFacts.ts';
+import { protocolSizeLimit, relayTtl } from '../../../config/sharedFacts.ts';
 
 # Deploying
 
@@ -53,7 +53,7 @@ sqlite_path = "/var/lib/trueseal-relay/inbox.db"
 | `relay.keypair_path` | `TRUESEAL_RELAY_KEYPAIR_PATH` | — | Path to hex-encoded private key. Required. |
 | `relay.listen_push` | `TRUESEAL_RELAY_LISTEN_PUSH` | `:7701` | Push Session listener address. |
 | `relay.listen_receive` | `TRUESEAL_RELAY_LISTEN_RECEIVE` | `:7700` | Receive Session listener address. |
-| `relay.ttl` | `TRUESEAL_RELAY_TTL` | `720h` (30 days) | Blob TTL before reaping. |
+| `relay.ttl` | `TRUESEAL_RELAY_TTL` | `720h` ({relayTtl.text}) | Blob TTL before reaping. |
 | `relay.reap_interval` | `TRUESEAL_RELAY_REAP_INTERVAL` | `1h` | How often the reaper runs. |
 | `relay.max_envelope_bytes` | `TRUESEAL_RELAY_MAX_ENVELOPE_BYTES` | Protocol ceiling | Max envelope size, for a `Sync` body of at most {protocolSizeLimit.text} (the Protocol Size Limit). You can lower it, never raise it. A relay set higher refuses to start. Larger blobs are refused permanently as too large. |
 | `store.type` | `TRUESEAL_RELAY_STORE_TYPE` | `sqlite` | Storage backend. `sqlite` is the only supported backend. `postgres` is experimental. |

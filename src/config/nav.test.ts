@@ -24,7 +24,7 @@ test('children follow their parent in reading order, in its section', () => {
 });
 
 test('the last page has no next link', () => {
-  expect(placeOf('reference/nk-pattern')?.next).toBeUndefined();
+  expect(placeOf('reference/compatibility-table')?.next).toBeUndefined();
 });
 
 test('placeOf is undefined for a page outside the sidebar', () => {

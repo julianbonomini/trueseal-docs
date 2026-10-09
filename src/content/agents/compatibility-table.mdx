@@ -1,0 +1,27 @@
+---
+title: Compatibility Table
+description: Which TrueSeal Release, relay and noise versions work together, and the protocol and Store Versions each one uses.
+---
+import CompatibilityTable from '../../components/reference/CompatibilityTable.astro';
+
+# Compatibility Table
+
+Each row is a Release Manifest: a TrueSeal Release and the relay and noise versions the release gate tested it with. A row marked planned hasn't shipped yet.
+
+<CompatibilityTable />
+
+## Rules
+
+{/* TODO: name the error and status cases (relayVersionUnsupported, storeTooNew, storeReset) once Shared Facts carries error cases (agent-docs Goal). */}
+
+- Package versions and protocol versions are independent. A protocol version changes when wire bytes, signing inputs or encryption inputs change, during the preview too (sync ADR-0022).
+- The relay and every device speak exactly one Transport Version, and every device speaks exactly one End-to-End Version. There is no negotiation and no mixed-version operation.
+- The relay answers an unsupported Transport Version with its supported range in plaintext and closes the connection. The SDK reports this as a typed error.
+- A device holds a message with a newer End-to-End Version unacked on the relay, so it can read it after upgrading. Past a per-device cap, the oldest are acked and dropped.
+- A device acks and drops a message with an older or malformed End-to-End Version, and raises a local event. Nothing goes back to the sender.
+- Unknown protobuf fields never carry meaning.
+- Session State migrates forward from any release since the migration floor. A store from before the floor is wiped: the device gets a new identity and has to pair again. A store written by a newer release is refused and left unchanged (sync ADR-0032).
+- A Store Reset release moves the migration floor to itself.
+- The relay migrates `inbox.db` forward when it starts, and refuses to start on a store written by a newer release (relay ADR-0013).
+
+Agents: say a version combination is supported only when a row of this table lists it. Never infer compatibility from version numbers.

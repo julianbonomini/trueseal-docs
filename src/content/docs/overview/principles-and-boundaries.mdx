@@ -34,7 +34,7 @@ trueseal is opinionated. Every choice in the stack traces back to a short list o
 
 The relay can't read or forge your messages.
 
-Everything is encrypted on the device before it goes anywhere. The relay receives ciphertext addressed to a recipient's public key. It holds no keys and can't read what it routes. It does see some metadata, such as who receives a message, its size and its time. [Here is exactly what it sees](/docs/overview/architecture#what-the-relay-actually-sees).
+Everything is encrypted on the device before it goes anywhere. The relay receives ciphertext addressed to a recipient's public key. It holds no keys and can't read what it routes. It does see some metadata, such as who receives a message, its size and its time. [Here is exactly what it sees](/docs/trust/threat-model#what-the-relay-sees).
 
 This is the only mode there is. There's no setting that loosens it.
 
@@ -86,7 +86,7 @@ Devices don't talk to each other directly. The relay is always in the middle.
 
 Real peer-to-peer over the open internet means NAT traversal, which means STUN and TURN to punch through home routers, office firewalls and mobile carriers — and when that fails (it fails a lot), TURN is just a relay anyway, wearing a different hat.
 
-The trueseal relay solves the connectivity problem cleanly: outbound connections from both sides, no NAT gymnastics. The relay can't read what it carries, but it does see metadata, so the convenience has a privacy cost. [Here is exactly what it sees](/docs/overview/architecture#what-the-relay-actually-sees).
+The trueseal relay solves the connectivity problem cleanly: outbound connections from both sides, no NAT gymnastics. The relay can't read what it carries, but it does see metadata, so the convenience has a privacy cost. [Here is exactly what it sees](/docs/trust/threat-model#what-the-relay-sees).
 
 ### Not a Real-Time Channel
 

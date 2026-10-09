@@ -1,0 +1,15 @@
+{
+  "releases": [
+    {
+      "truesealRelease": "0.6.0",
+      "relay": "0.2.0",
+      "noise": "0.2.0",
+      "transportVersion": 1,
+      "endToEndVersion": 1,
+      "sessionStateStoreVersion": 1,
+      "relayStoreVersion": 1,
+      "migrationFloor": "0.6.0",
+      "status": "planned"
+    }
+  ]
+}

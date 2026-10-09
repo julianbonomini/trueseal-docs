@@ -2,6 +2,7 @@
 title: trueseal-relay
 description: A delivery buffer for encrypted blobs that can't read or forge what it carries. Self-hostable Go binary that stores ciphertext for offline recipients and forwards on reconnect.
 ---
+import { ipWording } from '../../../config/threatModel.ts';
 
 # trueseal-relay — Overview
 
@@ -18,7 +19,7 @@ Blobs for offline recipients sit in their Inbox until they reconnect. Delivered 
 
 ## What it doesn't do
 
-It never decrypts anything, and stored blobs carry no sender identity. It can still infer which devices likely share a group from how a send fans out, and it often sees which device pushed, by IP address or timing. The relay never logs, stores or uses your IP address. The server it runs on still sees the connection, as with any internet service. To hide your IP from the server too, use a VPN or Tor. Routing is by recipient public key. Blob content is never parsed, logged, or examined.
+It never decrypts anything, and stored blobs carry no sender identity. It can still infer which devices likely share a group from how a send fans out, and it often sees which device pushed, by IP address or timing. {ipWording} Routing is by recipient public key. Blob content is never parsed, logged, or examined.
 
 It's not a durable log. It's not a database. It's a delivery buffer — data lives in it only until it reaches the recipient.
 

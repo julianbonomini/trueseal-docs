@@ -4,6 +4,7 @@ description: How the trueseal stack fits together — trueseal-noise, trueseal-s
 ---
 import FlowDiagram from '../../../components/mdx/FlowDiagram.astro';
 import { protocolSizeLimit } from '../../../config/sharedFacts.ts';
+import { ipWording } from '../../../config/threatModel.ts';
 
 # Architecture
 
@@ -38,10 +39,10 @@ The relay can't read or forge your messages. It routes each one by its recipient
 - each device's key, and when it is online;
 - who receives a message, its size (up to {protocolSizeLimit.text} of `Sync` body) and its time;
 - which devices receive the same messages. A single send fans out to every group member in one connection, with matching sizes and timing, from the sender's network address, so a relay operator can infer which devices likely share a group;
-- which end-to-end protocol version each device runs, from which messages it leaves unacknowledged;
+- which End-to-End Version each device runs, from which messages it leaves unacknowledged;
 - often, which device sent a message, by IP address or timing.
 
-Stored messages carry no sender identity. The relay never logs, stores or uses your IP address. The server it runs on still sees the connection, as with any internet service. To hide your IP from the server too, use a VPN or Tor.
+Stored messages carry no sender identity. {ipWording}
 
 The full list, with what TrueSeal doesn't defend against, is in the [Threat Model](/docs/trust/threat-model#what-the-relay-sees).
 

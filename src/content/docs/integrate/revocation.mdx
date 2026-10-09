@@ -2,6 +2,7 @@
 title: Revocation
 description: Two ways to take devices out of a Sync Group. Remove one device for routine changes, or destroy the whole group after a security incident.
 ---
+import { relayTtl } from '../../../config/sharedFacts.ts';
 
 # Revocation
 
@@ -45,7 +46,7 @@ Any current member calls `destroyGroup()`. The device stays in `destroying` unti
 **What it does not do:**
 - It can't recover or erase anything the stolen device already received or stored.
 - It can't force the stolen device to wipe itself.
-- It doesn't reach a device that stays offline longer than the relay's message lifetime (30 days by default). That device keeps its old group until the user destroys or leaves it there too.
+- It doesn't reach a device that stays offline longer than the relay's message lifetime ({relayTtl.text} by default). That device keeps its old group until the user destroys or leaves it there too.
 - It doesn't complete while your device can't reach the relay. Your device shows "destroying" until it can.
 - Any current or former member can trigger it. That includes a stolen device, which can end your group, though that cuts it off from the group as well.
 

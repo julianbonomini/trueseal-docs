@@ -1,0 +1,57 @@
+---
+// The Compatibility Table, rendered from src/config/compatibility.ts. The Human Docs and Agent Docs pages
+// both place it, so a data edit changes both and no MDX holds a version.
+import { compatibilityTable } from '../../config/compatibility';
+
+const { columns, rows } = compatibilityTable();
+---
+
+{rows.length === 0 ? (
+  <p>No TrueSeal Release has shipped yet. The first row appears here when one does.</p>
+) : (
+  <table class="compat">
+    <thead>
+      <tr>{columns.map(column => <th>{column}</th>)}</tr>
+    </thead>
+    <tbody>
+      {rows.map(row => (
+        <tr>{row.map((cell, i) => <td data-label={columns[i]}>{cell}</td>)}</tr>
+      ))}
+    </tbody>
+  </table>
+)}
+
+<style>
+  .compat {
+    display: table;
+  }
+
+  /* On a phone each release is one block of label/value pairs, so the reader never scrolls sideways. */
+  @media (max-width: 659px) {
+    .compat thead {
+      display: none;
+    }
+
+    .compat,
+    .compat tbody,
+    .compat tr,
+    .compat td {
+      display: block;
+    }
+
+    .compat tr {
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .compat td {
+      border-bottom: 0;
+    }
+
+    .compat td::before {
+      content: attr(data-label);
+      display: block;
+      font-size: var(--text-label);
+      color: var(--ink-muted);
+    }
+  }
+</style>

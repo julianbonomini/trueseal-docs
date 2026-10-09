@@ -57,6 +57,7 @@ export const docsNav: NavSection[] = [
       { title: 'Threat Model',   slug: 'trust/threat-model' },
       { title: 'Encryption',     slug: 'trust/encryption' },
       { title: 'The Dumb Relay', slug: 'trust/the-dumb-relay' },
+      { title: 'Reporting a vulnerability', slug: 'trust/reporting-a-vulnerability' },
     ],
   },
   {
@@ -83,6 +84,7 @@ export const docsNav: NavSection[] = [
           { title: 'NK Pattern',            slug: 'reference/nk-pattern' },
         ],
       },
+      { title: 'Compatibility Table', slug: 'reference/compatibility-table' },
     ],
   },
 ];

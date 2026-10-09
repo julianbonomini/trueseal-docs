@@ -57,6 +57,10 @@ GITHUB_TOKEN=$(gh auth token) bun scripts/check-threat-model.ts
 
 It prints each missing test and exits 1 when any is missing, and exits 2 when it can't fetch a file. `.github/workflows/threat-model.yml` runs it on every pull request and push to `main`, with the `SIBLING_REPOS_TOKEN` secret: a token with read access to trueseal-sync, trueseal-noise, trueseal-relay and trueseal-e2e (trueseal-e2e is private). To bump a pin, put the repo's new full commit SHA in `threatModelPins.json`. The job lists tests the sibling repos haven't written yet, so it isn't a required check until the pins point at commits that have them.
 
+### Compatibility Table
+
+The Compatibility Table renders from `src/config/compatibility.json`. A release adds one object to `releases` with the fields in `ReleaseManifest` (`src/config/compatibility.ts`), and replaces the planned row when that release ships. The build fails on a malformed row. The Release Conductor (trueseal-e2e ADR-0002) edits only this file.
+
 ---
 
 ## Deployment
@@ -102,10 +106,12 @@ src/
     docs/         # Sidebar
     layout/       # Navbar, Wordmark, Footer
     mdx/          # Reusable MDX components
-    trust/        # The Threat Model parts both surfaces render
+    reference/    # The Compatibility Table both surfaces render
+    trust/        # The Threat Model parts and the Security tab links both surfaces render
     ui/           # Buttons, theme toggle, mascot
   config/         # nav.ts (sidebar and reading order), redirects.ts (moved URLs), site.ts (version label), sharedFacts.ts (Shared Facts),
-                  # threatModel.ts (Threat Model claims and limitations) and threatModelPins.json (the commits its tests are checked at)
+                  # threatModel.ts (Threat Model claims and limitations), threatModelPins.json (the commits its tests are checked at),
+                  # compatibility.json (the Compatibility Table's Release Manifests) and compatibility.ts (reads and checks it)
   content/
     docs/         # All documentation markdown
     agents/       # Agent Docs pages
@@ -115,4 +121,4 @@ src/
 scripts/          # check-threat-model.ts and its core declared-tests.ts, screenshot.ts, export-mascot.ts
 ```
 
-`tests/` holds the brand checks on the source, the banned-terms check on every file under `src/`, the Landing checks, the mascot and 404 checks, the redirect, link and docs-sidebar checks and the Shared Facts check on the built site, the Threat Model data checks, the check core's fixture tests and the Threat Model page checks, run by `bun test`.
+`tests/` holds the brand checks on the source, the banned-terms check on every file under `src/`, the Landing checks, the mascot and 404 checks, the redirect, link and docs-sidebar checks and the Shared Facts check on the built site, the Threat Model data checks, the check core's fixture tests and the Threat Model page checks, the Compatibility Table data and page checks, the vulnerability-reporting checks, run by `bun test`.
