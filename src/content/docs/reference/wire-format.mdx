@@ -106,7 +106,7 @@ Sent by the relay when a Push is permanently rejected. Body is always empty.
 
 **Current rejection reasons:**
 - Push body shorter than 32 bytes (malformed).
-- Envelope larger than the protocol size limit (see below).
+- Envelope larger than the Protocol Size Limit allows (see below).
 
 A client that receives an Error removes the blob from its retry queue. Retrying won't help.
 

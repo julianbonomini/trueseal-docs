@@ -141,6 +141,6 @@ A `Sync` message is stamped once, at `send()`, and keeps that Sender Timestamp t
 
 The Protocol Size Limit is <Fact id="protocolSizeLimit" /> of the `Sync` body the caller passes to `send()` (trueseal-sync ADR-0025). `send()` checks it synchronously and fails with `payloadTooLarge{max}`, and an oversize body never enters the outbox. A caller may pass a lower `maxPayloadBytes` to `TrueSeal.open`; a higher value is clamped to the Protocol Size Limit.
 
-An Operator may set a lower Relay Size Limit, never a higher one. A relay configured above the protocol ceiling refuses to start. A size refusal from the relay is permanent and reported as `sendFailed(messageId, tooLarge)`.
+An Operator may set a lower Relay Size Limit, never a higher one. A relay configured above the Protocol Size Limit refuses to start. A size refusal from the relay is permanent and reported as `sendFailed(messageId, tooLarge)`.
 
-Every message type must fit in one frame. For a `GroupManifest` that requires the maximum group size (<Fact id="maxGroupSize" />), and `accept(request)` fails with `groupFull{max}` beyond it.
+Every message type must fit in one frame. For a `GroupManifest` that requires the Maximum Group Size (<Fact id="maxGroupSize" />), and `accept(request)` fails with `groupFull{max}` beyond it.

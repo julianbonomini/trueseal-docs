@@ -35,6 +35,8 @@ export interface ApiEntryData {
   tsValues?: 'string' | 'state';
   /** Platform-only identifiers the reference check must accept, e.g. 'MAX_PAYLOAD_BYTES'. */
   aliases?: string[];
+  /** Names inside the entry: record fields and the type's own methods, e.g. 'sdkVersion', 'cancel'. */
+  fields?: string[];
   /** `sketch` marks a spelling taken from the ADR-0028 sketch rather than an ADR. */
   source: { adr: string[]; sketch?: boolean };
   /** How today's SDKs differ from the ADR. Never rendered. */
@@ -67,7 +69,9 @@ export interface ApiEntry {
 
 const platformLabels: Record<Platform, string> = { swift: 'Swift', kotlin: 'Kotlin', typescript: 'TypeScript' };
 
-const anchorPrefix: Record<CaseGroup, string> = { errors: 'error-', events: 'event-', deliveryIssues: 'issue-' };
+/** The HTML id prefix of an API entry and of each case kind; the reference check reads them to name a missing anchor. */
+export const entryAnchorPrefix = 'api-';
+export const anchorPrefix: Record<CaseGroup, string> = { errors: 'error-', events: 'event-', deliveryIssues: 'issue-' };
 // The Kotlin type each case kind is nested in. Swift events and issues use the bare case (`.statusChanged`).
 const kotlinType: Record<CaseGroup, string> = { errors: 'TrueSealException', events: 'TrueSealEvent', deliveryIssues: 'DeliveryIssue' };
 
@@ -142,7 +146,7 @@ function entryOf(data: ApiEntryData, facts: SharedFacts): ApiEntry {
     };
   }
   return {
-    anchor: `api-${data.name.toLowerCase().replace(/\./g, '-')}`,
+    anchor: `${entryAnchorPrefix}${data.name.toLowerCase().replace(/\./g, '-')}`,
     title: data.kind === 'module' ? pascal(data.name) : data.name,
     signature,
     meaning: meaningParts(data.meaning),
@@ -181,11 +185,16 @@ export function apiSection(section: ApiSection, api: ApiReference = apiReference
 }
 
 /** Every API name, sorted and unique: each entry name and each dotted segment of it, every alias,
- *  every error/event/delivery-issue id, every value of the value sets (braces dropped:
- *  'relayVersionUnsupported'), and every case's Kotlin and TS spelling head ('TrueSealException.GroupFull',
- *  'TrueSealEvent.StatusChanged', 'DeliveryIssue.Unreadable', 'GROUP_FULL'). The reference-existence check reads this. */
+ *  each field bare and as '<entry name>.<field>' ('sdkVersion', 'TrueSeal.info.sdkVersion'), every
+ *  error/event/delivery-issue id, every value of the value sets (braces dropped: 'relayVersionUnsupported'), and every case's Kotlin and TS spelling head ('TrueSealException.GroupFull',
+ *  'TrueSealEvent.StatusChanged', 'DeliveryIssue.Unreadable', 'GROUP_FULL'). The reference check reads this. */
 export function apiNames(api: ApiReference = apiReference, facts: SharedFacts = sharedFacts): string[] {
-  const entryNames = api.entries.flatMap(entry => [entry.name, ...entry.name.split('.'), ...(entry.aliases ?? [])]);
+  const entryNames = api.entries.flatMap(entry => [
+    entry.name,
+    ...entry.name.split('.'),
+    ...(entry.aliases ?? []),
+    ...(entry.fields ?? []).flatMap(field => [field, `${entry.name}.${field}`]),
+  ]);
   const cases = (['errors', 'events', 'deliveryIssues'] as const).flatMap(kind =>
     facts[kind].flatMap(c => {
       const heads = [`${kotlinType[kind]}.${pascal(c.id)}`];

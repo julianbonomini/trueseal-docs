@@ -152,6 +152,9 @@ function codeParts(values: string[], todo: string | undefined): FactPart[] {
   return values.length === 0 && todo ? [notFixed] : values.map(text => ({ text, code: true }));
 }
 
+/** The HTML id prefix of a FactTable row: a value fact, a value set, or a case. */
+export const rowAnchorPrefix = { fact: 'fact-', set: 'set-', case: 'case-' } as const;
+
 /** Every fact of `group` as table rows, plus the four column labels:
  *  value groups → ['Fact', 'Value', 'Meaning', 'Source'];
  *  errors/events/deliveryIssues → ['Case', 'Reasons', 'When', 'Source'];
@@ -161,15 +164,18 @@ function codeParts(values: string[], todo: string | undefined): FactPart[] {
  *  reasonSet as code parts, empty when it has none. A value-set row lists its values as code parts.
  *  A fact with no value and a todo shows the single part "Not fixed by an ADR yet."
  *  A meaning is split into parts, its backticked spans as code.
- *  Source reads "trueseal-sync ADR-0025, trueseal-sync ADR-0028; code: trueseal-relay internal/config/config.go". */
+ *  Source reads "trueseal-sync ADR-0025, trueseal-sync ADR-0028; code: trueseal-relay internal/config/config.go".
+ *  A row's anchor is its HTML id, the id lowercased after 'fact-', 'set-' or 'case-', so plain Markdown can link a
+ *  fact as /agents/limits#fact-protocolsizelimit. 'case-' keeps clear of the API reference's 'error-' and 'event-' ids. */
 export function factTable(group: FactGroup, data: SharedFacts = sharedFacts): {
   columns: [string, string, string, string];
-  rows: { name: FactPart; value: FactPart[]; meaning: FactPart[]; source: string }[];
+  rows: { anchor: string; name: FactPart; value: FactPart[]; meaning: FactPart[]; source: string }[];
 } {
   if (group === 'valueSets') {
     return {
       columns: ['Set', 'Values', 'Meaning', 'Source'],
       rows: data.valueSets.map(set => ({
+        anchor: `${rowAnchorPrefix.set}${set.id.toLowerCase()}`,
         name: { text: set.id, code: true },
         value: codeParts(set.values, set.todo),
         meaning: meaningParts(set.meaning),
@@ -184,6 +190,7 @@ export function factTable(group: FactGroup, data: SharedFacts = sharedFacts): {
       rows: cases.map(c => {
         const reasons = data.valueSets.find(set => set.id === c.reasonSet);
         return {
+          anchor: `${rowAnchorPrefix.case}${c.id.toLowerCase()}`,
           name: { text: caseSignature(group, c), code: true },
           value: reasons ? codeParts(reasons.values, reasons.todo) : [],
           meaning: meaningParts(c.meaning),
@@ -195,6 +202,7 @@ export function factTable(group: FactGroup, data: SharedFacts = sharedFacts): {
   return {
     columns: ['Fact', 'Value', 'Meaning', 'Source'],
     rows: data[group].map(fact => ({
+      anchor: `${rowAnchorPrefix.fact}${fact.id.toLowerCase()}`,
       name: { text: fact.name, code: false },
       value: [fact.value ? written(fact.value) : notFixed],
       meaning: meaningParts(fact.meaning),

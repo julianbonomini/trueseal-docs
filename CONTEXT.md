@@ -13,7 +13,7 @@ The developer documentation surface at `/docs/...`, written for people: short pa
 _Avoid_: documentation site, wiki, reference, Docs (on its own, now ambiguous)
 
 **Agent Docs**
-The documentation surface written for AI coding agents: dense, exhaustive pages that say exactly what TrueSeal is and what it is not, including the full SDK API reference. It is authored separately from the Human Docs, has its own `llms.txt` and `llms-full.txt`, generated from the Agent Docs sidebar, and is the canonical reference when the two differ (ADR-0003). The SDK API reference renders from one data file, `src/api/api-reference.ts`, which also lists the API names the reference-existence check reads.
+The documentation surface written for AI coding agents: dense, exhaustive pages that say exactly what TrueSeal is and what it is not, including the full SDK API reference. It is authored separately from the Human Docs, has its own `llms.txt` and `llms-full.txt`, generated from the Agent Docs sidebar, and is the canonical reference when the two differ (ADR-0003). The SDK API reference renders from one data file, `src/api/api-reference.ts`, which also lists the API names the reference check reads.
 _Avoid_: LLM docs, AI docs, llms.txt (that is one file within the Agent Docs)
 
 **Markdown version**
@@ -24,12 +24,16 @@ _Avoid_: twin, raw page
 The short block an app developer pastes into their own project's `AGENTS.md`: the integration pitfalls and a pointer to the Agent Docs. It lives in the developer's repo, not in TrueSeal's. TrueSeal keeps its text in `src/agent-snippet/agent-snippet.ts`. It is the first Agent Docs page, at `/agents/`, and the Landing's Integrate section renders the same text. Besides the pitfalls, it names the Agent Docs `llms.txt` and the TrueSeal Skills install commands, and states no Shared Fact.
 _Avoid_: rules file, prompt
 
+**Reference check**
+The check that fails `bun run check` when a Human Docs or Agent Docs page, the Agent Snippet or a skill names a page, API name, error or event case, or Shared Fact that doesn't exist (ADR-0003). It reads source Markdown and resolves against the built site, `apiNames()` and Shared Facts; `bun run check:references` runs it on any folder.
+_Avoid_: link checker, lint
+
 **TrueSeal Skills**
 The Agent Skills TrueSeal publishes for coding agents: Integrate, Pairing and Relay, one per workflow, shipped from the `trueseal-skills` repo as the `trueseal` plugin. They teach steps and pitfalls and link to the Agent Docs for every API name and fact (ADR-0005).
 _Avoid_: prompts, agent docs (a different surface), plugin (the package, not the skills)
 
 **Shared Facts**
-The values both the Human Docs and the Agent Docs state and that must never differ between them: error cases, event cases, limits, protocol versions and the Relay Address format; error, event and delivery-issue cases carry what the app should do. They come from one source, `src/facts/shared-facts.ts`, rendered on both surfaces by the `Fact` and `FactTable` Astro components; trueseal-sync will later generate that file from the core (SYNC-21).
+The values both the Human Docs and the Agent Docs state and that must never differ between them: error cases, event cases, limits, protocol versions and the Relay Address format; error, event and delivery-issue cases carry what the app should do. They come from one source, `src/facts/shared-facts.ts`, rendered on both surfaces by the `Fact` and `FactTable` Astro components, and the cases by `ApiEntries`; trueseal-sync will later generate that file from the core (SYNC-21).
 _Avoid_: constants (too code-specific)
 
 **Journey**

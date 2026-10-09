@@ -41,6 +41,42 @@ Type-checks with `astro check`, builds, then runs `bun test`. Some tests read th
 
 CI runs the same `bun run check` on every pull request and every push to `main` (`.github/workflows/check.yml`).
 
+### Reference check
+
+`bun test` fails when a Human Docs page, an Agent Docs page or the Agent Snippet names a page, API name, error or event case, or Shared Fact that doesn't exist. Each miss prints as `<file>:<line>: unknown <kind> <reference>`. The check reads the source Markdown/MDX and resolves against the built site in `dist/`, `apiNames()` and Shared Facts. `src/references/references.ts` holds the rules.
+
+A reference is either of these:
+
+- a link to a site path: a Markdown link or `href` starting with `/`, or a `https://trueseal.dev/…` URL. The page or file must be built, and a `#fragment` must be an id on that page.
+- a code span shaped like a TrueSeal API name: `TrueSeal.open`, `send()`, `trueSeal.send()`, `groupFull{max}`, `onMessage`. Bare PascalCase words such as `Sync` aren't checked.
+
+Frontmatter, comments, `import` and `export` lines, fenced code, MDX component tags, external links and relative links aren't read. To reference a limit from plain Markdown, link its table row: `/agents/limits#fact-protocolsizelimit` (a value fact's row id is `fact-` plus its id lowercased, and a value set's is `set-` plus its id lowercased). Link an error, event or delivery issue on `/agents/errors-and-events` as `#error-`, `#event-` or `#issue-` and the case id lowercased: `/agents/errors-and-events#error-groupfull`.
+
+`bun run check:references` runs the same check on any folder or file of Markdown/MDX, against this checkout's build:
+
+```bash
+bun run build
+bun run check:references --ref main path/to/skills
+```
+
+It exits 0 with no misses, 1 with misses, and 2 on a usage error, a missing build, or when `--ref` names a commit other than the checkout's `HEAD`.
+
+The `trueseal-skills` CI runs it from a trueseal-docs checkout at a release tag:
+
+```yaml
+- uses: actions/checkout@v4
+- uses: oven-sh/setup-bun@v2
+  with:
+    bun-version: 1.4.2
+- uses: actions/checkout@v4
+  with:
+    repository: julianbonomini/trueseal-docs
+    ref: vX.Y.Z
+    path: trueseal-docs
+- run: cd trueseal-docs && bun install --frozen-lockfile && bun run build
+- run: bun trueseal-docs/scripts/check-references.ts --ref vX.Y.Z skills
+```
+
 To screenshot built pages in both themes at desktop and phone width (run `bunx playwright install chromium` once first):
 
 ```bash
@@ -66,7 +102,7 @@ Build settings (already configured in Cloudflare):
 
 The Human Docs live in `src/content/docs/`. Files can be `.md` or `.mdx`.
 
-The Agent Docs live in `src/content/agents/` and are served at `/agents/...`. They are written for coding agents: literal, with no humour. Every Shared Fact (limits, versions, Relay Address, error and event cases) lives in `src/facts/shared-facts.ts` with its source; pages show one with `<Fact id="…" />` or `<FactTable group="…" />` and never type the value. A test fails on a typed value. The SDK API reference renders from `src/api/api-reference.ts`; pages place `<ApiEntries>` and never list API names. Their sidebar is in `src/config/nav.ts`, beside the Human Docs one.
+The Agent Docs live in `src/content/agents/` and are served at `/agents/...`. They are written for coding agents: literal, with no humour. Every Shared Fact (limits, versions, Relay Address, error and event cases) lives in `src/facts/shared-facts.ts` with its source; pages show a value with `<Fact id="…" />` or `<FactTable group="…" />`, and the cases with `<ApiEntries>`, and never type them. A test fails on a typed value. The SDK API reference renders from `src/api/api-reference.ts`; pages place `<ApiEntries>` and never list API names. Their sidebar is in `src/config/nav.ts`, beside the Human Docs one.
 
 The Agent Snippet, the first Agent Docs page, renders `src/agent-snippet/agent-snippet.ts`. The Landing's Integrate section renders the same text, so edit it only there.
 
@@ -116,7 +152,9 @@ src/
   layouts/        # BaseLayout, DocsLayout, LandingLayout
   markdown/       # markdown.ts (Markdown versions of built pages, llms.txt, llms-full.txt)
   pages/          # Astro routes
+  references/     # references.ts (the reference check)
   styles/         # tokens.css, global.css
+scripts/          # check-references.ts (the reference check CLI), screenshot.ts, export-mascot.ts
 ```
 
-`tests/` holds the brand checks on the source and the Landing checks, the mascot and 404 checks, the redirect, link and docs-sidebar checks on the built site, the Agent Docs and header-switch checks, the Agent Snippet checks, the SDK API reference checks, the Shared Facts checks, including a build of a copy with a changed fact, the Markdown version, `llms.txt` and Copy as Markdown checks, and the CI workflow check, run by `bun test`.
+`tests/` holds the brand checks on the source and the Landing checks, the mascot and 404 checks, the redirect, link and docs-sidebar checks on the built site, the Agent Docs and header-switch checks, the Agent Snippet checks, the SDK API reference checks, the Shared Facts checks, including a build of a copy with a changed fact, the Markdown version, `llms.txt` and Copy as Markdown checks, the reference check on its fixtures, the real content and its CLI, and the CI workflow check, run by `bun test`.

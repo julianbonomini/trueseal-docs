@@ -135,6 +135,13 @@ describe('apiNames', () => {
       expect({ name, listed: names.includes(name) }).toEqual({ name, listed: true });
     }
   });
+
+  test('lists the fields of the real data, bare and on their entry', () => {
+    const names = apiNames();
+    for (const name of ['sdkVersion', 'TrueSeal.info.sdkVersion', 'cancel', 'Subscription.cancel']) {
+      expect({ name, listed: names.includes(name) }).toEqual({ name, listed: true });
+    }
+  });
 });
 
 describe('the API reference data', () => {

@@ -14,7 +14,7 @@ const { columns, rows } = factTable(Astro.props.group);
   </thead>
   <tbody>
     {rows.map(row => (
-      <tr>
+      <tr id={row.anchor}>
         <td><FactParts parts={[row.name]} /></td>
         <td>{row.value.map((part: FactPart, index: number) => <>{index > 0 && ', '}<FactParts parts={[part]} /></>)}</td>
         <td><FactParts parts={row.meaning} /></td>

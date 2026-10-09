@@ -9,6 +9,7 @@
     "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",
     "check": "ASTRO_TELEMETRY_DISABLED=1 astro check && bun run build && bun test --pass-with-no-tests",
     "screenshot": "bun scripts/screenshot.ts",
+    "check:references": "bun scripts/check-references.ts",
     "export-mascot": "bun scripts/export-mascot.ts"
   },
   "dependencies": {

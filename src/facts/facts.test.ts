@@ -67,8 +67,8 @@ describe('factTable', () => {
     const table = factTable('errors', fixture);
     expect(table.columns).toEqual(['Case', 'Reasons', 'When', 'Source']);
     expect(table.rows).toEqual([
-      { name: { text: 'groupFull{max}', code: true }, value: [], meaning: [{ text: 'Full.', code: false }], source: 'trueseal-sync ADR-0028, trueseal-sync ADR-0027; code: trueseal-sync src/ffi.rs' },
-      { name: { text: 'closed', code: true }, value: [], meaning: [{ text: 'Closed.', code: false }], source: 'trueseal-sync ADR-0028' },
+      { anchor: 'case-groupfull', name: { text: 'groupFull{max}', code: true }, value: [], meaning: [{ text: 'Full.', code: false }], source: 'trueseal-sync ADR-0028, trueseal-sync ADR-0027; code: trueseal-sync src/ffi.rs' },
+      { anchor: 'case-closed', name: { text: 'closed', code: true }, value: [], meaning: [{ text: 'Closed.', code: false }], source: 'trueseal-sync ADR-0028' },
     ]);
   });
 
@@ -77,6 +77,12 @@ describe('factTable', () => {
       name: { text: 'statusChanged(status, reason)', code: true },
       value: [{ text: 'created', code: true }, { text: 'joined', code: true }],
     });
+  });
+
+  test('each row carries its anchor: fact-, set- or case- and the id lowercased', () => {
+    expect(factTable('clientLimits', fixture).rows[0].anchor).toBe('fact-unset');
+    expect(factTable('valueSets', fixture).rows[0].anchor).toBe('set-statusreason');
+    expect(factTable('errors', fixture).rows[0].anchor).toBe('case-groupfull');
   });
 
   test('a meaning shows its backticked spans as code', () => {
