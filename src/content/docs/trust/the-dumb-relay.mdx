@@ -11,7 +11,7 @@ The relay is infrastructure, not a service. It moves encrypted blobs from one de
 
 - **It's a buffer, not a database.** Blobs are deleted on delivery.
 - **One thing per device:** an Inbox of undelivered blobs addressed to that device's public key.
-- **It knows little.** Recipient keys, who's connected, sizes and timing, and which devices receive the same messages. No content, and no sender identity on stored blobs.
+- **It knows little.** No content, and no sender identity on stored blobs. The [Threat Model](/docs/trust/threat-model#what-the-relay-sees) lists what it does see.
 - **Who runs it doesn't change what it can read.** It does decide whether your messages arrive.
 
 ## What "dumb" means
@@ -30,18 +30,11 @@ Blobs that never get delivered — recipient permanently offline, lost, abandone
 
 ## What the relay knows
 
-Two things it needs to do its job:
-
-- **Which noise keys have active connections.** Needed to deliver to online devices without polling.
-- **The recipient public key on each blob.** Needed to put the blob into the right inbox.
-
-It also sees each blob's size and time, and which devices receive the same messages. A single send fans out to every group member in one connection, with matching sizes and timing, from the sender's network address. A relay operator can therefore infer which devices likely share a group. TrueSeal does not hide group structure from the relay. It often sees which device pushed a blob, by IP address or timing, and which End-to-End Version each device runs. It can't read content, and stored blobs carry no sender identity.
-
-The full list, with what TrueSeal doesn't defend against, is in the [Threat Model](/docs/trust/threat-model#what-the-relay-sees).
+It needs two things to do its job. It tracks which noise keys have active connections, so it can deliver to online devices without polling. It reads the recipient public key on each blob, so it can put the blob into the right inbox. It sees more metadata than that, but never content: the [Threat Model](/docs/trust/threat-model#what-the-relay-sees) lists what the relay sees.
 
 ## Self-hosting and operator trust
 
-Because the relay can't read or forge your messages, who operates it doesn't change what it can read. Your own $5 VPS or a friend's box sees the same metadata listed above. The operator does decide whether your messages arrive.
+Because the relay can't read or forge your messages, who operates it doesn't change what it can read. Your own $5 VPS or a friend's box sees the same metadata as any other relay. The operator does decide whether your messages arrive.
 
 The relay has its own long-term keypair. Connecting devices verify the relay's identity through the Noise XX handshake before sending anything. The relay's public key is distributed out-of-band by whoever runs it — baked into a client, posted on a landing page, shared as a QR. The relay doesn't discover itself.
 

@@ -3,8 +3,6 @@ title: Architecture
 description: How the trueseal stack fits together — trueseal-noise, trueseal-sync, trueseal-relay, and the trueseal-protocol spec that binds them.
 ---
 import FlowDiagram from '../../../components/mdx/FlowDiagram.astro';
-import { protocolSizeLimit } from '../../../config/sharedFacts.ts';
-import { ipWording } from '../../../config/threatModel.ts';
 
 # Architecture
 
@@ -34,17 +32,7 @@ Three components and one spec. Each piece does one job, can be swapped out, and 
 
 ## What the relay actually sees
 
-The relay can't read or forge your messages. It routes each one by its recipient key, and it does see:
-
-- each device's key, and when it is online;
-- who receives a message, its size (up to {protocolSizeLimit.text} of `Sync` body) and its time;
-- which devices receive the same messages. A single send fans out to every group member in one connection, with matching sizes and timing, from the sender's network address, so a relay operator can infer which devices likely share a group;
-- which End-to-End Version each device runs, from which messages it leaves unacknowledged;
-- often, which device sent a message, by IP address or timing.
-
-Stored messages carry no sender identity. {ipWording}
-
-The full list, with what TrueSeal doesn't defend against, is in the [Threat Model](/docs/trust/threat-model#what-the-relay-sees).
+The relay can't read or forge your messages. It routes each one by its recipient key, so it knows who a message is for and when it arrived. Everything else it sees is listed in the [Threat Model](/docs/trust/threat-model#what-the-relay-sees).
 
 ## Sending a blob
 

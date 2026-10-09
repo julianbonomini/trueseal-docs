@@ -1,5 +1,5 @@
 // The Threat Model on both surfaces renders every row of src/config/threatModel.ts, and it is the only
-// threat model on the site. Reads dist/.
+// threat model on the site: other pages link to its relay list instead of repeating it. Reads dist/.
 import { describe, expect, test } from 'bun:test';
 import { docsNav } from '../src/config/nav.ts';
 import { claims, ipWording, limitations, standardWording, testRefs } from '../src/config/threatModel.ts';
@@ -36,4 +36,12 @@ test('the two Threat Model pages are the only threat model on the site', () => {
 
 test('the Threat Model is the first page under Trust', () => {
   expect(docsNav.find(section => section.title === 'Trust')!.items[0].slug).toBe('trust/threat-model');
+});
+
+test('Architecture and The Dumb Relay link to the relay list instead of repeating it', () => {
+  for (const path of ['/docs/overview/architecture', '/docs/trust/the-dumb-relay']) {
+    const page = text(path);
+    expect({ path, links: page.includes('href="/docs/trust/threat-model#what-the-relay-sees"') }).toEqual({ path, links: true });
+    expect({ path, repeats: page.includes('fans out to every group member') }).toEqual({ path, repeats: false });
+  }
 });

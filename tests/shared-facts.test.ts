@@ -4,7 +4,7 @@ import { protocolSizeLimit, relayTtl, replayWindow } from '../src/config/sharedF
 import { servedAt } from './dist.ts';
 
 test('the size limit renders from Shared Facts', () => {
-  const paths = ['/docs/reference/wire-format', '/docs/operate/deploying', '/docs/overview/architecture'];
+  const paths = ['/docs/reference/wire-format', '/docs/operate/deploying'];
   const missing = paths.filter(path => {
     const served = servedAt(path);
     return served?.kind !== 'page' || !served.html.includes(protocolSizeLimit.text);
