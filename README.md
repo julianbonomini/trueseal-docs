@@ -39,6 +39,8 @@ bun run check
 
 Type-checks with `astro check`, builds, then runs `bun test`. Some tests read the built site in `dist/`, so run `bun run build` before running `bun test` on its own.
 
+CI runs the same `bun run check` on every pull request and every push to `main` (`.github/workflows/check.yml`).
+
 To screenshot built pages in both themes at desktop and phone width (run `bunx playwright install chromium` once first):
 
 ```bash
@@ -84,6 +86,8 @@ Use `.mdx` when a page needs custom components (flow diagrams, phase breakdowns,
 ## Project Structure
 
 ```
+.github/
+  workflows/      # check.yml: CI runs bun run check
 brand/
   mascot/         # Mascot SVG and its PNG exports
 src/
@@ -101,4 +105,4 @@ src/
   styles/         # tokens.css, global.css
 ```
 
-`tests/` holds the brand checks on the source and the Landing checks, the mascot and 404 checks, and the redirect, link and docs-sidebar checks on the built site, run by `bun test`.
+`tests/` holds the brand checks on the source and the Landing checks, the mascot and 404 checks, the redirect, link and docs-sidebar checks on the built site, and the CI workflow check, run by `bun test`.
