@@ -1,0 +1,62 @@
+---
+title: Developer preview
+description: What the TrueSeal developer preview promises and doesn't, how breaking releases are announced, and what must be true before 1.0.
+---
+
+# Developer preview
+
+You're deciding whether to build on a library whose version starts with `0.`. Every `0.x` release follows the rules below, and TrueSeal reaches 1.0 only when four criteria hold.
+
+## Versions
+
+The core library and the Swift, Kotlin and TypeScript SDKs share one version number and always release together, even when a package hasn't changed. That shared number is the TrueSeal Release, and it starts at 0.6.0. The relay and trueseal-noise have their own version numbers, starting at 0.2.0. A version tag is never moved, so a fix always ships as a new version.
+
+The preview lasts as long as the version starts with `0.`.
+
+## The rules while the preview lasts
+
+### Breaking releases come without notice
+
+Any `0.x` release may break the API, the wire format or stored data, and it may ship without warning.
+
+### Every breaking release has Upgrade Notes
+
+A breaking release carries a "Breaking" section with the steps to upgrade. The same section appears in the changelog, on the GitHub Release and on the [Upgrade Notes](/docs/operate/upgrade-notes) page. The release process refuses to publish a breaking release that lacks one.
+
+Two kinds of break always carry a fixed label, so you can search for them:
+
+- A new Transport Version or End-to-End Version: "every device and the relay must upgrade together".
+- A Store Reset: "local data is wiped and every group must pair again".
+
+[Upgrading](/docs/operate/upgrades) explains both.
+
+### There is no end date
+
+The preview ends when the 1.0 criteria below are met, and not on a date. No target date is published.
+
+### Fixes are best effort
+
+Fixes, security fixes included, land only in the next `0.x` release. Nothing is backported to an older `0.x`, and there is no promise about when a fix ships. Every release speaks exactly one Transport Version and one End-to-End Version, so after a Transport Version change an older `0.x` can't talk to a current relay.
+
+## What must be true before 1.0
+
+1. Identity keys are stored in the Keychain on Apple platforms and the Keystore on Android, and the local store is encrypted at rest. In the preview, the operating system's app sandbox is their only protection on the device.
+2. The public SDK APIs follow semver, so a breaking change needs a new major version. A check in each SDK's CI compares the API between versions and enforces it.
+3. Stored data on the device and on the relay migrates forward within a major version, with no Store Reset inside a major version.
+4. Each major version speaks exactly one Transport Version and one End-to-End Version, as the preview does. A new protocol version means a new major version.
+
+## What 1.0 doesn't require
+
+These stay documented limitations, or aren't criteria at all:
+
+- **An external security audit.** TrueSeal is not independently audited, in the preview or at 1.0. Every public security claim names the tests that prove it.
+- **Forward secrecy for sealed messages.** 1.x ships without a ratchet. Adding one changes the protocol, so it is a candidate for 2.0.
+- **Hiding IP addresses at the network level**, through Tor or a proxy option. It can be added later without changing the protocol.
+- **A hosted relay.** Whether to run one is a business and cost decision.
+- **Rust crates on crates.io.** Publishing them needs a separate decision to keep the Rust API stable.
+
+## What stays your job
+
+- Pinning exact versions of the SDK and the relay image, and upgrading when you choose.
+- Reading [Upgrade Notes](/docs/operate/upgrade-notes) before you move to a new release.
+- Upgrading to get fixes, since no older `0.x` receives them.

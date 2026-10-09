@@ -3,7 +3,7 @@ import { expect, test } from 'bun:test';
 import { pagePaths, servedAt } from './dist.ts';
 
 // Written by the preview-trust Goal; remove each entry when its page lands.
-const pending = new Set(['/docs/trust/threat-model']);
+const pending = new Set(['/docs/trust/threat-model', '/docs/reference/compatibility-table']);
 
 test('every internal link points at a built page or file, and its fragment exists', () => {
   const broken: string[] = [];

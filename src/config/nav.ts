@@ -28,6 +28,7 @@ export const docsNav: NavSection[] = [
       { title: 'How it works',             slug: 'overview/how-it-works' },
       { title: 'Is it right for my app?',  slug: 'overview/is-it-right-for-my-app' },
       { title: 'Why TrueSeal exists',      slug: 'overview/why-trueseal-exists' },
+      { title: 'Developer preview',        slug: 'overview/developer-preview' },
       { title: 'Roadmap & Research',       slug: 'overview/roadmap' },
       { title: 'License',                  slug: 'overview/license' },
     ],
@@ -52,6 +53,8 @@ export const docsNav: NavSection[] = [
       { title: 'Relay Address and keypair',  slug: 'operate/relay-address-and-keypair' },
       { title: 'Limits and quotas',          slug: 'operate/limits-and-quotas' },
       { title: 'Backups',                    slug: 'operate/backups' },
+      { title: 'Upgrading',                  slug: 'operate/upgrades' },
+      { title: 'Upgrade Notes',              slug: 'operate/upgrade-notes' },
     ],
   },
   {

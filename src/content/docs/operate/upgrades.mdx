@@ -1,0 +1,64 @@
+---
+title: Upgrading
+description: What happens to the data on your users' devices and on your relay when you ship a newer TrueSeal, when a Store Reset wipes it, and what a rollback does.
+---
+
+import Callout from '../../../components/mdx/Callout.astro';
+
+# Upgrading
+
+You ship an app update with a newer TrueSeal. On each user's device, the new library opens the store the old one wrote, with the device's identity, its group and the messages still waiting to go out. The library moves that store forward, except in one case where it wipes it.
+
+## The upgrade promise
+
+The store records the Store Version that wrote it. The first preview release, 0.6.0, writes Store Version 1{/* TODO: Shared Fact sessionStoreVersion */}.
+
+Every release opens the store of any earlier preview release since the latest [Store Reset](#store-reset) and moves it forward. The steps are chained, and every one since 0.6.0 stays in the library for the whole preview, so an app that skips releases (0.6 straight to 0.8) still upgrades. A device that was waiting to join, leaving or destroying its group when you shipped the update is still in that state afterwards, and messages waiting in its outbox are still sent.
+
+The move runs in one database transaction. If the app is killed partway, the old store is left as it was, and the next start tries again. If the move fails outright, `TrueSeal.open` fails with `storage` and the old store is left intact. The library keeps no copy of the old store on disk, because a second file would hold the identity keys too and double what sits on the device unencrypted.
+
+The [Compatibility Table](/docs/reference/compatibility-table) lists the Store Version of each release and the oldest release it can move forward from.
+
+## A new protocol version
+
+Some releases change the End-to-End Version, which covers how messages are sealed. On upgrade, the library seals every message still in the outbox again under the new version, in the same transaction, in the same order. Each message your app sent keeps its Message ID and the time it was sent, and nothing is dropped.
+
+Your users don't all update on the same day. Until a device updates, messages in the newer version wait for it on the relay, unacknowledged, and it raises `heldForUpgrade(version)`. Past about 100 waiting messages{/* TODO: Shared Fact heldBlobCap */}, the oldest is dropped as `unreadable(droppedWhileHeld)`. A device that has updated drops messages from a device still on the older version and raises `unreadable(senderOutdated)`. [Delivery issues](/docs/integrate/delivery-issues) says what to show for each.
+
+A release that changes the Transport Version, which covers the connection to the relay, needs the relay and every device to upgrade together. A device whose library doesn't speak the relay's version reports `relayVersionUnsupported` and keeps its messages queued until it does.
+
+Both kinds of release carry the label "every device and the relay must upgrade together" in [Upgrade Notes](/docs/operate/upgrade-notes).
+
+## Store Reset
+
+A release can drop the ability to move older stores forward. That release is a Store Reset release. It needs explicit approval from TrueSeal's product owner, its release notes say so, and its [Upgrade Notes](/docs/operate/upgrade-notes) entry carries the label "local data is wiped and every group must pair again".
+
+When the library opens a store it can't move forward, it resets it. That happens to a store from before the latest Store Reset release, and to a store with no Store Version, which every build before 0.6.0 wrote. The library:
+
+1. deletes everything in the namespace: the group, the outbox and the record of handled messages;
+2. generates a new identity for the device;
+3. reports `statusChanged(notJoined, storeReset)`.
+
+The same `TrueSeal` object stays usable, and the device can pair again. If the app is killed during the reset, the reset runs again on the next start.
+
+<Callout variant="warning">
+A Store Reset release ends every group whose devices upgrade to it. Each upgraded device has a new identity, and the devices still on the old release keep sending to an identity that no longer answers. Every group has to pair again.
+</Callout>
+
+The listener gets `storeReset` even when you register it after `open()`, because the library holds events raised before the first listener.
+
+## Rolling back
+
+If you ship an older release after a newer one, the older library finds a store with a Store Version it doesn't know. `TrueSeal.open` fails with `storeTooNew` and leaves the store unchanged. Ship the newer release again and the device carries on with nothing lost. The library refuses the store instead of resetting it, because a rollback may be temporary and a reset would destroy the device's identity.
+
+## The relay
+
+Your relay's store follows the same pattern. It moves an older store forward on start, refuses a store from a newer release, and on a relay Store Reset release it refuses to start until you pass a reset flag, which deletes the queued messages. Unlike a device reset, it keeps its keypair, so your app needs no new configuration. [Running a relay](/docs/operate/running-a-relay#upgrading) has the steps.
+
+## What stays your app's job
+
+- Reading [Upgrade Notes](/docs/operate/upgrade-notes) before you move to a new release, and shipping a Store Reset release only when you accept that every group ends.
+- Handling `storeTooNew` from `TrueSeal.open`. It means an older build of your app is running on a store a newer one wrote.
+- Handling `statusChanged(notJoined, storeReset)`: telling the user why the group is gone, deciding what happens to your app's own copy of the shared data, and guiding them through pairing again.
+- Asking users to update when `heldForUpgrade` or `unreadable(senderOutdated)` shows a device is behind.
+- Upgrading your relay and your app together when a release changes the Transport Version.

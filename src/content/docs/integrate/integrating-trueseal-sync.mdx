@@ -67,7 +67,7 @@ To run the relay yourself, see [Running a relay](/docs/operate/running-a-relay).
 
 Construct one session per app lifecycle. Initialisation reads or generates the keypair from storage and starts connecting in the background. It returns immediately and doesn't block on relay connectivity.
 
-A throw at init time is a developer or deployment error — bad arguments, corrupt storage, missing entitlements. Treat it as fatal. There's no meaningful recovery path.
+A throw at init time is a developer or deployment error, such as bad arguments, corrupt storage or missing entitlements. Treat it as fatal, with one exception. `storeTooNew` means an older build of your app opened a store that a newer build wrote. The store is unchanged, and shipping the newer build again fixes it. See [Upgrading](/docs/operate/upgrades#rolling-back).
 
 ### The session is a singleton
 
