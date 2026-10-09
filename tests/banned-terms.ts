@@ -12,7 +12,7 @@ export interface BannedTerm {
   instead: string;
 }
 
-const sizeLimit = 'The Protocol Size Limit from src/config/sharedFacts.ts';
+const sizeLimit = 'The Protocol Size Limit Shared Fact: <Fact id="protocolSizeLimit" />';
 
 export const bannedTerms: BannedTerm[] = [
   { term: 'zero-trust', pattern: /\bzero-trust\b/i, instead: standardWording },

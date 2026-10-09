@@ -1,7 +1,7 @@
 // The Threat Model on both surfaces renders every row of src/config/threatModel.ts, and it is the only
 // threat model on the site: other pages link to its relay list instead of repeating it. Reads dist/.
 import { describe, expect, test } from 'bun:test';
-import { docsNav } from '../src/config/nav.ts';
+import { sidebarPages } from '../src/config/nav.ts';
 import { claims, ipWording, limitations, standardWording, testRefs } from '../src/config/threatModel.ts';
 import { decodeEntities, pagePaths, servedAt } from './dist.ts';
 
@@ -35,7 +35,7 @@ test('the two Threat Model pages are the only threat model on the site', () => {
 });
 
 test('the Threat Model is the first page under Trust', () => {
-  expect(docsNav.find(section => section.title === 'Trust')!.items[0].slug).toBe('trust/threat-model');
+  expect(sidebarPages('docs').find(page => page.section === 'Trust')?.link.href).toBe('/docs/trust/threat-model');
 });
 
 test('Architecture and The Dumb Relay link to the relay list instead of repeating it', () => {

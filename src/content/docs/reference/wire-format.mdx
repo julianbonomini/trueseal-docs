@@ -2,7 +2,7 @@
 title: Wire Format
 description: Byte-level specification for every message exchanged over a trueseal-protocol connection — framing, types, push body layout, ack semantics.
 ---
-import { protocolSizeLimit } from '../../../config/sharedFacts.ts';
+import Fact from '../../../components/mdx/Fact.astro';
 
 # Wire Format
 
@@ -106,7 +106,7 @@ Sent by the relay when a Push is permanently rejected. Body is always empty.
 
 **Current rejection reasons:**
 - Push body shorter than 32 bytes (malformed).
-- Envelope larger than the protocol size limit (see below).
+- Envelope larger than the Protocol Size Limit allows (see below).
 
 A client that receives an Error removes the blob from its retry queue. Retrying won't help.
 
@@ -114,11 +114,11 @@ A client that receives an Error removes the blob from its retry queue. Retrying 
 
 ## Size limit
 
-The Protocol Size Limit is **{protocolSizeLimit.text}** for the body of a `Sync` message, the bytes the caller passes to `send()`. Every message fits in one Noise frame. The envelope and frame limits are internal values derived from the Protocol Size Limit (sync ADR-0025).
+The Protocol Size Limit is <Fact id="protocolSizeLimit" /> of `Sync` body: the bytes the caller passes to `send()`. The Envelope that carries it, the `envelope` portion of the Push body after the 32-byte `recipient_pub`, is a little larger, so its fields can grow without changing the public limit.
 
 The check is enforced twice:
 
-**Client-side (trueseal-sync):** `send()` checks the limit before anything is written to the Operation Log and fails with `payloadTooLarge{max}`. An oversized body never enters the Outbox, and no bytes go to the relay.
+**Client-side (trueseal-sync):** before any Push Session is opened. `send()` refuses a `Sync` body over the limit with `payloadTooLarge{max}`, and the body never enters the outbox. No NK handshake happens, no bytes go to the relay.
 
 **Relay-side (trueseal-relay):** on receipt, as a backstop. The relay refuses the blob as too large, doesn't Ack it and doesn't store it. The refusal is permanent, so the client never retries it. This catches buggy clients and any third-party implementation that skips the check.
 

@@ -1,7 +1,7 @@
 // The Threat Model data in src/config/threatModel.ts: every claim names its tests, the limitations cover
 // release spec section 4, and the ADR wording is verbatim.
 import { describe, expect, test } from 'bun:test';
-import { relayTtl } from '../src/config/sharedFacts.ts';
+import { factText } from '../src/facts/facts.ts';
 import {
   adversaries,
   claims,
@@ -73,7 +73,7 @@ describe('the Threat Model', () => {
     expect(limitations.find(limitation => limitation.id === 'destroy-group')!.points).toEqual([
       "It can't recover or erase anything the stolen device already received or stored.",
       "It can't force the stolen device to wipe itself.",
-      `It doesn't reach a device that stays offline longer than the relay's message lifetime (${relayTtl.text} by default). That device keeps its old group until the user destroys or leaves it there too.`,
+      `It doesn't reach a device that stays offline longer than the relay's message lifetime (${factText('relayTtlDefault').text} by default). That device keeps its old group until the user destroys or leaves it there too.`,
       'It doesn\'t complete while your device can\'t reach the relay. Your device shows "destroying" until it can.',
       'Any current or former member can trigger it. That includes a stolen device, which can end your group, though that cuts it off from the group as well.',
     ]);

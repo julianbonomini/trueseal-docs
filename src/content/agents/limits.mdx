@@ -1,0 +1,27 @@
+---
+title: Limits
+description: The Protocol Size Limit, the Maximum Group Size, delivery retries and expiry, the Replay Window, and the relay's TTL, deadlines and quotas.
+---
+import Fact from '../../components/mdx/Fact.astro';
+import FactTable from '../../components/mdx/FactTable.astro';
+
+# Limits
+
+Values follow the accepted ADRs for the Developer Preview.
+
+## Client limits
+
+<FactTable group="clientLimits" />
+
+- `send()` refuses a `Sync` body over the Protocol Size Limit with `payloadTooLarge{max}`, and the body never enters the outbox.
+- A caller may pass a lower `maxPayloadBytes` to `TrueSeal.open`; a higher value is clamped to the Protocol Size Limit.
+- `accept(request)` fails with `groupFull{max}` when admitting would exceed the Maximum Group Size.
+
+## Relay limits
+
+<FactTable group="relayLimits" />
+
+- The Operator can change every relay value, but can only lower the Relay Size Limit and the TTL.
+- The relay refuses to start with a Relay Size Limit above the Protocol Size Limit, or a TTL above <Fact id="relayTtlMax" />.
+- Every relay limit is keyed on the recipient Inbox, the device key or a global count, never on an IP address. Per-IP limits belong at the Operator's firewall or reverse proxy.
+- Anyone who knows a device's public key can fill that device's Inbox quota and delay its delivery.

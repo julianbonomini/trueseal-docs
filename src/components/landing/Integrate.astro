@@ -2,6 +2,7 @@
 // The Integrate part of the Journey: the integration in each SDK's language, and the Agent Snippet.
 import LandingSection from './LandingSection.astro';
 import CodeTabs, { type CodeTab } from './CodeTabs.astro';
+import { agentSnippet } from '../../agent-snippet/agent-snippet';
 
 // TODO: brandbook section 10. "About ten lines" is unchecked against the shipped SDKs (DOCS-9).
 
@@ -60,13 +61,6 @@ const token = await trueseal.startPairing() // the other device calls join(token
 await trueseal.send(location)`,
   },
 ];
-
-// TODO: the agent-docs Goal owns the Agent Snippet text and ships /agents/llms.txt.
-const agentSnippet = `## TrueSeal
-This app syncs user data with TrueSeal.
-Before changing sync code, read https://trueseal.dev/agents/llms.txt.
-Payloads are opaque bytes up to the published limit. Conflict
-resolution and the pairing screens belong to this app.`;
 ---
 
 <LandingSection
@@ -89,8 +83,8 @@ resolution and the pairing screens belong to this app.`;
     <div>
       <h3 class="agent__heading">For your coding agent</h3>
       <p class="agent__text">
-        Paste this into your project's <code>AGENTS.md</code>. It points the agent at the Agent Docs, which hold the
-        full API.
+        Paste this into your project's <code>AGENTS.md</code>. It names the mistakes agents make with TrueSeal and
+        points them at the <a href="/agents/">Agent Docs</a>, which hold the full API.
       </p>
     </div>
     <pre class="agent__snippet">{agentSnippet}</pre>
@@ -133,6 +127,7 @@ resolution and the pairing screens belong to this app.`;
     background: var(--wash);
     border-left: 2px solid var(--ink);
     white-space: pre-wrap;
+    overflow-wrap: anywhere;
     padding: 18px 20px;
     font-size: 13px;
     line-height: 1.7;

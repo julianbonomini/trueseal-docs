@@ -58,7 +58,10 @@ describe('banned terms', () => {
     const found = walk(join(root, 'src')).flatMap(file => {
       const path = relative(root, file);
       // redirects.ts keys are old URLs that must keep redirecting; redirects.test.ts holds its targets to built pages.
-      const texts = path === 'src/config/redirects.ts' ? [path] : [path, readFileSync(file, 'utf8')];
+      // A Shared Fact's `gap` records what today's sibling code says, which can be a banned figure; it is never rendered.
+      const source = readFileSync(file, 'utf8');
+      const text = path === 'src/facts/shared-facts.ts' ? source.replace(/^\s*gap: .*$/gm, '') : source;
+      const texts = path === 'src/config/redirects.ts' ? [path] : [path, text];
       return texts.flatMap(text =>
         findBannedTerms(text).map(({ term, line }) => `${path}:${line}: ${term} → ${instead.get(term)}`),
       );

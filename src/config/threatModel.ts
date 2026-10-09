@@ -1,7 +1,12 @@
 // The Threat Model: what TrueSeal claims about security, the tests that prove each claim, and what it
 // doesn't defend against (trueseal-roadmap#16). Both surfaces and scripts/check-threat-model.ts read it.
-import { protocolSizeLimit, relayTtl, replayWindow } from './sharedFacts';
+import { factText } from '../facts/facts';
 import pins from './threatModelPins.json';
+
+const protocolSizeLimit = factText('protocolSizeLimit');
+const relayTtlDefault = factText('relayTtlDefault');
+const relayTtlMax = factText('relayTtlMax');
+const replayWindow = factText('replayWindow');
 
 export type Repo = 'trueseal-sync' | 'trueseal-noise' | 'trueseal-relay' | 'trueseal-e2e';
 
@@ -161,7 +166,7 @@ export const claims: readonly Claim[] = defineClaims([
       relay('internal/relay/e2e_test.go', 'TestE2E_TCPDropBeforeAck_Redelivers'),
     ],
     limit: {
-      value: `the relay message lifetime, at most ${relayTtl.text}`,
+      value: `the relay message lifetime, at most ${relayTtlMax.text}`,
       inside: e2e('message delivered just inside the relay TTL'),
       outside: e2e('message dropped just past the relay TTL'),
     },
@@ -269,7 +274,7 @@ export const limitations: readonly Limitation[] = [
     points: [
       "It can't recover or erase anything the stolen device already received or stored.",
       "It can't force the stolen device to wipe itself.",
-      `It doesn't reach a device that stays offline longer than the relay's message lifetime (${relayTtl.text} by default). That device keeps its old group until the user destroys or leaves it there too.`,
+      `It doesn't reach a device that stays offline longer than the relay's message lifetime (${relayTtlDefault.text} by default). That device keeps its old group until the user destroys or leaves it there too.`,
       'It doesn\'t complete while your device can\'t reach the relay. Your device shows "destroying" until it can.',
       'Any current or former member can trigger it. That includes a stolen device, which can end your group, though that cuts it off from the group as well.',
     ],

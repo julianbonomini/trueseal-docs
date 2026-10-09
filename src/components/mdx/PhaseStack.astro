@@ -21,9 +21,21 @@ interface Props {
 }
 
 const { phases } = Astro.props;
+
+// The page's Markdown version reads this in place of the rows.
+const markdown = phases
+  .map(phase =>
+    [
+      `**Phase ${phase.number}: ${phase.title}**`,
+      phase.description,
+      ...(phase.code ? [`\`\`\`${phase.code.lang}\n${phase.code.content.trim()}\n\`\`\``] : []),
+      ...(phase.checks?.length ? [phase.checks.map(check => `- ${check.label}`).join('\n')] : []),
+    ].join('\n\n'),
+  )
+  .join('\n\n');
 ---
 
-<div class="phase-stack">
+<div class="phase-stack" data-markdown={markdown}>
   {phases.map((phase, i) => (
     <div class:list={['phase-row', { 'phase-row--last': i === phases.length - 1 }]}>
 

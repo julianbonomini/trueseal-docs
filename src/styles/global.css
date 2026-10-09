@@ -302,8 +302,14 @@ table.stacked-table {
   border: none;
 }
 
-/* ─── ThemeToggle (React Island) ────────────────────────── */
-.theme-toggle {
+.code-block .code-block__pre--wrap {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* ─── ThemeToggle and CopyMarkdown (React Islands) ─────── */
+.theme-toggle,
+.copy-markdown {
   font-family: var(--font-mono);
   font-size: var(--text-label);
   height: 32px;
@@ -314,9 +320,14 @@ table.stacked-table {
   cursor: pointer;
 }
 
-.theme-toggle:hover {
+.theme-toggle:hover,
+.copy-markdown:hover {
   border-color: var(--ink);
   color: var(--ink);
+}
+
+.copy-markdown {
+  white-space: nowrap;
 }
 
 /* Hidden on screen, still read by screen readers and still focusable. */

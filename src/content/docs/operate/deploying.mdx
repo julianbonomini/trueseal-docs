@@ -2,7 +2,30 @@
 title: Deploying
 description: Self-host a trueseal-relay instance — keypair generation, configuration, single-node setup, Docker, and operational notes.
 ---
-import { protocolSizeLimit, relayTtl } from '../../../config/sharedFacts.ts';
+import Fact from '../../../components/mdx/Fact.astro';
+import { Code } from 'astro:components';
+import { codeTheme } from '../../../config/shiki';
+import { factText } from '../../../facts/facts';
+
+export const receive = factText('defaultReceivePort').text;
+export const push = factText('defaultPushPort').text;
+export const compose = `services:
+  trueseal-relay:
+    image: ghcr.io/julianbonomini/trueseal-relay:0.2.0
+    command: ["-no-config"]
+    environment:
+      TRUESEAL_RELAY_KEYPAIR_PATH: /secrets/keypair.hex
+      TRUESEAL_RELAY_STORE_SQLITE_PATH: /data/inbox.db
+    volumes:
+      - ./keypair.hex:/secrets/keypair.hex:ro
+      - relay-data:/data
+    ports:
+      - "${receive}:${receive}"
+      - "${push}:${push}"
+
+volumes:
+  relay-data:
+`;
 
 # Deploying
 
@@ -51,11 +74,11 @@ sqlite_path = "/var/lib/trueseal-relay/inbox.db"
 | Field | Env var | Default | Description |
 |---|---|---|---|
 | `relay.keypair_path` | `TRUESEAL_RELAY_KEYPAIR_PATH` | — | Path to hex-encoded private key. Required. |
-| `relay.listen_push` | `TRUESEAL_RELAY_LISTEN_PUSH` | `:7701` | Push Session listener address. |
-| `relay.listen_receive` | `TRUESEAL_RELAY_LISTEN_RECEIVE` | `:7700` | Receive Session listener address. |
-| `relay.ttl` | `TRUESEAL_RELAY_TTL` | `720h` ({relayTtl.text}) | Blob TTL before reaping. |
+| `relay.listen_push` | `TRUESEAL_RELAY_LISTEN_PUSH` | <code>:<Fact id="defaultPushPort" /></code> | Push Session listener address. |
+| `relay.listen_receive` | `TRUESEAL_RELAY_LISTEN_RECEIVE` | <code>:<Fact id="defaultReceivePort" /></code> | Receive Session listener address. |
+| `relay.ttl` | `TRUESEAL_RELAY_TTL` | <Fact id="relayTtlDefault" /> | Blob TTL before reaping. Can only be lowered; the relay refuses to start above <Fact id="relayTtlMax" />. |
 | `relay.reap_interval` | `TRUESEAL_RELAY_REAP_INTERVAL` | `1h` | How often the reaper runs. |
-| `relay.max_envelope_bytes` | `TRUESEAL_RELAY_MAX_ENVELOPE_BYTES` | Protocol ceiling | Max envelope size, for a `Sync` body of at most {protocolSizeLimit.text} (the Protocol Size Limit). You can lower it, never raise it. A relay set higher refuses to start. Larger blobs are refused permanently as too large. |
+| `relay.max_envelope_bytes` | `TRUESEAL_RELAY_MAX_ENVELOPE_BYTES` | Protocol Size Limit | The Relay Size Limit, in Envelope bytes, for a `Sync` body of at most <Fact id="protocolSizeLimit" /> (the Protocol Size Limit). You can lower it, never raise it. A relay set higher refuses to start. Larger blobs are refused permanently as too large. |
 | `store.type` | `TRUESEAL_RELAY_STORE_TYPE` | `sqlite` | Storage backend. `sqlite` is the only supported backend. `postgres` is experimental. |
 | `store.sqlite_path` | `TRUESEAL_RELAY_STORE_SQLITE_PATH` | — | SQLite database file path. Required when `store.type = sqlite`. |
 
@@ -79,31 +102,14 @@ With `-no-config`, every setting has to come from environment variables.
 
 {/* TODO: check the tag against the first relay release. The relay restarts at 0.2.0 (trueseal-sync ADR-0030). */}
 
-```yaml
-services:
-  trueseal-relay:
-    image: ghcr.io/julianbonomini/trueseal-relay:0.2.0
-    command: ["-no-config"]
-    environment:
-      TRUESEAL_RELAY_KEYPAIR_PATH: /secrets/keypair.hex
-      TRUESEAL_RELAY_STORE_SQLITE_PATH: /data/inbox.db
-    volumes:
-      - ./keypair.hex:/secrets/keypair.hex:ro
-      - relay-data:/data
-    ports:
-      - "7700:7700"
-      - "7701:7701"
-
-volumes:
-  relay-data:
-```
+<Code lang="yaml" theme={codeTheme} code={compose} />
 
 ## Graceful shutdown
 
-trueseal-relay handles `SIGINT` and `SIGTERM`. On signal, it stops accepting new connections and waits up to 30 seconds for active sessions to drain cleanly before exiting.
+trueseal-relay handles `SIGINT` and `SIGTERM`. On signal, it stops accepting new connections and waits up to <Fact id="shutdownDrain" /> for active sessions to drain cleanly before exiting.
 
 ## Operational notes
 
-- **Firewall.** Open TCP 7700 (receive) and 7701 (push) to the internet. Devices connect outbound; the relay never initiates connections.
+- **Firewall.** Open TCP <Fact id="defaultReceivePort" /> (receive) and <Fact id="defaultPushPort" /> (push) to the internet. Devices connect outbound; the relay never initiates connections.
 - **Disk.** Size SQLite storage based on your expected group size, blob size, and TTL. A conservative rule of thumb: `devices × blobs_per_day × avg_blob_bytes × ttl_days`.
 - **Logs.** In normal mode trueseal-relay logs lifecycle events (startup, listener addresses, its own public key, shutdown) and errors, and nothing about clients. Dev mode (`-dev`) may also log key prefixes, sizes and Blob IDs. No mode logs payload bytes or IP addresses (relay ADR-0012).
