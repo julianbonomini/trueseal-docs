@@ -91,10 +91,21 @@ describe('Shared Facts', () => {
   }, 120_000);
 });
 
-test('the Threat Model renders its day counts and size limit from Shared Facts', () => {
-  const facts = [...new Set(['replayWindow', 'relayTtlDefault', 'relayTtlMax', 'protocolSizeLimit'].map(id => factText(id).text))];
-  for (const path of ['/docs/trust/threat-model', '/agents/threat-model']) {
+// Each page whose text lacks the rendered value of any of the Shared Facts `ids`, with the values it lacks.
+function factsMissingOn(paths: string[], ids: string[]) {
+  const facts = [...new Set(ids.map(id => factText(id).text))];
+  return paths.map(path => {
     const page = text(pageHtml(path));
-    expect({ path, missing: facts.filter(fact => !page.includes(fact)) }).toEqual({ path, missing: [] });
-  }
+    return { path, missing: facts.filter(fact => !page.includes(fact)) };
+  }).filter(page => page.missing.length > 0);
+}
+
+test('the Threat Model renders its day counts and size limit from Shared Facts', () => {
+  const ids = ['replayWindow', 'relayTtlDefault', 'relayTtlMax', 'protocolSizeLimit'];
+  expect(factsMissingOn(['/docs/trust/threat-model', '/agents/threat-model'], ids)).toEqual([]);
+});
+
+test('the relay limits pages render their defaults from Shared Facts', () => {
+  const ids = ['inboxMaxBlobs', 'inboxMaxBytes', 'pushRate', 'maxConnectionsPerListener', 'maxReceiveSessionsPerDevice', 'relayTtlDefault'];
+  expect(factsMissingOn(['/agents/relay-limits-and-quotas', '/docs/operate/limits-and-quotas'], ids)).toEqual([]);
 });

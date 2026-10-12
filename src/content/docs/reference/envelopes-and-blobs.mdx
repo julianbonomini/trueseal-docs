@@ -71,7 +71,7 @@ Inside the sealed plaintext, a message type says what the body is. The relay nev
 | Type | Body | Handled by |
 |---|---|---|
 | `Pair` | The joining device's keys and a proof that it knows the Pairing Secret | The library, on the admitting device |
-| `Sync` | The bytes the app passed to `send()` | The app's message handler |
+| `Sync` | The message body the app sent | The app's message handler |
 | `GroupManifest` | A signed [Group Manifest](/docs/reference/group-manifest) | The library |
 | `Revoke` | Ends the group, as [Destroy Group](/docs/integrate/destroy-group) describes | The library |
 

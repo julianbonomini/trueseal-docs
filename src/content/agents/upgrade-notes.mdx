@@ -11,10 +11,8 @@ This page lists breaking TrueSeal releases as trueseal-sync ADR-0033 requires. E
 
 Use these strings verbatim when reporting or searching for these breaks.
 
-| Label | Release changes | Required action |
-|---|---|---|
-| "every device and the relay must upgrade together" | The Transport Version or the End-to-End Version (ADR-0022). | Upgrade the relay and every device. Across a Transport Version bump, mismatched clients get `relayVersionUnsupported{min, max}`. Across an End-to-End Version bump, peers raise `heldForUpgrade(version)` or `unreadable(senderOutdated)`. |
-| "local data is wiped and every group must pair again" | A Store Reset (ADR-0032). | Expect `statusChanged(notJoined, storeReset)` on every upgraded device, then pair again. See [Upgrades](/agents/upgrades). |
+- **"every device and the relay must upgrade together"** marks a release that changes the Transport Version or the End-to-End Version (ADR-0022). Upgrade the relay and every device. Across a Transport Version bump, mismatched clients get [`relayVersionUnsupported{min, max}`](/agents/api#api-connection). Across an End-to-End Version bump, peers raise [`heldForUpgrade(version)`](/agents/errors-and-events#issue-heldforupgrade) or [`unreadable(senderOutdated)`](/agents/errors-and-events#issue-unreadable-senderoutdated).
+- **"local data is wiped and every group must pair again"** marks a Store Reset (ADR-0032). Expect [`statusChanged(notJoined, storeReset)`](/agents/errors-and-events#event-statuschanged) on every upgraded device, then pair again. See [Upgrades](/agents/upgrades).
 
 ## Breaking releases
 

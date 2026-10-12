@@ -12,14 +12,12 @@ This page describes the manifest as the Developer Preview decides it. [Membershi
 
 ## Fields
 
-| Field | Meaning |
-|---|---|
-| `group_id` | A random identifier, fixed when the group is created |
-| `version` | One higher than the manifest this one was built on |
-| `parent` | The hash of the manifest this one was built on. Empty in the first manifest of a group. |
-| `members` | Every member's X25519 key, Ed25519 key and name |
-| `issued_by` | The Ed25519 key of the member who issued it |
-| `signature` | Ed25519, by `issued_by`, over a domain-separated input that includes the End-to-End Version, `group_id`, `version`, `parent` and `members` |
+- `group_id`: a random identifier, fixed when the group is created.
+- `version`: one higher than the manifest this one was built on.
+- `parent`: the hash of the manifest this one was built on. Empty in the first manifest of a group.
+- `members`: every member's X25519 key, Ed25519 key and name.
+- `issued_by`: the Ed25519 key of the member who issued it.
+- `signature`: Ed25519, by `issued_by`, over a domain-separated input that includes the End-to-End Version, `group_id`, `version`, `parent` and `members`.
 
 A member's name is a label derived from its signing key, two words such as `SwiftFox`. It is for display only. Names are short enough that someone can generate a key whose name matches a real device, so a name never proves which device is which.
 
@@ -43,7 +41,7 @@ A device in no group accepts a manifest only while it has a Pending Join. It the
 
 ## Concurrent changes
 
-Two members can change the group at the same moment, each building on the same manifest. Every device orders the two the same way, by `(version, hash)`, so every device ends up holding the same one. The issuer of the losing change re-applies it, except in the cases the table below lists.
+Two members can change the group at the same moment, each building on the same manifest. Every device orders the two the same way, by `(version, hash)`, so every device ends up holding the same one. The issuer of the losing change re-applies it, except in the cases below.
 
 When a member admits, removes or leaves, it records a Pending Membership Change in the same transaction as the new manifest and its outbox entries. The change holds its intent, such as "D is a member", and the hash of the manifest that carried it. Each time the issuer accepts a newer manifest, it checks each pending change:
 
@@ -53,7 +51,8 @@ When a member admits, removes or leaves, it records a Pending Membership Change 
 | Descends from a manifest that carried the change | Clears it. A later, deliberate change undid it. |
 | Neither, so it was built concurrently | Re-applies the change on top, as a new manifest one version higher |
 | Leaves the issuer out | Drops the change, because the issuer is no longer a member |
-| Would go over the Maximum Group Size (<Fact id="maxGroupSize" />) if the admission were re-applied | Drops the change and reports `admissionDropped(name, reason)`; the joiner stays in Pending Join |
+
+If re-applying an admission would take the group over the Maximum Group Size (<Fact id="maxGroupSize" />), the issuer drops the change instead and reports `admissionDropped(name, reason)`. The joiner stays in Pending Join.
 
 Pending Membership Changes survive a restart. An issuer that was offline re-applies after it reconnects.
 

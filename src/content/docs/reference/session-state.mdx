@@ -20,7 +20,7 @@ Every change that spans several records is written in one database transaction, 
 |---|---|---|
 | Identity | The device's X25519 and Ed25519 keypairs | The device is removed, leaves, destroys the group or receives a Destroy Group, or its store is reset |
 | Group Manifest | The current manifest, and the manifests held before it for this group | The same |
-| Join state | `notJoined`, `pendingJoin`, `member`, `leaving` or `destroying`, and the Pending Join's token keys and Pairing Secret | It moves on |
+| Join state | <Fact id="status" />, and the Pending Join's token keys and Pairing Secret | It moves on |
 | Pending Membership Changes | Admissions, removals and leaves this device issued and still has to see through | Each one is satisfied, superseded or dropped |
 | Outbox | One entry per message per recipient, in sequence order | The relay acknowledges the push, or the message fails |
 | Sequence | The device's send counter | With the identity |
@@ -47,11 +47,11 @@ Removal, leaving and Destroy Group all end in the same wipe. The library deletes
 
 Session State records the Store Version that wrote it. The first preview release, 0.6.0, writes Store Version <Fact id="sessionStoreVersion" />. Each later release migrates any older preview store forward, in one transaction, the first time it opens it.
 
-| Store found by `open()` | What happens |
-|---|---|
-| Older, and migratable | Migrated in one transaction. A crash leaves the old store, and the next start retries. |
-| Older than the migration floor, or from a development build | Wiped. The device gets a new identity and reports `statusChanged(notJoined, storeReset)`. |
-| Written by a newer release | `open()` fails with `storeTooNew` and leaves the store unchanged |
+What `open()` does with the store it finds:
+
+- **Older, and migratable.** Migrated in one transaction. A crash leaves the old store, and the next start retries.
+- **Older than the migration floor, or from a development build.** Wiped. The device gets a new identity and reports `statusChanged(notJoined, storeReset)`.
+- **Written by a newer release.** `open()` fails with `storeTooNew` and leaves the store unchanged.
 
 A migration that bumps the End-to-End Version re-seals every outbox entry under the new version in the same transaction. A `Sync` entry keeps its Message ID and Sender Timestamp. [Upgrading](/docs/operate/upgrades) covers what an app does in each case.
 

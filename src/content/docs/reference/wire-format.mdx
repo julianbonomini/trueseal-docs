@@ -59,11 +59,13 @@ The relay sends `Error` instead of `Ack` when it refuses a `Push`. It stores not
 
 | Reason | Kind | What the device does |
 |---|---|---|
-| Too large | Permanent | Removes the message and reports `sendFailed(messageId, tooLarge)` |
-| Malformed | Permanent | Removes the message and reports `sendFailed(messageId, malformed)` |
+| Too large | Permanent | Removes the message and reports it as failed |
+| Malformed | Permanent | Removes the message and reports it as failed |
 | Inbox full | Temporary | Keeps the message and retries with backoff |
 | Rate limited | Temporary | Keeps the message and retries with backoff |
 | Unavailable or internal error | Temporary | Keeps the message and retries with backoff |
+
+A message refused as too large is reported as `sendFailed(messageId, tooLarge)`, and one refused as malformed as `sendFailed(messageId, malformed)`. [Delivery issues](/docs/integrate/delivery-issues) says what your app does with each.
 
 {/* TODO: the byte values of the reason codes. sync ADR-0025 and ADR-0026 add the codes and leave the encoding to the test vectors (trueseal-relay#42). */}
 

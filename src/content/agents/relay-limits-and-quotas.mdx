@@ -16,16 +16,14 @@ This page states the relay's limits in the Developer Preview as trueseal-relay A
 
 ## Defaults
 
-{/* TODO: render from Shared Facts once the agent-docs Goal is merged. */}
-
 | Limit | Default | When exceeded | Kind |
 |---|---|---|---|
 | Blobs per Inbox | <Fact id="inboxMaxBlobs" /> | `inbox full` | Temporary |
 | Bytes per Inbox | <Fact id="inboxMaxBytes" /> | `inbox full` | Temporary |
-| Push rate per recipient | Token bucket, 20/s sustained, burst 500 | `rate limited` | Temporary |
-| Concurrent connections per listener | 1,000 | Connection closed | |
-| Concurrent Receive Sessions per Device key | 4 | New session refused | |
-| Envelope size | Derived from the Protocol Size Limit, <Fact id="protocolSizeLimit" /> of `send()` body | `too large` | Permanent |
+| Push rate per recipient | Token bucket, <Fact id="pushRate" /> | `rate limited` | Temporary |
+| Concurrent connections per listener | <Fact id="maxConnectionsPerListener" /> | Connection closed | |
+| Concurrent Receive Sessions per Device key | <Fact id="maxReceiveSessionsPerDevice" /> | New session refused | |
+| Envelope size | Derived from the Protocol Size Limit, <Fact id="protocolSizeLimit" /> of `Sync` body | `too large` | Permanent |
 | TTL | <Fact id="relayTtlDefault" /> | Blob reaped | |
 
 - Refusal codes carry no content.

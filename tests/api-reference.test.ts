@@ -13,20 +13,6 @@ const caseSections: ApiSection[] = ['errors', 'events', 'deliveryIssues'];
 const squash = (s: string) => s.replace(/\s+/g, '');
 const partsText = (parts: { text: string }[]) => parts.map(part => part.text).join('');
 
-// Pages whose tables still name API entries by hand: state tables, per-case tables and per-topic API tables that
-// the preview-pages Goal wrote before this rule existed. The api-tables Goal reworks them to render from the API
-// reference and Shared Facts; remove each page then.
-const pagesWithHandListedTables = new Set([
-  'src/content/agents/relay-limits-and-quotas.mdx',
-  'src/content/agents/sending-and-receiving.mdx',
-  'src/content/agents/upgrade-notes.mdx',
-  'src/content/docs/operate/limits-and-quotas.mdx',
-  'src/content/docs/reference/envelopes-and-blobs.mdx',
-  'src/content/docs/reference/group-manifest.mdx',
-  'src/content/docs/reference/session-state.mdx',
-  'src/content/docs/reference/wire-format.mdx',
-]);
-
 // What each page lacks, as `path: text`: a stacked table with class `tableClass`, or any expected text.
 function missingOnPages(tableClass: string, expected: Record<string, string[]>): string[] {
   return Object.entries(expected).flatMap(([path, texts]) => {
@@ -40,8 +26,8 @@ function missingOnPages(tableClass: string, expected: Record<string, string[]>):
 function handListedNames(): string[] {
   const names = new Set(apiNames());
   return (['agents', 'docs'] as const).flatMap(collection =>
-    contentLines(collection).flatMap(({ file, where, line }) => {
-      if (pagesWithHandListedTables.has(file) || !/^(\||#{1,6} )/.test(line)) return [];
+    contentLines(collection).flatMap(({ where, line }) => {
+      if (!/^(\||#{1,6} )/.test(line)) return [];
       // A span names an API entry when it is the name itself or the name called: `members()`, `groupFull{max}`.
       const hits = [...line.matchAll(/`([^`]+)`/g)].map(m => m[1].replace(/[({].*$/, '')).filter(span => names.has(span));
       return hits.map(name => `${where}: ${name}`);
