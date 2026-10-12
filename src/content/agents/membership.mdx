@@ -3,6 +3,7 @@ title: Membership
 description: Membership authority and its trust boundary, manifest ordering and convergence, Pending Membership Changes, the event flicker, the Maximum Group Size, and the wipe on removal or leave.
 ---
 import Fact from '../../components/mdx/Fact.astro';
+import StateTable from '../../components/mdx/StateTable.astro';
 
 # Membership
 
@@ -19,18 +20,16 @@ This page states membership in the Developer Preview as trueseal-sync ADR-0027 d
 
 ## API
 
-| Call, property or event | Behaviour |
-|---|---|
-| `accept(request)` | Admits a device. See [Pairing](/agents/pairing). Fails with `pairingClosed` or `groupFull{max}`. |
-| `remove(memberId)` | Issues a manifest without that member. Takes an `id` from `members`. Fails with `memberNotFound`. |
-| `leave()` | Issues a manifest without this device and moves it to `leaving`. |
-| `me` | This device, `Member{id, name}`. |
-| `members` | Every other member. |
-| `membersChanged(members)` event | The whole current member list, never a delta. |
-| `admissionDropped(name, reason)` event | A re-applied admission was dropped because it would exceed `maxGroupSize`.{/* TODO: the values of admissionDropped's reason; ADR-0027 and ADR-0028 name the event but not its reasons. */} |
-| `statusChanged(notJoined, removed)` | This device was deliberately removed and has wiped. |
-| `statusChanged(notJoined, left)` | This device finished leaving and has wiped. |
-| `maxGroupSize` | The Maximum Group Size, <Fact id="maxGroupSize" />, a constant. |
+- [`accept(request)`](/agents/api#api-accept) admits a device. See [Pairing](/agents/pairing). It fails with `pairingClosed` or `groupFull{max}`.
+- [`remove(memberId)`](/agents/api#api-remove) issues a manifest without that member. It takes an `id` from `members`. It fails with `memberNotFound`.
+- [`leave()`](/agents/api#api-leave) issues a manifest without this device and moves it to `leaving`.
+- [`me`](/agents/api#api-me) is this device, `Member{id, name}`.
+- [`members`](/agents/api#api-members) is every other member.
+- [`membersChanged(members)`](/agents/errors-and-events#event-memberschanged) gives the whole current member list, never a delta.
+- [`admissionDropped(name, reason)`](/agents/errors-and-events#event-admissiondropped) says a re-applied admission was dropped because it would exceed `maxGroupSize`.{/* TODO: the values of admissionDropped's reason; ADR-0027 and ADR-0028 name the event but not its reasons. */}
+- [`statusChanged(notJoined, removed)`](/agents/errors-and-events#event-statuschanged) says this device was deliberately removed and has wiped.
+- [`statusChanged(notJoined, left)`](/agents/errors-and-events#event-statuschanged) says this device finished leaving and has wiped.
+- [`maxGroupSize`](/agents/api#api-trueseal-maxgroupsize) is the Maximum Group Size, <Fact id="maxGroupSize" />, a constant.
 
 {/* TODO: the error remove() and leave() raise when status is not `member`; no ADR states it. */}
 
@@ -62,7 +61,8 @@ Each time the issuer accepts a newer manifest `W`, it checks every pending chang
 | Deliberately superseded | `W` descends from a manifest the issuer knows carried the change | Cleared |
 | Concurrently overwritten | `W` neither descends from the change nor satisfies it | Re-applied on top of `W` at `W.version + 1`; the new manifest becomes the carrier |
 | Issuer removed | `W` excludes the issuer | Dropped |
-| Re-applied admission would exceed `maxGroupSize` | | Dropped with `admissionDropped(name, reason)`; the joiner stays `pendingJoin` |
+
+When a concurrently overwritten admission would push the group past `maxGroupSize`, it is dropped instead, with `admissionDropped(name, reason)`, and the joiner stays `pendingJoin`.
 
 Pending changes survive restarts. An offline issuer re-applies after it reconnects. The app never redoes a membership change.
 
@@ -95,15 +95,15 @@ Pending changes survive restarts. An offline issuer re-applies after it reconnec
 
 `notJoined → pendingJoin → member → leaving → notJoined`, and `member → notJoined` on a deliberate removal. Destroy Group adds `destroying`.
 
+<StateTable machine="membership" />
+
 ## Crash points
 
-| Point | Outcome |
-|---|---|
-| Before the issuing transaction commits | No change. The call fails or never returns. |
-| After it commits | The manifest is redelivered from the outbox. The pending change is re-checked on the next accepted manifest. |
-| Receiving | Accepting a manifest, updating pending changes and queuing any re-application commit together. A crash before the commit means the relay redelivers the manifest. |
-| During `leaving` | `leaving` resumes. The wipe happens only after the relay has persisted the last manifest push. |
-| During the wipe | The wipe restarts. |
+- **Before the issuing transaction commits.** No change. The call fails or never returns.
+- **After it commits.** The manifest is redelivered from the outbox. The pending change is re-checked on the next accepted manifest.
+- **Receiving.** Accepting a manifest, updating pending changes and queuing any re-application commit together. A crash before the commit means the relay redelivers the manifest.
+- **During `leaving`.** `leaving` resumes. The wipe happens only after the relay has persisted the last manifest push.
+- **During the wipe.** The wipe restarts.
 
 ## What stays the app's job
 

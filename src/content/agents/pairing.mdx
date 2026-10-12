@@ -2,6 +2,8 @@
 title: Pairing
 description: The pairing API on both sides, the Pairing Token and Pairing Secret, the Pending Join, every join state, and the failure, restart and crash transitions.
 ---
+import Fact from '../../components/mdx/Fact.astro';
+import StateTable from '../../components/mdx/StateTable.astro';
 
 # Pairing
 
@@ -21,13 +23,10 @@ This page states pairing in the Developer Preview as trueseal-sync ADR-0023 deci
 
 ## Admitting side
 
-| Call or event | Behaviour |
-|---|---|
-| `startPairing()` | Generates a fresh Pairing Secret, opens the pairing window, returns the Pairing Token as a string. |
-| `joinRequest(request)` event | Raised for each `Pair` with a valid secret proof. `JoinRequest` is `{id, name}`. Repeat `Pair`s from the same joiner keys deduplicate into one request. Several distinct requests can coexist; the user picks one. |
-| `accept(request)` | Single-use. Persists the new Group Manifest and queues it in the outbox before it returns, then closes the window. Fails with `pairingClosed` if the window is closed, or `groupFull{max}` if the group is at `maxGroupSize`. |
-| `cancelPairing()` | Closes the window and spends the secret. |
-
+- [`startPairing()`](/agents/api#api-startpairing) generates a fresh Pairing Secret, opens the pairing window and returns the Pairing Token as a string.
+- [`joinRequest(request)`](/agents/errors-and-events#event-joinrequest) is raised for each `Pair` with a valid secret proof. `JoinRequest` is `{id, name}`. Repeat `Pair`s from the same joiner keys deduplicate into one request. Several distinct requests can coexist; the user picks one.
+- [`accept(request)`](/agents/api#api-accept) is single-use. It persists the new Group Manifest and queues it in the outbox before it returns, then closes the window. It fails with `pairingClosed` if the window is closed, or `groupFull{max}` if the group is at `maxGroupSize`.
+- [`cancelPairing()`](/agents/api#api-cancelpairing) closes the window and spends the secret.
 - The window and its pending requests live in memory only. A restart closes the window and spends the secret.
 - Every new window gets a new secret, so an older token stops working.
 - `Pair`s that arrive under a spent secret are dropped.
@@ -38,12 +37,9 @@ This page states pairing in the Developer Preview as trueseal-sync ADR-0023 deci
 
 ## Joining side
 
-| Call | Behaviour |
-|---|---|
-| `join(token)` | Persists the Pending Join and queues `Pair` in the outbox, in one transaction. `status` becomes `pendingJoin`. Fails with `alreadyInGroup` if the device holds a manifest (one Sync Group per namespace), or `invalidPairingToken` if the token can't be decoded. |
-| `join(token)` while `pendingJoin` | Replaces the Pending Join. |
-| `cancelJoin()` | Clears the Pending Join. `status` becomes `notJoined`. |
-
+- [`join(token)`](/agents/api#api-join) persists the Pending Join and queues `Pair` in the outbox, in one transaction. `status` becomes `pendingJoin`. It fails with `alreadyInGroup` if the device holds a manifest (one Sync Group per namespace), or `invalidPairingToken` if the token can't be decoded.
+- Calling `join(token)` again while `pendingJoin` replaces the Pending Join.
+- [`cancelJoin()`](/agents/api#api-canceljoin) clears the Pending Join. `status` becomes `notJoined`.
 - A Pending Join has no timer and survives restarts.
 - `Pair` is not re-sent on restart. Retries follow the outbox, and `Pair` outbox entries never expire (ADR-0026).
 - A manifest that fails the checks is dropped, and the Pending Join is kept.
@@ -52,31 +48,22 @@ This page states pairing in the Developer Preview as trueseal-sync ADR-0023 deci
 
 ## Join states
 
-`status` is one of `notJoined | pendingJoin | member | leaving | destroying`. Pairing moves a device through the first three.
+`status` is one of <Fact id="status" />. Pairing moves a device through the first three.
 
-| From | Trigger | To |
-|---|---|---|
-| `notJoined` | `join(token)` | `pendingJoin` |
-| `pendingJoin` | `join(token)` with another token | `pendingJoin`, Pending Join replaced |
-| `pendingJoin` | `cancelJoin()` | `notJoined` |
-| `pendingJoin` | Valid Group Manifest | `member`, `statusChanged(member, joined)` |
-| `pendingJoin` | Invalid Group Manifest | `pendingJoin`, manifest dropped |
-| `member`, `leaving`, `destroying` | `join(token)` | Unchanged, fails with `alreadyInGroup` |
+<StateTable machine="join" />
 
 `leaving` is defined on [Membership](/agents/membership) and `destroying` on [Destroy Group](/agents/destroy-group).
 
 ## Failure, restart and crash points
 
-| Situation | Outcome |
-|---|---|
-| Joiner crashes before the `join(token)` transaction commits | `notJoined`. The app calls `join(token)` again. |
-| Joiner crashes after it commits | `pendingJoin`. The outbox retries `Pair`. |
-| Joiner crashes after receiving a manifest, before storing it | `pendingJoin`. The relay redelivers the unacked manifest. |
-| Admitter crashes or restarts before `accept(request)` commits | The window is lost and nobody joined. The joiner stays `pendingJoin` until its app calls `cancelJoin()` or `join(token)` with a new token. |
-| Admitter crashes after `accept(request)` commits | The outbox re-sends the queued manifest. |
-| Admitter calls `cancelPairing()` or restarts while a joiner is pending | The admitter forgets the pending request and drops any later `Pair` under the spent secret. The joiner stays `pendingJoin` with no reply. |
-| Admitter never accepts | The joiner stays `pendingJoin` with no reply. |
-| A concurrent admission pushes the group past `maxGroupSize` | The re-applied admission is dropped, the admitting device raises `admissionDropped(name, reason)`, and the joiner stays `pendingJoin` (ADR-0027). |
+- **Joiner crashes before the `join(token)` transaction commits.** `notJoined`. The app calls `join(token)` again.
+- **Joiner crashes after it commits.** `pendingJoin`. The outbox retries `Pair`.
+- **Joiner crashes after receiving a manifest, before storing it.** `pendingJoin`. The relay redelivers the unacked manifest.
+- **Admitter crashes or restarts before `accept(request)` commits.** The window is lost and nobody joined. The joiner stays `pendingJoin` until its app calls `cancelJoin()` or `join(token)` with a new token.
+- **Admitter crashes after `accept(request)` commits.** The outbox re-sends the queued manifest.
+- **Admitter calls `cancelPairing()` or restarts while a joiner is pending.** The admitter forgets the pending request and drops any later `Pair` under the spent secret. The joiner stays `pendingJoin` with no reply.
+- **Admitter never accepts.** The joiner stays `pendingJoin` with no reply.
+- **A concurrent admission pushes the group past `maxGroupSize`.** The re-applied admission is dropped, the admitting device raises `admissionDropped(name, reason)`, and the joiner stays `pendingJoin` (ADR-0027).
 
 A Pending Join with no reply never resolves by itself. The app must offer `cancelJoin()`.
 

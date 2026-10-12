@@ -5,6 +5,8 @@ import type { SharedFacts } from './facts';
 
 const caseSetGap = "today's `ffi.rs` has a different error and callback set; it is reshaped to ADR-0028 under SYNC-15";
 
+const notMemberTodo = 'TODO: trueseal-sync ADR-0029 says "typed error: not in a group"; `notMember{status}` is the ADR-0028 case that matches.';
+
 export const sharedFacts = {
   versions: [
     {
@@ -362,6 +364,45 @@ export const sharedFacts = {
       id: 'admissionDroppedReason', values: [], meaning: 'The reason in `admissionDropped`.',
       source: { adr: ['trueseal-sync ADR-0028'] },
       todo: 'TODO: no ADR names the reasons; trueseal-sync ADR-0027 gives one cause, a re-applied admission that would exceed the Maximum Group Size.',
+    },
+  ],
+  stateMachines: [
+    {
+      id: 'join', source: { adr: ['trueseal-sync ADR-0023', 'trueseal-sync ADR-0028'] },
+      transitions: [
+        { from: ['notJoined'], trigger: '`join(token)`', to: 'pendingJoin' },
+        { from: ['pendingJoin'], trigger: '`join(token)` with another token', outcome: 'The Pending Join is replaced.' },
+        { from: ['pendingJoin'], trigger: '`cancelJoin()`', to: 'notJoined' },
+        { from: ['pendingJoin'], trigger: 'A valid Group Manifest', to: 'member', outcome: '`statusChanged(member, joined)` fires once.' },
+        { from: ['pendingJoin'], trigger: 'A Group Manifest that fails the checks', outcome: 'The manifest is dropped and the Pending Join kept.' },
+        { from: ['member', 'leaving', 'destroying'], trigger: '`join(token)`', outcome: 'Fails with `alreadyInGroup`.' },
+      ],
+    },
+    {
+      id: 'membership', source: { adr: ['trueseal-sync ADR-0027', 'trueseal-sync ADR-0028'] },
+      transitions: [
+        { from: ['member'], trigger: '`leave()`', to: 'leaving', outcome: 'A manifest without this device is issued.' },
+        { from: ['leaving'], trigger: 'The relay has accepted every manifest push', to: 'notJoined', outcome: 'The device wipes, makes a fresh identity and raises `statusChanged(notJoined, left)`.' },
+        { from: ['member'], trigger: 'A manifest that excludes this device, built on one that included it', to: 'notJoined', outcome: 'The device wipes, makes a fresh identity and raises `statusChanged(notJoined, removed)`.' },
+        {
+          from: ['member'], trigger: 'A manifest that excludes this device, built concurrently',
+          outcome: 'The device stores it as its current view, does not wipe, and waits for its admitter to re-apply the admission.',
+        },
+      ],
+    },
+    {
+      id: 'destroyGroup', source: { adr: ['trueseal-sync ADR-0029', 'trueseal-sync ADR-0028'] },
+      transitions: [
+        { from: ['member'], trigger: '`destroyGroup()`', to: 'destroying' },
+        { from: ['leaving'], trigger: '`destroyGroup()`', to: 'destroying', outcome: 'The leave is abandoned.' },
+        { from: ['pendingJoin'], trigger: '`destroyGroup()`', outcome: 'Fails with `notMember{status}`.', todo: notMemberTodo },
+        { from: ['destroying'], trigger: '`destroyGroup()`', outcome: 'Does nothing.' },
+        { from: ['notJoined'], trigger: '`destroyGroup()`', outcome: 'Fails with `notMember{status}`.', todo: notMemberTodo },
+        { from: ['member', 'leaving'], trigger: 'A valid Revoke', to: 'destroying', outcome: 'Forwards the Revoke to every member of its own view except the author.' },
+        { from: ['pendingJoin'], trigger: 'A valid Revoke', outcome: 'Ignored. There is no manifest to check the author against.' },
+        { from: ['destroying', 'notJoined'], trigger: 'A valid Revoke', outcome: 'Ignored.' },
+        { from: ['destroying'], trigger: 'The relay has accepted every queued Revoke', to: 'notJoined', outcome: 'The device wipes, makes a fresh identity and raises `statusChanged(notJoined, destroyed)`.' },
+      ],
     },
   ],
 } satisfies SharedFacts;

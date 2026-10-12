@@ -37,6 +37,7 @@ const facts: SharedFacts = {
     { id: 'status', values: ['notJoined', 'member'], meaning: 'Status.', source },
     { id: 'sendFailedReason', values: ['tooLarge', 'expired'], meaning: 'Reasons.', source },
   ],
+  stateMachines: [],
 };
 
 function entry(overrides: Partial<ApiEntryData>): ApiEntryData {

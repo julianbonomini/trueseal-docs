@@ -2,6 +2,7 @@
 // their spelling and what to do, and no page lists an API name by hand. Reads dist/, so run `bun run build` first.
 import { describe, expect, test } from 'bun:test';
 import { apiNames, apiSection, caseRows, type ApiSection } from '../src/api/api.ts';
+import { transitionRows } from '../src/facts/facts.ts';
 import { contentLines } from './content.ts';
 import { pageHtml } from './dist.ts';
 import { prose, text } from './html.ts';
@@ -16,20 +17,25 @@ const partsText = (parts: { text: string }[]) => parts.map(part => part.text).jo
 // the preview-pages Goal wrote before this rule existed. The api-tables Goal reworks them to render from the API
 // reference and Shared Facts; remove each page then.
 const pagesWithHandListedTables = new Set([
-  'src/content/agents/destroy-group.mdx',
-  'src/content/agents/membership.mdx',
-  'src/content/agents/pairing.mdx',
   'src/content/agents/relay-limits-and-quotas.mdx',
   'src/content/agents/sending-and-receiving.mdx',
   'src/content/agents/upgrade-notes.mdx',
-  'src/content/docs/integrate/destroy-group.mdx',
-  'src/content/docs/integrate/pairing.mdx',
   'src/content/docs/operate/limits-and-quotas.mdx',
   'src/content/docs/reference/envelopes-and-blobs.mdx',
   'src/content/docs/reference/group-manifest.mdx',
   'src/content/docs/reference/session-state.mdx',
   'src/content/docs/reference/wire-format.mdx',
 ]);
+
+// What each page lacks, as `path: text`: a stacked table with class `tableClass`, or any expected text.
+function missingOnPages(tableClass: string, expected: Record<string, string[]>): string[] {
+  return Object.entries(expected).flatMap(([path, texts]) => {
+    const html = pageHtml(path);
+    const page = squash(text(html));
+    const tableMissing = html.includes(`class="${tableClass} stacked-table"`) ? [] : [`${tableClass} table`];
+    return [...tableMissing, ...texts.filter(expected => !page.includes(squash(expected)))].map(missing => `${path}: ${missing}`);
+  });
+}
 
 function handListedNames(): string[] {
   const names = new Set(apiNames());
@@ -70,14 +76,20 @@ describe('SDK API reference', () => {
       '/docs/integrate/delivery-issues': deliveryPage,
       '/docs/integrate/integrating-trueseal-sync': caseRows('errors', ['invalidRelayAddress', 'invalidNamespace', 'storage', 'storeTooNew']),
     };
-    const missing = Object.entries(pages).flatMap(([path, rows]) => {
-      const html = pageHtml(path);
-      const page = squash(text(html));
-      const tableMissing = html.includes('class="case-table stacked-table"') ? [] : [`${path}: case table`];
-      const rowsMissing = rows.flatMap(row => [row.label, partsText(row.action)]).filter(expected => !page.includes(squash(expected)));
-      return [...tableMissing, ...rowsMissing.map(expected => `${path}: ${expected}`)];
-    });
-    expect(missing).toEqual([]);
+    const expected = Object.fromEntries(Object.entries(pages).map(([path, rows]) => [path, rows.flatMap(row => [row.label, partsText(row.action)])]));
+    expect(missingOnPages('case-table', expected)).toEqual([]);
+  });
+
+  test('the pairing, membership and Destroy Group pages render their state tables from Shared Facts', () => {
+    const pages = {
+      '/agents/pairing': 'join',
+      '/docs/integrate/pairing': 'join',
+      '/agents/membership': 'membership',
+      '/agents/destroy-group': 'destroyGroup',
+      '/docs/integrate/destroy-group': 'destroyGroup',
+    };
+    const expected = Object.fromEntries(Object.entries(pages).map(([path, machine]) => [path, transitionRows(machine).flatMap(row => [row.from, row.trigger, row.to].map(partsText))]));
+    expect(missingOnPages('state-table', expected)).toEqual([]);
   });
 
   test('/agents/api says what the API does not do', () => {

@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'bun:test';
 import { typedDuration, typedFacts } from '../../tests/typed-facts.ts';
-import { factParts, factTable, factText, type CaseFact, type FactValue, type SharedFacts } from './facts.ts';
+import { apiNames } from '../api/api.ts';
+import { voiceProblems } from '../../tests/html.ts';
+import { factParts, factTable, factText, transitionRows, type CaseFact, type FactValue, type SharedFacts } from './facts.ts';
 import { sharedFacts as data } from './shared-facts.ts';
 
 // Read through the declared shape: `satisfies` keeps each entry's own narrow type.
@@ -10,7 +12,7 @@ const source = { adr: ['trueseal-sync ADR-0028'] };
 
 function withValue(value: FactValue): SharedFacts {
   return {
-    versions: [], relayAddress: [], relayLimits: [], errors: [], events: [], deliveryIssues: [], valueSets: [],
+    versions: [], relayAddress: [], relayLimits: [], errors: [], events: [], deliveryIssues: [], valueSets: [], stateMachines: [],
     clientLimits: [{ id: 'fact', name: 'Fact', meaning: 'A fact.', source, value }],
   };
 }
@@ -28,6 +30,16 @@ const fixture: SharedFacts = {
     { id: 'connection', values: ['connecting', 'connected', 'disconnected'], meaning: 'Connection.', source },
     { id: 'one', values: ['only'], meaning: 'One.', source },
     { id: 'dropped', values: [], meaning: 'Unknown.', source, todo: 'TODO: no ADR names them.' },
+    { id: 'status', values: ['a', 'b'], meaning: 'Status.', source },
+  ],
+  stateMachines: [
+    {
+      id: 'm', source,
+      transitions: [
+        { from: ['a', 'b'], trigger: '`go()` twice', to: 'b', outcome: 'It went.' },
+        { from: ['b'], trigger: '`go()`', outcome: 'Fails with `closed`.' },
+      ],
+    },
   ],
 };
 
@@ -201,5 +213,61 @@ describe('the Shared Facts cases', () => {
 
   test('the status value set includes destroying (trueseal-sync ADR-0029)', () => {
     expect(sharedFacts.valueSets.find(set => set.id === 'status')?.values).toEqual(['notJoined', 'pendingJoin', 'member', 'leaving', 'destroying']);
+  });
+});
+
+describe('transitionRows', () => {
+  const joined = (parts: { text: string; code: boolean }[]) => parts.map(part => (part.code ? `[${part.text}]` : part.text)).join('');
+
+  test('gives the from statuses as code, the trigger with its code spans, and the to status then the outcome', () => {
+    const [row] = transitionRows('m', fixture);
+    expect([joined(row.from), joined(row.trigger), joined(row.to)]).toEqual(['[a], [b]', '[go()] twice', '[b]. It went.']);
+  });
+
+  test('reads Unchanged when the status stays the same', () => {
+    expect(joined(transitionRows('m', fixture)[1].to)).toBe('Unchanged. Fails with [closed].');
+  });
+
+  test('throws on an unknown machine or a status outside the status value set', () => {
+    expect(() => transitionRows('x', fixture)).toThrow('Unknown state machine "x"');
+    const bad: SharedFacts = { ...fixture, stateMachines: [{ id: 'm', source, transitions: [{ from: ['y'], trigger: 'T' }] }] };
+    expect(() => transitionRows('m', bad)).toThrow('Unknown status "y" in state machine "m"');
+  });
+});
+
+describe('the Shared Facts state machines', () => {
+  const machines = sharedFacts.stateMachines;
+  const transitions = machines.flatMap(machine => machine.transitions.map(t => ({ ...t, machine: machine.id })));
+  const texts = transitions.flatMap(t => [t.trigger, t.outcome ?? '']);
+  const statuses = sharedFacts.valueSets.find(set => set.id === 'status')!.values;
+
+  test('every backticked span in a trigger or outcome is an API name', () => {
+    const names = new Set(apiNames());
+    const spans = texts.flatMap(text => [...text.matchAll(/`([^`]+)`/g)].map(m => m[1].replace(/[({].*$/, '')));
+    expect(spans.filter(span => !names.has(span))).toEqual([]);
+  });
+
+  test('every machine cites an ADR, and every todo starts with TODO:', () => {
+    expect(machines.filter(machine => machine.source.adr.length === 0).map(machine => machine.id)).toEqual([]);
+    const todos = [...machines, ...transitions].flatMap(item => (item.todo === undefined ? [] : [item.todo]));
+    expect(todos.filter(todo => !todo.startsWith('TODO:'))).toEqual([]);
+  });
+
+  test('every trigger and outcome passes the voice rules', () => {
+    expect(texts.flatMap(voiceProblems)).toEqual([]);
+  });
+
+  test('destroyGroup covers every status once for destroyGroup() and once for a valid Revoke (ADR-0029)', () => {
+    const destroy = machines.find(machine => machine.id === 'destroyGroup')!.transitions;
+    for (const trigger of ['`destroyGroup()`', 'A valid Revoke']) {
+      const from = destroy.filter(t => t.trigger === trigger).flatMap(t => t.from);
+      expect(from.toSorted()).toEqual(statuses.toSorted());
+    }
+  });
+
+  test('join covers every status once for join(token)', () => {
+    const join = machines.find(machine => machine.id === 'join')!.transitions;
+    const from = join.filter(t => t.trigger.startsWith('`join(token)`')).flatMap(t => t.from);
+    expect(from.toSorted()).toEqual(statuses.toSorted());
   });
 });

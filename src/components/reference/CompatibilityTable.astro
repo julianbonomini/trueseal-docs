@@ -21,14 +21,3 @@ const { columns, rows } = compatibilityTable();
   </table>
 )}
 
-<style>
-  /* On a phone each cell is labelled with its column, since the stacked table hides the header. */
-  @media (max-width: 659px) {
-    .compat td::before {
-      content: attr(data-label);
-      display: block;
-      font-size: var(--text-label);
-      color: var(--ink-muted);
-    }
-  }
-</style>

@@ -65,6 +65,28 @@ export interface ValueSet extends FactBase {
   values: string[];
 }
 
+/** One status transition of one device. Markdown backticks for code. */
+export interface Transition {
+  /** The `status` values it starts from, each a value of the `status` value set. */
+  from: string[];
+  /** What causes it: '`join(token)`', 'A valid Revoke'. */
+  trigger: string;
+  /** The `status` value it ends in. Absent when status stays the same. */
+  to?: string;
+  /** What else happens, read after the status: 'The leave is abandoned.' */
+  outcome?: string;
+  /** What no ADR settles, starting `TODO:`. Never rendered. */
+  todo?: string;
+}
+
+/** The status transitions one page's state table shows: 'join', 'membership' or 'destroyGroup'. */
+export interface StateMachine {
+  id: string;
+  transitions: Transition[];
+  source: FactSource;
+  todo?: string;
+}
+
 export interface SharedFacts {
   versions: ValueFact[];
   relayAddress: ValueFact[];
@@ -74,6 +96,7 @@ export interface SharedFacts {
   events: CaseFact[];
   deliveryIssues: CaseFact[];
   valueSets: ValueSet[];
+  stateMachines: StateMachine[];
 }
 
 /** A piece of displayed text; `code` means it shows as inline code. */
@@ -220,4 +243,34 @@ export function factTable(group: TableGroup, data: SharedFacts = sharedFacts): {
       source: sourceText(fact.source),
     })),
   };
+}
+
+/** One row of a state table, as display parts. */
+export interface TransitionRow {
+  /** The from statuses as code, joined ', '. */
+  from: FactPart[];
+  trigger: FactPart[];
+  /** The `to` status as code, or the text 'Unchanged'; then '. ' and the outcome's parts when there is one. */
+  to: FactPart[];
+}
+
+/** The rows of state machine `machine`, in data order. Throws `Unknown state machine "<id>"`, and
+ *  `Unknown status "<value>" in state machine "<id>"` for a from or to value outside the `status`
+ *  value set, so a bad name fails the build. */
+export function transitionRows(machine: string, data: SharedFacts = sharedFacts): TransitionRow[] {
+  const found = data.stateMachines.find(m => m.id === machine);
+  if (!found) throw new Error(`Unknown state machine "${machine}"`);
+  const statuses = data.valueSets.find(set => set.id === 'status')?.values ?? [];
+  const status = (value: string): FactPart => {
+    if (!statuses.includes(value)) throw new Error(`Unknown status "${value}" in state machine "${machine}"`);
+    return { text: value, code: true };
+  };
+  return found.transitions.map(t => {
+    const to = [t.to ? status(t.to) : { text: 'Unchanged', code: false }];
+    return {
+      from: t.from.flatMap((value, index) => (index === 0 ? [status(value)] : [{ text: ', ', code: false }, status(value)])),
+      trigger: meaningParts(t.trigger),
+      to: t.outcome ? [...to, { text: '. ', code: false }, ...meaningParts(t.outcome)] : to,
+    };
+  });
 }

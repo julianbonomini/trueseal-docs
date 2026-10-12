@@ -3,6 +3,7 @@ title: Destroy Group
 description: Destroy Group's public wording, its authority rule, the destroying state, Revoke forwarding, the state table, crash points, and what it does not do.
 ---
 import Fact from '../../components/mdx/Fact.astro';
+import StateTable from '../../components/mdx/StateTable.astro';
 
 # Destroy Group
 
@@ -47,23 +48,13 @@ Forwarding reaches members admitted concurrently and missing from the initiator'
 
 ## States
 
-| `status` | `destroyGroup()` | Valid incoming `Revoke` |
-|---|---|---|
-| `member` | → `destroying` | → `destroying`, forwards |
-| `leaving` | → `destroying`, the leave is abandoned | → `destroying`, forwards |
-| `pendingJoin` | Fails with `notMember{status}`{/* TODO: ADR-0029 says "typed error: not in a group"; notMember{status} is the ADR-0028 case that matches. */} | Ignored, no manifest to check the author against |
-| `destroying` | No-op | Ignored |
-| `notJoined` | Fails with `notMember{status}` | Ignored |
-
-`destroying → notJoined` happens once the relay has accepted every queued `Revoke`.
+<StateTable machine="destroyGroup" />
 
 ## Crash points
 
-| Point | Outcome |
-|---|---|
-| Before the `destroying` transaction commits | No change. On a receiver, the relay redelivers the unacked `Revoke`. |
-| After the commit, during the pushes | `destroying` resumes on the next start. The outbox replays the `Revoke`s the relay hasn't accepted. |
-| During the wipe | The wipe restarts. It never runs against a fresh identity, because the identity is replaced last. |
+- **Before the `destroying` transaction commits.** No change. On a receiver, the relay redelivers the unacked `Revoke`.
+- **After the commit, during the pushes.** `destroying` resumes on the next start. The outbox replays the `Revoke`s the relay hasn't accepted.
+- **During the wipe.** The wipe restarts. It never runs against a fresh identity, because the identity is replaced last.
 
 ## After the wipe
 

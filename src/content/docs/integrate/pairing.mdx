@@ -3,6 +3,7 @@ title: Pairing
 description: How a device joins a Sync Group, with explicit admission on both sides, every join state, and what happens on failure and restart.
 ---
 import Fact from '../../../components/mdx/Fact.astro';
+import StateTable from '../../../components/mdx/StateTable.astro';
 
 # Pairing
 
@@ -45,11 +46,11 @@ Calling `join(token)` again with a new token replaces the Pending Join. `cancelJ
 
 `status` tells you where the device is at any time. Drive your pairing UI from it.
 
-| `status` | Meaning | Calls that move it |
-|---|---|---|
-| `notJoined` | In no group and not waiting to join. | `join(token)` → `pendingJoin` |
-| `pendingJoin` | Waiting for the admitting device to accept. | A valid manifest → `member`. `cancelJoin()` → `notJoined`. `join(token)` replaces the Pending Join. |
-| `member` | In the group. | See [Membership](/docs/integrate/membership) and [Destroy Group](/docs/integrate/destroy-group). |
+- `notJoined`: in no group and not waiting to join.
+- `pendingJoin`: waiting for the admitting device to accept.
+- `member`: in the group. [Membership](/docs/integrate/membership) and [Destroy Group](/docs/integrate/destroy-group) say what moves it from there.
+
+<StateTable machine="join" />
 
 `status` has two more values, `leaving` and `destroying`. A device reaches them only after it has been a `member`, as the Membership and Destroy Group pages describe.
 
@@ -57,17 +58,15 @@ The pairing window on the admitting device is separate from `status`. It is open
 
 ## Failure and restart
 
-| What happens | Result |
-|---|---|
-| The joining device restarts while pending | The Pending Join survives. The library doesn't send a second join request on restart; the outbox keeps retrying the first one until the relay accepts it. |
-| The admitting app restarts, or calls `cancelPairing()` | The window closes and its Pairing Secret is spent. Pending requests are forgotten, since they live in memory only. A join request that arrives later under that secret is dropped. |
-| The joining device holds a token from a closed window | It stays in `pendingJoin` and nothing arrives. Its app calls `cancelJoin()`, or the user scans a new token and the app calls `join(token)` again. |
-| The admitting user never accepts | The joining device gets no reply. Same as above. |
-| A Group Manifest arrives that the token's key didn't sign, or that leaves this device out | The library drops it and keeps the Pending Join. |
-| The joining device crashes during `join(token)` | Before the write completes, the device is still `notJoined`, and the app calls `join(token)` again. After it, the device is `pendingJoin`. |
-| The joining device crashes while storing the manifest | The relay delivers the manifest again, because the device hadn't acknowledged it. |
-| The admitting device crashes before `accept(request)` completes | The window is lost and no one joined. The joining device stays pending until its app cancels or the user scans a new token. |
-| The admitting device crashes after `accept(request)` completes | The outbox sends the queued manifest after restart. |
+- **The joining device restarts while pending.** The Pending Join survives. The library doesn't send a second join request on restart; the outbox keeps retrying the first one until the relay accepts it.
+- **The admitting app restarts, or calls `cancelPairing()`.** The window closes and its Pairing Secret is spent. Pending requests are forgotten, since they live in memory only. A join request that arrives later under that secret is dropped.
+- **The joining device holds a token from a closed window.** It stays in `pendingJoin` and nothing arrives. Its app calls `cancelJoin()`, or the user scans a new token and the app calls `join(token)` again.
+- **The admitting user never accepts.** The joining device gets no reply. Same as above.
+- **A Group Manifest arrives that the token's key didn't sign, or that leaves this device out.** The library drops it and keeps the Pending Join.
+- **The joining device crashes during `join(token)`.** Before the write completes, the device is still `notJoined`, and the app calls `join(token)` again. After it, the device is `pendingJoin`.
+- **The joining device crashes while storing the manifest.** The relay delivers the manifest again, because the device hadn't acknowledged it.
+- **The admitting device crashes before `accept(request)` completes.** The window is lost and no one joined. The joining device stays pending until its app cancels or the user scans a new token.
+- **The admitting device crashes after `accept(request)` completes.** The outbox sends the queued manifest after restart.
 
 A Pending Join with no answer stays pending forever. Give the user a way out, such as a cancel button that calls `cancelJoin()`.
 

@@ -116,7 +116,7 @@ Build settings (already configured in Cloudflare):
 
 The Human Docs live in `src/content/docs/`. Files can be `.md` or `.mdx`.
 
-The Agent Docs live in `src/content/agents/` and are served at `/agents/...`. They are written for coding agents: literal, with no humour. Every Shared Fact (limits, versions, Relay Address, error and event cases) lives in `src/facts/shared-facts.ts` with its source; pages show a value with `<Fact id="…" />` or `<FactTable group="…" />`, and the cases with `<ApiEntries>` or `<CaseTable>`, and never type them. A test fails on a typed value. The SDK API reference renders from `src/api/api-reference.ts`; pages place `<ApiEntries>` and never list API names. Their sidebar is in `src/config/nav.ts`, beside the Human Docs one.
+The Agent Docs live in `src/content/agents/` and are served at `/agents/...`. They are written for coding agents: literal, with no humour. Every Shared Fact (limits, versions, Relay Address, error and event cases) lives in `src/facts/shared-facts.ts` with its source; pages show a value with `<Fact id="…" />` or `<FactTable group="…" />`, and the cases with `<ApiEntries>` or `<CaseTable>` and the status transitions with `<StateTable>`, and never type them. A test fails on a typed value. The SDK API reference renders from `src/api/api-reference.ts`; pages place `<ApiEntries>` and never list API names. Their sidebar is in `src/config/nav.ts`, beside the Human Docs one.
 
 The Agent Snippet, the first Agent Docs page, renders `src/agent-snippet/agent-snippet.ts`. The Landing's Integrate section renders the same text, so edit it only there.
 
@@ -139,6 +139,7 @@ After `astro build`, `src/markdown/markdown.ts` writes a Markdown version of eve
 | `<Fact id="..." />` | One Shared Fact inline: a value, or a value set's values |
 | `<FactTable group="..." />` | Every Shared Fact of a value group (`versions`, `relayAddress`, `clientLimits`, `relayLimits`), or every value set (`valueSets`), as a table. Cases render through `<ApiEntries>` |
 | `<CaseTable group="..." cases={[...]} />` | The cases of a case group (`errors`, `events`, `deliveryIssues`), or the listed ones, as a table of case, what happened and what to do, one row per reason where a case has reasons. Each case links to its entry on `/agents/errors-and-events` |
+| `<StateTable machine="..." />` | One status state machine from Shared Facts (`join`, `membership`, `destroyGroup`) as a table of from, trigger and to |
 | `<ApiEntries section="..." />` | Every API entry of a section, or every error, event or delivery-issue case, with its signature, meaning and each platform's spelling |
 
 ---

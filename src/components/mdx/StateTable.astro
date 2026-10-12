@@ -1,0 +1,38 @@
+---
+// One status state machine from Shared Facts as a table: the status it starts from, what moves it, and the status
+// it ends in with what else happens. Fails the build on an unknown machine or status.
+import { transitionRows } from '../../facts/facts';
+import FactParts from './FactParts.astro';
+
+interface Props {
+  /** 'join', 'membership' or 'destroyGroup'. */
+  machine: string;
+}
+const rows = transitionRows(Astro.props.machine);
+---
+<table class="state-table stacked-table">
+  <thead>
+    <tr><th>From</th><th>Trigger</th><th>To</th></tr>
+  </thead>
+  <tbody>
+    {rows.map(row => (
+      <tr>
+        <td><FactParts parts={row.from} /></td>
+        <td data-label="Trigger"><FactParts parts={row.trigger} /></td>
+        <td data-label="To"><FactParts parts={row.to} /></td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+
+<style>
+  .state-table td code {
+    overflow-wrap: anywhere;
+  }
+
+  @media (min-width: 660px) {
+    .state-table td:first-child {
+      width: 25%;
+    }
+  }
+</style>
