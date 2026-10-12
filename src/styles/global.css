@@ -187,8 +187,10 @@ code, kbd, samp, pre {
 
 /* ─── Stacked table ─────────────────────────────────────── */
 /* A table that stays a table from 660px and turns each row into one block on a phone, so the reader
-   never scrolls sideways. `table.stacked-table` has the same specificity as `.prose table`, so it
-   beats that scrolling block only because it comes later: keep this section below .prose. */
+   never scrolls sideways. On a phone a cell with `data-label` shows its column name above it, since the
+   header is hidden; a cell without one reads as the row's head. `table.stacked-table` has the same
+   specificity as `.prose table`, so it beats that scrolling block only because it comes later: keep this
+   section below .prose. */
 
 table.stacked-table {
   display: table;
@@ -212,6 +214,13 @@ table.stacked-table {
 
   table.stacked-table td {
     border-bottom: 0;
+  }
+
+  table.stacked-table td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-size: var(--text-label);
+    color: var(--ink-muted);
   }
 }
 

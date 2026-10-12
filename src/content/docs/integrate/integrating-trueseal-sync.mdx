@@ -2,6 +2,7 @@
 title: Integrating trueseal-sync
 description: How an app opens TrueSeal, points it at a relay, reads its state, registers its handlers and closes it, in the same shape for the Swift, Kotlin and TypeScript SDKs.
 ---
+import CaseTable from '../../../components/mdx/CaseTable.astro';
 import Fact from '../../../components/mdx/Fact.astro';
 
 # Integrating trueseal-sync
@@ -27,22 +28,17 @@ Open one object per namespace when the app starts and keep it for the life of th
 
 `open()` can fail with:
 
-| Error | Meaning |
-|---|---|
-| `invalidRelayAddress` | The Relay Address can't be parsed. Fix the constant you ship. |
-| `invalidNamespace` | The namespace isn't valid. |
-| `storage` | The library can't read or write the storage directory. |
-| `storeTooNew` | A newer build of your app wrote this store, and this build is older. The store is left unchanged, and shipping the newer build again fixes it. See [Upgrading](/docs/operate/upgrades). |
+<CaseTable group="errors" cases={['invalidRelayAddress', 'invalidNamespace', 'storage', 'storeTooNew']} />
+
+Ship the Relay Address as a build-time constant, so `invalidRelayAddress` means fixing that constant. [Upgrading](/docs/operate/upgrades) covers `storeTooNew`.
 
 ## State
 
 These values describe the device at any moment. Each SDK makes them observable in its usual way: `@Observable` in Swift, `StateFlow` in Kotlin, and getters with change events in TypeScript.
 
-| Value | Cases |
-|---|---|
-| `status` | `notJoined`, `pendingJoin`, `member`, `leaving`, `destroying` |
-| `connection` | `connecting`, `connected`, `disconnected`, `relayVersionUnsupported{min, max}` |
-| `me`, `members` | This device, and every other member, each a `Member{id, name}` |
+- `status` is one of <Fact id="status" />.
+- `connection` is one of <Fact id="connection" />.
+- `me` is this device and `members` every other member, each a `Member{id, name}`.
 
 Read `status` and `connection` separately. A device can be connected with no group yet, or in a group with the relay out of reach. Neither is an error. `relayVersionUnsupported` is the one connection state the user can't wait out. The relay speaks a different protocol version, and messages stay queued until your app's library and the relay speak the same version again.
 

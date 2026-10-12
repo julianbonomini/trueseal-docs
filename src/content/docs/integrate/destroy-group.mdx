@@ -3,6 +3,7 @@ title: Destroy Group
 description: What Destroy Group does when a device is lost or stolen, what it doesn't do, its states, and what happens on a crash or when the relay is out of reach.
 ---
 import Fact from '../../../components/mdx/Fact.astro';
+import StateTable from '../../../components/mdx/StateTable.astro';
 
 # Destroy Group
 
@@ -35,15 +36,7 @@ The same `TrueSeal` object stays usable after the wipe. Pair the devices again f
 
 ## States
 
-| `status` | `destroyGroup()` | A valid Revoke arrives |
-|---|---|---|
-| `member` | → `destroying` | → `destroying`, and forwards |
-| `leaving` | → `destroying`. The leave is abandoned. | → `destroying`, and forwards |
-| `pendingJoin` | Fails with `notMember{status}`{/* TODO: ADR-0029 says "typed error: not in a group"; notMember{status} is the ADR-0028 case that matches. */} | Ignored |
-| `destroying` | Does nothing | Ignored |
-| `notJoined` | Fails with `notMember{status}` | Ignored |
-
-`destroying` becomes `notJoined` once the relay has accepted every queued Revoke.
+<StateTable machine="destroyGroup" />
 
 ## Crashes and an unreachable relay
 

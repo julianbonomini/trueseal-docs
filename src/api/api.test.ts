@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import { typedDuration, typedFacts } from '../../tests/typed-facts.ts';
 import { voiceProblems } from '../../tests/html.ts';
 import type { SharedFacts } from '../facts/facts.ts';
-import { apiNames, apiSection, type ApiEntryData, type ApiReference, type ApiSection } from './api.ts';
+import { apiNames, apiSection, caseRows, type ApiEntryData, type ApiReference, type ApiSection } from './api.ts';
 import { apiReference as realData } from './api-reference.ts';
 
 // Read through the declared shape: `satisfies` keeps each entry's own narrow type.
@@ -13,18 +13,31 @@ const source = { adr: ['trueseal-sync ADR-0028'] };
 const facts: SharedFacts = {
   versions: [],
   relayAddress: [],
-  clientLimits: [{ id: 'limit', name: 'Size Limit', meaning: 'A limit.', source, value: { kind: 'bytes', value: 1000 } }],
+  clientLimits: [
+    { id: 'limit', name: 'Size Limit', meaning: 'A limit.', source, value: { kind: 'bytes', value: 1000 } },
+    { id: 'expiry', name: 'Expiry', meaning: 'An expiry.', source, value: { kind: 'duration', seconds: 60 } },
+  ],
   relayLimits: [],
   errors: [
     { id: 'groupFull', args: ['max'], meaning: 'Full.', action: 'Remove a member with `remove`.', source },
     { id: 'closed', meaning: 'Closed.', action: 'Open again.', source },
   ],
   events: [{ id: 'statusChanged', args: ['status', 'reason'], meaning: 'Changed.', action: 'Update.', source }],
-  deliveryIssues: [{ id: 'sendFailed', args: ['messageId', 'reason'], meaning: 'Failed.', action: 'Mark it.', source }],
+  deliveryIssues: [
+    {
+      id: 'sendFailed', args: ['messageId', 'reason'], reasonSet: 'sendFailedReason', meaning: 'Failed.', action: 'Mark it.', facts: ['limit'], source,
+      reasons: [
+        { value: 'tooLarge', meaning: 'Too `big`.', action: 'Shrink it.', source },
+        { value: 'expired', meaning: 'Too old.', action: 'Send again.', facts: ['expiry'], source },
+      ],
+    },
+  ],
   valueSets: [
     { id: 'connection', values: ['connected', 'relayVersionUnsupported{min, max}'], meaning: 'Connection.', source },
     { id: 'status', values: ['notJoined', 'member'], meaning: 'Status.', source },
+    { id: 'sendFailedReason', values: ['tooLarge', 'expired'], meaning: 'Reasons.', source },
   ],
+  stateMachines: [],
 };
 
 function entry(overrides: Partial<ApiEntryData>): ApiEntryData {
@@ -108,6 +121,13 @@ describe('apiSection', () => {
     expect(apiSection('deliveryIssues', api, facts)[0]).toMatchObject({ anchor: 'issue-sendfailed', signature: 'sendFailed(messageId, reason)' });
   });
 
+  test('a case entry carries its fact values and its reason rows', () => {
+    const [sendFailed] = apiSection('deliveryIssues', api, facts);
+    expect(sendFailed.values).toEqual([{ name: 'Size Limit', value: { text: '1,000 bytes', code: false } }]);
+    expect(sendFailed.reasons).toEqual(caseRows('deliveryIssues', ['sendFailed'], facts));
+    expect(apiSection('errors', api, facts).map(e => e.reasons)).toEqual([[], [], []]);
+  });
+
   test('throws link to the error on the errors page, and values read the Shared Fact', () => {
     const [open] = apiSection('send', api, facts);
     expect(open.anchor).toBe('api-trueseal-open');
@@ -120,6 +140,46 @@ describe('apiSection', () => {
     expect(broken({ throws: ['missing'] })).toThrow('Unknown error case "missing"');
     expect(broken({ valueSet: 'missing' })).toThrow('Unknown value set "missing"');
     expect(broken({ facts: ['missing'] })).toThrow('Unknown Shared Fact "missing"');
+  });
+});
+
+describe('caseRows', () => {
+  test('a case without reasons is one row linking to its entry', () => {
+    expect(caseRows('errors', ['closed'], facts)).toEqual([{
+      anchor: 'error-closed',
+      label: 'closed',
+      href: '/agents/errors-and-events#error-closed',
+      meaning: [{ text: 'Closed.', code: false }],
+      reasonMeaning: [],
+      values: [],
+      action: [{ text: 'Open again.', code: false }],
+    }]);
+    expect(caseRows('errors', ['groupFull'], facts)[0].label).toBe('groupFull{max}');
+  });
+
+  test('a case with reasons is one row per reason, in data order', () => {
+    const [tooLarge, expired] = caseRows('deliveryIssues', undefined, facts);
+    expect(tooLarge).toEqual({
+      anchor: 'issue-sendfailed-toolarge',
+      label: 'sendFailed(messageId, tooLarge)',
+      href: '/agents/errors-and-events#issue-sendfailed-toolarge',
+      meaning: [{ text: 'Failed.', code: false }, { text: ' Too ', code: false }, { text: 'big', code: true }, { text: '.', code: false }],
+      reasonMeaning: [{ text: 'Too ', code: false }, { text: 'big', code: true }, { text: '.', code: false }],
+      values: [{ name: 'Size Limit', value: { text: '1,000 bytes', code: false } }],
+      action: [{ text: 'Shrink it.', code: false }],
+    });
+    expect(expired.values).toEqual([
+      { name: 'Size Limit', value: { text: '1,000 bytes', code: false } },
+      { name: 'Expiry', value: { text: '1 minute', code: false } },
+    ]);
+  });
+
+  test('cases keeps only the listed ids, in data order', () => {
+    expect(caseRows('errors', ['closed', 'groupFull'], facts).map(row => row.anchor)).toEqual(['error-groupfull', 'error-closed']);
+  });
+
+  test('an unknown case fails, naming it and its group', () => {
+    expect(() => caseRows('errors', ['x'], facts)).toThrow('Unknown case "x" in errors');
   });
 });
 
@@ -181,7 +241,7 @@ describe('the API reference data', () => {
 
   test('every rendered meaning and action follows the brandbook voice', () => {
     const sections: ApiSection[] = ['open', 'state', 'receive', 'send', 'pairing', 'membership', 'subscribe', 'info', 'errors', 'events', 'deliveryIssues'];
-    const problems = sections.flatMap(section => apiSection(section)).flatMap(e =>
+    const problems = sections.flatMap(section => apiSection(section)).flatMap(e => [e, ...e.reasons]).flatMap(e =>
       [...e.meaning, ...e.action].flatMap(part => voiceProblems(part.text)).map(problem => `${e.anchor}: ${problem}`),
     );
     expect(problems).toEqual([]);

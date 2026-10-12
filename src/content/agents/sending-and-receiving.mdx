@@ -19,12 +19,10 @@ Exceptions:
 
 ## API
 
-| Call or type | Behaviour |
-|---|---|
-| `send(bytes)` | Returns the `MessageId` once the message is in the outbox. Works before the connection is up. Fails with `payloadTooLarge{max}` or `notMember{status}`, and with `closed` after `close()`. |
-| `onMessage(handler)` | Registers the single message handler. Registering it starts receiving. A second call fails with `messageHandlerAlreadySet`. Returns a cancel handle. |
-| handler | Async and awaited. Receives `Message{id, from: Member, body: bytes}`. `from.id` is the same identifier as in `members`. |
-| `maxPayloadBytes` | The Protocol Size Limit, <Fact id="protocolSizeLimit" />, a constant. `open(…, maxPayloadBytes?)` accepts a lower value. A higher value is clamped to the constant. |
+- [`send(bytes)`](/agents/api#api-send) returns the `MessageId` once the message is in the outbox. It works before the connection is up. It fails with `payloadTooLarge{max}` or `notMember{status}`, and with `closed` after `close()`.
+- [`onMessage(handler)`](/agents/api#api-onmessage) registers the single message handler. Registering it starts receiving. A second call fails with `messageHandlerAlreadySet`. It returns a cancel handle.
+- The handler is async and awaited. It receives [`Message{id, from: Member, body: bytes}`](/agents/api#api-message). `from.id` is the same identifier as in `members`.
+- [`maxPayloadBytes`](/agents/api#api-trueseal-maxpayloadbytes) is the Protocol Size Limit, <Fact id="protocolSizeLimit" />, a constant. `open(…, maxPayloadBytes?)` accepts a lower value. A higher value is clamped to the constant.
 
 There is no text overload of `send()` and no `ack(messageId)` call.
 
@@ -77,13 +75,11 @@ Pair, Group Manifest, Leave and Revoke follow the same path with the library as 
 
 ## Crash points
 
-| Point | Outcome |
-|---|---|
-| Sender, before the outbox write | `send()` never returned. The message was not sent. |
-| Sender, after the outbox write | The entry is replayed on the next start. |
-| Sender, after the relay persisted the Blob, before the push ack arrived | Duplicate push. Recipient dedup drops it. |
-| Recipient, before the dedup write commits | The Blob is re-delivered on the next Receive Session and the handler runs again. This is the only way an app sees a duplicate. |
-| Recipient, between the dedup write and DeliverAck | The Blob is re-delivered, recognised as a duplicate, and acked. |
+- **Sender, before the outbox write.** `send()` never returned. The message was not sent.
+- **Sender, after the outbox write.** The entry is replayed on the next start.
+- **Sender, after the relay persisted the Blob, before the push ack arrived.** Duplicate push. Recipient dedup drops it.
+- **Recipient, before the dedup write commits.** The Blob is re-delivered on the next Receive Session and the handler runs again. This is the only way an app sees a duplicate.
+- **Recipient, between the dedup write and DeliverAck.** The Blob is re-delivered, recognised as a duplicate, and acked.
 
 ## Metadata
 

@@ -36,16 +36,55 @@ export interface ValueFact extends FactBase {
   value?: FactValue;
 }
 
+/** One value of a case's reason argument, with what it adds to the case's meaning and what the app does. */
+export interface CaseReason {
+  /** A value of the case's reasonSet, e.g. 'senderOutdated'. */
+  value: string;
+  /** Markdown backticks for code. Read after the case's meaning. */
+  meaning: string;
+  action: string;
+  /** Value fact ids the reason states, shown as "Name: value". */
+  facts?: string[];
+  source: FactSource;
+  todo?: string;
+}
+
 /** An error, event or delivery-issue case. `reasonSet` names the value set its `reason` argument takes. */
 export interface CaseFact extends FactBase {
   args?: string[];
   reasonSet?: string;
   /** What the app does when it sees this case, Markdown backticks for code. Required on every error, event and delivery issue (tested). */
   action?: string;
+  /** Value fact ids the case states, shown as "Name: value". */
+  facts?: string[];
+  /** One entry per value of reasonSet, in its order (tested). Present when the reasons need different responses. */
+  reasons?: CaseReason[];
 }
 
 export interface ValueSet extends FactBase {
   values: string[];
+}
+
+/** One status transition of one device. Markdown backticks for code. */
+export interface Transition {
+  /** The `status` values it starts from, each a value of the `status` value set. */
+  from: string[];
+  /** What causes it: '`join(token)`', 'A valid Revoke'. */
+  trigger: string;
+  /** The `status` value it ends in. Absent when status stays the same. */
+  to?: string;
+  /** What else happens, read after the status: 'The leave is abandoned.' */
+  outcome?: string;
+  /** What no ADR settles, starting `TODO:`. Never rendered. */
+  todo?: string;
+}
+
+/** The status transitions one page's state table shows: 'join', 'membership' or 'destroyGroup'. */
+export interface StateMachine {
+  id: string;
+  transitions: Transition[];
+  source: FactSource;
+  todo?: string;
 }
 
 export interface SharedFacts {
@@ -57,6 +96,7 @@ export interface SharedFacts {
   events: CaseFact[];
   deliveryIssues: CaseFact[];
   valueSets: ValueSet[];
+  stateMachines: StateMachine[];
 }
 
 /** A piece of displayed text; `code` means it shows as inline code. */
@@ -119,6 +159,21 @@ export function factText(id: string, data: SharedFacts = sharedFacts): FactPart 
   const fact = valueFact(id, data);
   if (!fact.value) throw new Error(`Shared Fact "${id}" has no value yet: ${fact.todo}`);
   return written(fact.value);
+}
+
+/** Shared Fact `id` inline. A value fact is its one written value, as factText gives it. A value set is
+ *  its values as code, joined "a, b or c". Throws `Unknown Shared Fact "<id>"` for any other id (cases
+ *  included), factText's error for a value fact with no value, and
+ *  `Value set "<id>" has no values yet: <todo>` for an empty set. */
+export function factParts(id: string, data: SharedFacts = sharedFacts): FactPart[] {
+  const set = data.valueSets.find(set => set.id === id);
+  if (!set) return [factText(id, data)];
+  if (set.values.length === 0) throw new Error(`Value set "${id}" has no values yet: ${set.todo}`);
+  return set.values.flatMap((text, index) => {
+    const value = { text, code: true };
+    if (index === 0) return [value];
+    return [{ text: index === set.values.length - 1 ? ' or ' : ', ', code: false }, value];
+  });
 }
 
 /** The display name of the value fact `id`, e.g. "Protocol Size Limit". Throws `Unknown Shared Fact "<id>"` like factText. */
@@ -188,4 +243,34 @@ export function factTable(group: TableGroup, data: SharedFacts = sharedFacts): {
       source: sourceText(fact.source),
     })),
   };
+}
+
+/** One row of a state table, as display parts. */
+export interface TransitionRow {
+  /** The from statuses as code, joined ', '. */
+  from: FactPart[];
+  trigger: FactPart[];
+  /** The `to` status as code, or the text 'Unchanged'; then '. ' and the outcome's parts when there is one. */
+  to: FactPart[];
+}
+
+/** The rows of state machine `machine`, in data order. Throws `Unknown state machine "<id>"`, and
+ *  `Unknown status "<value>" in state machine "<id>"` for a from or to value outside the `status`
+ *  value set, so a bad name fails the build. */
+export function transitionRows(machine: string, data: SharedFacts = sharedFacts): TransitionRow[] {
+  const found = data.stateMachines.find(m => m.id === machine);
+  if (!found) throw new Error(`Unknown state machine "${machine}"`);
+  const statuses = data.valueSets.find(set => set.id === 'status')?.values ?? [];
+  const status = (value: string): FactPart => {
+    if (!statuses.includes(value)) throw new Error(`Unknown status "${value}" in state machine "${machine}"`);
+    return { text: value, code: true };
+  };
+  return found.transitions.map(t => {
+    const to = [t.to ? status(t.to) : { text: 'Unchanged', code: false }];
+    return {
+      from: t.from.flatMap((value, index) => (index === 0 ? [status(value)] : [{ text: ', ', code: false }, status(value)])),
+      trigger: meaningParts(t.trigger),
+      to: t.outcome ? [...to, { text: '. ', code: false }, ...meaningParts(t.outcome)] : to,
+    };
+  });
 }

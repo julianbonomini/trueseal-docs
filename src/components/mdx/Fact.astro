@@ -1,10 +1,10 @@
 ---
-// One Shared Fact's value, inline. Fails the build on an unknown id or a fact with no value yet.
-import { factText } from '../../facts/facts';
+// One Shared Fact inline: a value, or a value set's values. Fails the build on an unknown id or a fact with no value yet.
+import { factParts } from '../../facts/facts';
+import FactParts from './FactParts.astro';
 
 interface Props {
   id: string;
 }
-const { text, code } = factText(Astro.props.id);
 ---
-{code ? <code>{text}</code> : text}
+<FactParts parts={factParts(Astro.props.id)} />

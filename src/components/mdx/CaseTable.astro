@@ -1,0 +1,43 @@
+---
+// The cases of one case group as a table: the case, what happened and what to do, one row per reason where a
+// case has reasons. Each case links to its entry on /agents/errors-and-events. Fails the build on an unknown case.
+import { caseRows } from '../../api/api';
+import type { CaseGroup } from '../../facts/facts';
+import FactParts from './FactParts.astro';
+
+interface Props {
+  group: CaseGroup;
+  /** Case ids to show. Omit to show the whole group. */
+  cases?: string[];
+}
+const rows = caseRows(Astro.props.group, Astro.props.cases);
+---
+<table class="case-table stacked-table">
+  <thead>
+    <tr><th>Case</th><th>What happened</th><th>What to do</th></tr>
+  </thead>
+  <tbody>
+    {rows.map(row => (
+      <tr>
+        <td><a href={row.href}><code>{row.label}</code></a></td>
+        <td data-label="What happened">
+          <FactParts parts={row.meaning} />
+          {row.values.map(value => <>{' '}{value.name}: <FactParts parts={[value.value]} />.</>)}
+        </td>
+        <td data-label="What to do"><FactParts parts={row.action} /></td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+
+<style>
+  .case-table td:first-child code {
+    overflow-wrap: anywhere;
+  }
+
+  @media (min-width: 660px) {
+    .case-table td:first-child {
+      width: 30%;
+    }
+  }
+</style>

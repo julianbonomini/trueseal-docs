@@ -12,15 +12,13 @@ Pushes carry no sender identity, so the relay can't limit by sender. Every limit
 
 ## Defaults
 
-{/* TODO: render these numbers from Shared Facts once the agent-docs Goal is merged. */}
-
 | Limit | Default | When it's reached |
 |---|---|---|
 | Messages waiting per inbox | <Fact id="inboxMaxBlobs" /> | The push is refused as `inbox full`. The sender retries later. |
 | Bytes waiting per inbox | <Fact id="inboxMaxBytes" /> | The push is refused as `inbox full`. The sender retries later. |
-| Push rate per recipient | 20 per second, bursts of up to 500 | The push is refused as `rate limited`. The sender retries later. |
-| Open connections per port | 1,000 | The new connection is closed. |
-| Receive Sessions per device key | 4 | The new session is refused. |
+| Push rate per recipient | <Fact id="pushRate" /> | The push is refused as `rate limited`. The sender retries later. |
+| Open connections per port | <Fact id="maxConnectionsPerListener" /> | The new connection is closed. |
+| Receive Sessions per device key | <Fact id="maxReceiveSessionsPerDevice" /> | The new session is refused. |
 | Message size | The Protocol Size Limit | The push is refused as `too large`, for good. |
 | How long a message waits | <Fact id="relayTtlDefault" /> | The message is deleted. |
 
@@ -54,7 +52,7 @@ You can change every value. Two of them can only go down:
 | TTL | `TRUESEAL_RELAY_TTL` | A duration such as `168h` |
 | Sweep interval | `TRUESEAL_RELAY_REAP_INTERVAL` | A duration such as `1h` |
 | Open connections per port | `TRUESEAL_RELAY_MAX_CONNECTIONS` | A number |
-| Relay Size Limit | `TRUESEAL_RELAY_MAX_ENVELOPE_BYTES` | Bytes of the sealed envelope, which is larger than the body your app passes to `send()` |
+| Relay Size Limit | `TRUESEAL_RELAY_MAX_ENVELOPE_BYTES` | Bytes of the sealed envelope, which is larger than the message body your app sends |
 
 {/* TODO: the envelope overhead above the body, so an Operator can work out the matching maxPayloadBytes; trueseal-sync ADR-0025 publishes only the body limit. */}
 {/* TODO: the variable names for the inbox quotas, the push rate and the Receive Session cap; relay ADR-0012 makes them configurable but doesn't name them. */}
