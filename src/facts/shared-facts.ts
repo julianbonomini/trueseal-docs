@@ -195,7 +195,8 @@ export const sharedFacts = {
       meaning: 'A call on a `TrueSeal` object after `close()`.', source: { adr: ['trueseal-sync ADR-0028'] }, gap: caseSetGap,
     },
     {
-      id: 'notMember', args: ['status'], action: 'Check `status` before calling. Offer pairing while it is `notJoined` or `pendingJoin`.',
+      id: 'notMember', args: ['status'],
+      action: 'Check `status` before calling, and hide the send action until it is `member`. Offer pairing while it is `notJoined` or `pendingJoin`.',
       meaning: '`send()` while the status is not `member`.', source: { adr: ['trueseal-sync ADR-0028'] }, gap: caseSetGap,
     },
     {
@@ -223,7 +224,8 @@ export const sharedFacts = {
     },
     {
       id: 'payloadTooLarge', args: ['max'], action: 'Send a smaller body. Split the data, or store it elsewhere and send a reference.',
-      meaning: '`send()` with a body over `maxPayloadBytes`; `max` is the limit in force. Nothing enters the outbox.',
+      meaning: '`send()` with a body over `max`, the Protocol Size Limit or the lower `maxPayloadBytes` passed to `open()`. Nothing enters the outbox.',
+      facts: ['protocolSizeLimit'],
       source: { adr: ['trueseal-sync ADR-0028', 'trueseal-sync ADR-0025'] }, gap: caseSetGap,
     },
     {
@@ -266,30 +268,73 @@ export const sharedFacts = {
   ],
   deliveryIssues: [
     {
-      id: 'unreadable', args: ['reason'], reasonSet: 'unreadableReason', action: 'Nothing is required. On `senderOutdated`, tell the user one of their devices needs an update.',
-      meaning: "A Blob the library can't use was acked and dropped.",
+      id: 'unreadable', args: ['reason'], reasonSet: 'unreadableReason', action: 'Act on the reason. Each reason says what to do.',
+      meaning: "A message the library can't use was acknowledged and dropped.",
       source: { adr: ['trueseal-sync ADR-0034'] }, gap: caseSetGap,
+      reasons: [
+        {
+          value: 'malformed', action: 'Nothing. Log it if you collect diagnostics.',
+          meaning: "Its bytes couldn't be decoded or authenticated, or it carried an unknown frame type or message tag.",
+          source: { adr: ['trueseal-sync ADR-0034'] },
+        },
+        {
+          value: 'senderOutdated', action: 'Tell the user one of their other devices needs an update.',
+          meaning: 'Another device sent it in an older End-to-End Version than this device supports.',
+          source: { adr: ['trueseal-sync ADR-0034'] },
+        },
+        {
+          value: 'expired', facts: ['replayWindow'],
+          action: 'Nothing. The data is lost on this device. If it matters, ask another device to send its current state again.',
+          meaning: 'Its Sender Timestamp is older than the Replay Window.',
+          source: { adr: ['trueseal-sync ADR-0031', 'trueseal-sync ADR-0034'] },
+        },
+        {
+          value: 'droppedWhileHeld', facts: ['heldBlobCap'], action: 'Ask the user to update the app now. Messages are already being lost.',
+          meaning: 'More newer-version messages than the Held-Blob cap were waiting for this device, and this was the oldest.',
+          source: { adr: ['trueseal-sync ADR-0022', 'trueseal-sync ADR-0034'] },
+        },
+      ],
     },
     {
-      id: 'unauthorized', action: 'Nothing is required.',
-      meaning: 'A Blob failed the pairing or membership rules and was acked and dropped.',
+      id: 'unauthorized', action: 'Nothing. Log it if you collect diagnostics.',
+      meaning: "A message failed the pairing or membership rules, for example its sender isn't a member, and was acknowledged and dropped.",
       source: { adr: ['trueseal-sync ADR-0028', 'trueseal-sync ADR-0026'] }, gap: caseSetGap,
     },
     {
-      id: 'heldForUpgrade', args: ['version'], action: 'Ask the user to update the app. Held Blobs are handled after the upgrade.',
-      meaning: 'A Blob in a newer End-to-End Version stays unacked on the relay until this device upgrades.',
+      id: 'heldForUpgrade', args: ['version'],
+      action: 'Ask the user to update the app. After the upgrade the message is handled, out of order with the messages around it.',
+      meaning: 'A message in a newer End-to-End Version waits on the relay, unacknowledged, until this device upgrades.',
       source: { adr: ['trueseal-sync ADR-0022', 'trueseal-sync ADR-0028'] }, gap: caseSetGap,
     },
     {
-      id: 'handlerGaveUp', args: ['messageId', 'error'], action: 'Fix the handler. The message is dropped; log `messageId` and `error`.',
-      meaning: 'The message handler threw on every attempt; the Blob was acked and dropped.',
+      id: 'handlerGaveUp', args: ['messageId', 'error'], facts: ['handlerAttempts'],
+      action: 'Treat it as a bug in the handler. Log `messageId` and report `error`. If the data matters, ask the sending device to send it again.',
+      meaning: 'The message handler threw on every attempt, and the message was acknowledged and dropped.',
       source: { adr: ['trueseal-sync ADR-0026'] }, gap: caseSetGap,
     },
     {
       id: 'sendFailed', args: ['messageId', 'reason'], reasonSet: 'sendFailedReason',
       action: 'Mark the message `send()` returned as failed. The library never retries it.',
-      meaning: 'An outbox entry was removed: a permanent relay refusal, or a `Sync` entry past the outbox expiry.',
+      meaning: 'An outbox entry was removed for good, so the recipient never gets that message. Messages sent after it still arrive.',
       source: { adr: ['trueseal-sync ADR-0026', 'trueseal-sync ADR-0028', 'trueseal-sync ADR-0034'] }, gap: caseSetGap,
+      reasons: [
+        {
+          value: 'tooLarge',
+          action: "Tell the user the message wasn't delivered. Send smaller messages, or pass a matching lower `maxPayloadBytes` to `open()` so `send()` refuses them up front. `maxPayloadBytes` counts the body, and the Relay Size Limit counts the sealed envelope.",
+          meaning: "The relay refused it because it is over the relay's Relay Size Limit, which an Operator may set below the Protocol Size Limit.",
+          source: { adr: ['trueseal-sync ADR-0025', 'trueseal-sync ADR-0028', 'trueseal-sync ADR-0034'] },
+        },
+        {
+          value: 'malformed', action: 'Treat it as a bug and report it.',
+          meaning: "The relay refused it because it couldn't parse it.",
+          source: { adr: ['trueseal-sync ADR-0028', 'trueseal-sync ADR-0034'] },
+        },
+        {
+          value: 'expired', facts: ['outboxExpiry'], action: "Tell the user it wasn't delivered, and send it again if it still matters.",
+          meaning: 'It was a `Sync` entry still in the outbox after the Outbox expiry, for example because the device was offline all that time.',
+          source: { adr: ['trueseal-sync ADR-0026', 'trueseal-sync ADR-0034'] },
+        },
+      ],
     },
   ],
   valueSets: [

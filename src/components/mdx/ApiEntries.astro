@@ -1,6 +1,6 @@
 ---
-// Every entry of one SDK API reference section: signature, meaning, values, errors, what to do, and the
-// spelling of each platform that differs. Fails the build when the data names a missing case or fact.
+// Every entry of one SDK API reference section: signature, meaning, values, errors, what to do, each reason of a
+// case that has reasons, and the spelling of each platform that differs. Fails the build when the data names a missing case or fact.
 import { apiSection, type ApiSection } from '../../api/api';
 import FactParts from './FactParts.astro';
 
@@ -20,6 +20,17 @@ const entries = apiSection(Astro.props.section);
       <p>Fails with {entry.throws.map((error, index) => <>{index > 0 && ', '}<a href={error.href}><code>{error.name}</code></a></>)}.</p>
     )}
     {entry.action.length > 0 && <p><strong>What to do.</strong>{' '}<FactParts parts={entry.action} /></p>}
+    {entry.reasons.length > 0 && (
+      <ul class="api-entry__reasons">
+        {entry.reasons.map(reason => (
+          <li id={reason.anchor}>
+            <code>{reason.label}</code>{' '}<FactParts parts={reason.reasonMeaning} />
+            {reason.values.map(value => <>{' '}{value.name}: <FactParts parts={[value.value]} />.</>)}
+            {' '}<strong>What to do.</strong>{' '}<FactParts parts={reason.action} />
+          </li>
+        ))}
+      </ul>
+    )}
     {entry.spellings.length > 0 && (
       <table class="api-entry__spellings">
         <thead><tr><th>Platform</th><th>Spelling</th></tr></thead>

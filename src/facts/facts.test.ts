@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test';
-import { factTable, factText, type FactValue, type SharedFacts } from './facts.ts';
+import { typedDuration, typedFacts } from '../../tests/typed-facts.ts';
+import { factParts, factTable, factText, type CaseFact, type FactValue, type SharedFacts } from './facts.ts';
 import { sharedFacts as data } from './shared-facts.ts';
 
 // Read through the declared shape: `satisfies` keeps each entry's own narrow type.
@@ -24,6 +25,8 @@ const fixture: SharedFacts = {
   deliveryIssues: [],
   valueSets: [
     { id: 'statusReason', values: ['created', 'joined'], meaning: 'Reasons.', source },
+    { id: 'connection', values: ['connecting', 'connected', 'disconnected'], meaning: 'Connection.', source },
+    { id: 'one', values: ['only'], meaning: 'One.', source },
     { id: 'dropped', values: [], meaning: 'Unknown.', source, todo: 'TODO: no ADR names them.' },
   ],
 };
@@ -59,6 +62,29 @@ describe('factText', () => {
   });
 });
 
+describe('factParts', () => {
+  test('a value fact is its written value', () => {
+    expect(factParts('transport', fixture)).toEqual([factText('transport', fixture)]);
+  });
+
+  test('a value set is its values as code, joined "a, b or c"', () => {
+    expect(factParts('connection', fixture)).toEqual([
+      { text: 'connecting', code: true },
+      { text: ', ', code: false },
+      { text: 'connected', code: true },
+      { text: ' or ', code: false },
+      { text: 'disconnected', code: true },
+    ]);
+    expect(factParts('one', fixture)).toEqual([{ text: 'only', code: true }]);
+  });
+
+  test('an unknown id, a case id or a set with no values fails, naming the id', () => {
+    expect(() => factParts('missing', fixture)).toThrow('Unknown Shared Fact "missing"');
+    expect(() => factParts('closed', fixture)).toThrow('Unknown Shared Fact "closed"');
+    expect(() => factParts('dropped', fixture)).toThrow('Value set "dropped" has no values yet: TODO: no ADR names them.');
+  });
+});
+
 describe('factTable', () => {
   test('a value fact shows its name, written value and sources', () => {
     const table = factTable('versions', fixture);
@@ -89,7 +115,7 @@ describe('factTable', () => {
     });
     const sets = factTable('valueSets', fixture);
     expect(sets.columns).toEqual(['Set', 'Values', 'Meaning', 'Source']);
-    expect(sets.rows[1].value).toEqual([{ text: 'Not fixed by an ADR yet.', code: false }]);
+    expect(sets.rows[3].value).toEqual([{ text: 'Not fixed by an ADR yet.', code: false }]);
     expect(sets.rows[0]).toMatchObject({ name: { text: 'statusReason', code: true } });
   });
 
@@ -135,6 +161,42 @@ describe('the Shared Facts cases', () => {
     expect([sharedFacts.errors.length, sharedFacts.events.length, sharedFacts.deliveryIssues.length]).toEqual([13, 5, 5]);
     const cases = [...sharedFacts.errors, ...sharedFacts.events, ...sharedFacts.deliveryIssues];
     expect(cases.filter(c => !c.action?.trim()).map(c => c.id)).toEqual([]);
+  });
+
+  const cases: CaseFact[] = [...sharedFacts.errors, ...sharedFacts.events, ...sharedFacts.deliveryIssues];
+  const reasons = cases.flatMap(c => (c.reasons ?? []).map(reason => ({ ...reason, id: `${c.id}(${reason.value})` })));
+
+  test('a case with reasons has one per value of its reasonSet, in order', () => {
+    const mismatched = cases.filter(c => c.reasons).filter(c => {
+      const set = sharedFacts.valueSets.find(set => set.id === c.reasonSet);
+      return JSON.stringify(c.reasons!.map(r => r.value)) !== JSON.stringify(set?.values);
+    });
+    expect(mismatched.map(c => c.id)).toEqual([]);
+  });
+
+  test('every reason says what to do, cites an ADR, and its todo starts with TODO:', () => {
+    expect(reasons.filter(r => !r.action.trim() || r.source.adr.length === 0).map(r => r.id)).toEqual([]);
+    expect(reasons.filter(r => r.todo !== undefined && !r.todo.startsWith('TODO:')).map(r => r.id)).toEqual([]);
+  });
+
+  test('every fact a case or reason cites has a value', () => {
+    const cited = [...cases, ...reasons].flatMap(c => (c.facts ?? []).map(id => ({ owner: c.id, id })));
+    const broken = cited.filter(({ id }) => {
+      try {
+        factText(id);
+        return false;
+      } catch {
+        return true;
+      }
+    });
+    expect(broken).toEqual([]);
+  });
+
+  test('no case or reason types a Shared Fact value', () => {
+    const typed = [...cases, ...reasons].flatMap(c =>
+      [c.meaning, c.action ?? ''].filter(text => [...typedFacts, typedDuration].some(pattern => pattern.test(text))).map(text => `${c.id}: ${text}`),
+    );
+    expect(typed).toEqual([]);
   });
 
   test('the status value set includes destroying (trueseal-sync ADR-0029)', () => {

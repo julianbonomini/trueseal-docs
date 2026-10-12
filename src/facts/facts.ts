@@ -36,12 +36,29 @@ export interface ValueFact extends FactBase {
   value?: FactValue;
 }
 
+/** One value of a case's reason argument, with what it adds to the case's meaning and what the app does. */
+export interface CaseReason {
+  /** A value of the case's reasonSet, e.g. 'senderOutdated'. */
+  value: string;
+  /** Markdown backticks for code. Read after the case's meaning. */
+  meaning: string;
+  action: string;
+  /** Value fact ids the reason states, shown as "Name: value". */
+  facts?: string[];
+  source: FactSource;
+  todo?: string;
+}
+
 /** An error, event or delivery-issue case. `reasonSet` names the value set its `reason` argument takes. */
 export interface CaseFact extends FactBase {
   args?: string[];
   reasonSet?: string;
   /** What the app does when it sees this case, Markdown backticks for code. Required on every error, event and delivery issue (tested). */
   action?: string;
+  /** Value fact ids the case states, shown as "Name: value". */
+  facts?: string[];
+  /** One entry per value of reasonSet, in its order (tested). Present when the reasons need different responses. */
+  reasons?: CaseReason[];
 }
 
 export interface ValueSet extends FactBase {
@@ -119,6 +136,21 @@ export function factText(id: string, data: SharedFacts = sharedFacts): FactPart 
   const fact = valueFact(id, data);
   if (!fact.value) throw new Error(`Shared Fact "${id}" has no value yet: ${fact.todo}`);
   return written(fact.value);
+}
+
+/** Shared Fact `id` inline. A value fact is its one written value, as factText gives it. A value set is
+ *  its values as code, joined "a, b or c". Throws `Unknown Shared Fact "<id>"` for any other id (cases
+ *  included), factText's error for a value fact with no value, and
+ *  `Value set "<id>" has no values yet: <todo>` for an empty set. */
+export function factParts(id: string, data: SharedFacts = sharedFacts): FactPart[] {
+  const set = data.valueSets.find(set => set.id === id);
+  if (!set) return [factText(id, data)];
+  if (set.values.length === 0) throw new Error(`Value set "${id}" has no values yet: ${set.todo}`);
+  return set.values.flatMap((text, index) => {
+    const value = { text, code: true };
+    if (index === 0) return [value];
+    return [{ text: index === set.values.length - 1 ? ' or ' : ', ', code: false }, value];
+  });
 }
 
 /** The display name of the value fact `id`, e.g. "Protocol Size Limit". Throws `Unknown Shared Fact "<id>"` like factText. */

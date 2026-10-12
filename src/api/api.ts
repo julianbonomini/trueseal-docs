@@ -1,7 +1,7 @@
 // The SDK API reference: every public name of the TrueSeal API (trueseal-sync ADR-0028), ready to render.
 // The names live in api-reference.ts; the error, event and delivery-issue cases come from Shared Facts.
 // This module owns how a name is spelled on each platform, the anchors, and the name list the checks read.
-import { caseSignature, factName, factText, meaningParts, type CaseFact, type CaseGroup, type FactPart, type SharedFacts } from '../facts/facts.ts';
+import { caseSignature, factName, factText, meaningParts, type CaseFact, type CaseGroup, type CaseReason, type FactPart, type SharedFacts } from '../facts/facts.ts';
 import { sharedFacts } from '../facts/shared-facts.ts';
 import { apiReference } from './api-reference.ts';
 
@@ -65,6 +65,26 @@ export interface ApiEntry {
   throws: { name: string; href: string }[];
   /** Only the platforms whose spelling differs from `signature`, in Platform order. */
   spellings: { platform: Platform; label: string; code: string }[];
+  /** The case's reason rows, each with its anchor. Empty for API entries and cases without reasons. */
+  reasons: CaseRow[];
+}
+
+/** One row of a case table: a case, or one reason of a case that has reasons. */
+export interface CaseRow {
+  /** The HTML id on /agents/errors-and-events: 'issue-unauthorized', 'issue-unreadable-malformed', 'error-notmember'. */
+  anchor: string;
+  /** The case as the app meets it: 'unauthorized', 'unreadable(malformed)', 'sendFailed(messageId, tooLarge)', 'payloadTooLarge{max}'. */
+  label: string;
+  /** '/agents/errors-and-events#' + anchor. */
+  href: string;
+  /** The case's meaning, then the reason's meaning when the row is a reason. */
+  meaning: FactPart[];
+  /** The reason's meaning alone. Empty on a case row. */
+  reasonMeaning: FactPart[];
+  /** "Name: value" for each fact the case cites, then each fact the reason cites. */
+  values: { name: string; value: FactPart }[];
+  /** The reason's action on a reason row, the case's action on a case row. */
+  action: FactPart[];
 }
 
 const platformLabels: Record<Platform, string> = { swift: 'Swift', kotlin: 'Kotlin', typescript: 'TypeScript' };
@@ -121,15 +141,63 @@ function valueSetOf(id: string, facts: SharedFacts): string[] {
   return set.values;
 }
 
+const caseAnchor = (kind: CaseGroup, id: string) => `${anchorPrefix[kind]}${id.toLowerCase()}`;
+const caseHref = (anchor: string) => `/agents/errors-and-events#${anchor}`;
+
 function errorHref(id: string, facts: SharedFacts): string {
   if (!facts.errors.some(error => error.id === id)) throw new Error(`Unknown error case "${id}"`);
-  return `/agents/errors-and-events#${anchorPrefix.errors}${id.toLowerCase()}`;
+  return caseHref(caseAnchor('errors', id));
 }
 
 function onlyDiffering(signature: string, platforms: Record<Platform, string>): ApiEntry['spellings'] {
   return (Object.keys(platformLabels) as Platform[])
     .filter(platform => platforms[platform] !== signature)
     .map(platform => ({ platform, label: platformLabels[platform], code: platforms[platform] }));
+}
+
+function factValues(ids: string[] | undefined, facts: SharedFacts): CaseRow['values'] {
+  return (ids ?? []).map(id => ({ name: factName(id, facts), value: factText(id, facts) }));
+}
+
+function caseRow(kind: CaseGroup, c: CaseFact, facts: SharedFacts): CaseRow {
+  const anchor = caseAnchor(kind, c.id);
+  return {
+    anchor,
+    label: caseSignature(kind, c),
+    href: caseHref(anchor),
+    meaning: meaningParts(c.meaning),
+    reasonMeaning: [],
+    values: factValues(c.facts, facts),
+    action: meaningParts(c.action ?? ''),
+  };
+}
+
+function reasonRow(kind: CaseGroup, c: CaseFact, reason: CaseReason, facts: SharedFacts): CaseRow {
+  const anchor = `${caseAnchor(kind, c.id)}-${reason.value.toLowerCase()}`;
+  const reasonMeaning = meaningParts(reason.meaning);
+  return {
+    anchor,
+    label: caseSignature(kind, { ...c, args: c.args?.map(arg => (arg === 'reason' ? reason.value : arg)) }),
+    href: caseHref(anchor),
+    // The leading space separates the two sentences; meaningParts keeps it on the reason's first text part.
+    meaning: [...meaningParts(c.meaning), ...meaningParts(` ${reason.meaning}`)],
+    reasonMeaning,
+    values: [...factValues(c.facts, facts), ...factValues(reason.facts, facts)],
+    action: meaningParts(reason.action),
+  };
+}
+
+const reasonRows = (kind: CaseGroup, c: CaseFact, facts: SharedFacts) => (c.reasons ?? []).map(reason => reasonRow(kind, c, reason, facts));
+
+/** The rows of `group`, in Shared Facts order: one row per case, or one row per reason for a case with
+ *  reasons. `cases` keeps only those case ids, still in data order. Throws `Unknown case "<id>" in <group>`
+ *  for an id not in the group, and factText's error for a bad fact id, so a bad name fails the build. */
+export function caseRows(group: CaseGroup, cases?: string[], facts: SharedFacts = sharedFacts): CaseRow[] {
+  const unknown = (cases ?? []).find(id => !facts[group].some(c => c.id === id));
+  if (unknown) throw new Error(`Unknown case "${unknown}" in ${group}`);
+  return facts[group]
+    .filter(c => !cases || cases.includes(c.id))
+    .flatMap(c => (c.reasons ? reasonRows(group, c, facts) : [caseRow(group, c, facts)]));
 }
 
 function entryOf(data: ApiEntryData, facts: SharedFacts): ApiEntry {
@@ -151,35 +219,37 @@ function entryOf(data: ApiEntryData, facts: SharedFacts): ApiEntry {
     signature,
     meaning: meaningParts(data.meaning),
     action: meaningParts(data.action ?? ''),
-    values: (data.facts ?? []).map(id => ({ name: factName(id, facts), value: factText(id, facts) })),
+    values: factValues(data.facts, facts),
     throws: (data.throws ?? []).map(id => ({ name: id, href: errorHref(id, facts) })),
     spellings: onlyDiffering(signature, platforms),
+    reasons: [],
   };
 }
 
-function caseEntryOf(kind: CaseGroup, c: CaseFact): ApiEntry {
-  const signature = caseSignature(kind, c);
+function caseEntryOf(kind: CaseGroup, c: CaseFact, facts: SharedFacts): ApiEntry {
+  const { anchor, label, meaning, values, action } = caseRow(kind, c, facts);
   return {
-    anchor: `${anchorPrefix[kind]}${c.id.toLowerCase()}`,
+    anchor,
     title: c.id,
-    signature,
-    meaning: meaningParts(c.meaning),
-    action: meaningParts(c.action ?? ''),
-    values: [],
+    signature: label,
+    meaning,
+    action,
+    values,
     throws: [],
-    spellings: onlyDiffering(signature, caseSpellings(kind, c)),
+    spellings: onlyDiffering(label, caseSpellings(kind, c)),
+    reasons: reasonRows(kind, c, facts),
   };
 }
 
 /** The entries of a section, in data order. 'errors' is the TrueSealError type entry, then every
  *  Shared Facts error in its order; 'events' and 'deliveryIssues' are every Shared Facts case of
- *  that group, spelled by the case rule. A case's meaning and action come from Shared Facts.
+ *  that group, spelled by the case rule. A case's meaning, action, values and reasons come from Shared Facts.
  *  Throws `Unknown error case "<id>"`, `Unknown value set "<id>"` or the factText error when the data
  *  names something missing, so a bad name fails the build. */
 export function apiSection(section: ApiSection, api: ApiReference = apiReference, facts: SharedFacts = sharedFacts): ApiEntry[] {
   const entries = api.entries.filter(entry => entry.section === section).map(entry => entryOf(entry, facts));
   if (section === 'errors' || section === 'events' || section === 'deliveryIssues') {
-    return [...entries, ...facts[section].map(c => caseEntryOf(section, c))];
+    return [...entries, ...facts[section].map(c => caseEntryOf(section, c, facts))];
   }
   return entries;
 }

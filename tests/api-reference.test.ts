@@ -1,28 +1,28 @@
 // The SDK API reference on the built site and in source: every entry and case has its anchor, cases show
 // their spelling and what to do, and no page lists an API name by hand. Reads dist/, so run `bun run build` first.
 import { describe, expect, test } from 'bun:test';
-import { apiNames, apiSection, type ApiSection } from '../src/api/api.ts';
+import { apiNames, apiSection, caseRows, type ApiSection } from '../src/api/api.ts';
 import { contentLines } from './content.ts';
 import { pageHtml } from './dist.ts';
 import { prose, text } from './html.ts';
 
 const apiSections: ApiSection[] = ['open', 'state', 'receive', 'send', 'pairing', 'membership', 'subscribe', 'info'];
 const caseSections: ApiSection[] = ['errors', 'events', 'deliveryIssues'];
+// Tags read as spaces in text(), so compare without whitespace.
+const squash = (s: string) => s.replace(/\s+/g, '');
+const partsText = (parts: { text: string }[]) => parts.map(part => part.text).join('');
 
 // Pages whose tables still name API entries by hand: state tables, per-case tables and per-topic API tables that
 // the preview-pages Goal wrote before this rule existed. The api-tables Goal reworks them to render from the API
 // reference and Shared Facts; remove each page then.
 const pagesWithHandListedTables = new Set([
-  'src/content/agents/delivery-issues.mdx',
   'src/content/agents/destroy-group.mdx',
   'src/content/agents/membership.mdx',
   'src/content/agents/pairing.mdx',
   'src/content/agents/relay-limits-and-quotas.mdx',
   'src/content/agents/sending-and-receiving.mdx',
   'src/content/agents/upgrade-notes.mdx',
-  'src/content/docs/integrate/delivery-issues.mdx',
   'src/content/docs/integrate/destroy-group.mdx',
-  'src/content/docs/integrate/integrating-trueseal-sync.mdx',
   'src/content/docs/integrate/pairing.mdx',
   'src/content/docs/operate/limits-and-quotas.mdx',
   'src/content/docs/reference/envelopes-and-blobs.mdx',
@@ -47,18 +47,35 @@ describe('SDK API reference', () => {
   test('every API entry has its anchor on /agents/api, and every case on /agents/errors-and-events', () => {
     const missing = (path: string, sections: ApiSection[]) => {
       const html = pageHtml(path);
-      return sections.flatMap(section => apiSection(section)).filter(entry => !html.includes(`id="${entry.anchor}"`)).map(entry => `${path}#${entry.anchor}`);
+      return sections.flatMap(section => apiSection(section)).flatMap(entry => [entry, ...entry.reasons])
+        .filter(entry => !html.includes(`id="${entry.anchor}"`)).map(entry => `${path}#${entry.anchor}`);
     };
     expect([...missing('/agents/api', apiSections), ...missing('/agents/errors-and-events', caseSections)]).toEqual([]);
   });
 
   test('every case shows its platform spelling and what to do', () => {
-    // Tags read as spaces in text(), so compare without whitespace.
-    const squash = (s: string) => s.replace(/\s+/g, '');
     const page = squash(text(pageHtml('/agents/errors-and-events')));
     const missing = caseSections.flatMap(section => apiSection(section)).flatMap(entry => {
-      const action = entry.action.map(part => part.text).join('');
-      return [...entry.spellings.map(s => s.code), action].filter(expected => !page.includes(squash(expected))).map(expected => `${entry.anchor}: ${expected}`);
+      const expected = [...entry.spellings.map(s => s.code), partsText(entry.action), ...entry.reasons.map(reason => partsText(reason.action))];
+      return expected.filter(text => !page.includes(squash(text))).map(text => `${entry.anchor}: ${text}`);
+    });
+    expect(missing).toEqual([]);
+  });
+
+  test('the delivery issues pages and Integrating trueseal-sync render their cases from Shared Facts', () => {
+    const sendErrors = caseRows('errors', ['payloadTooLarge', 'notMember', 'closed']);
+    const deliveryPage = [...caseRows('deliveryIssues'), ...sendErrors];
+    const pages = {
+      '/agents/delivery-issues': deliveryPage,
+      '/docs/integrate/delivery-issues': deliveryPage,
+      '/docs/integrate/integrating-trueseal-sync': caseRows('errors', ['invalidRelayAddress', 'invalidNamespace', 'storage', 'storeTooNew']),
+    };
+    const missing = Object.entries(pages).flatMap(([path, rows]) => {
+      const html = pageHtml(path);
+      const page = squash(text(html));
+      const tableMissing = html.includes('class="case-table stacked-table"') ? [] : [`${path}: case table`];
+      const rowsMissing = rows.flatMap(row => [row.label, partsText(row.action)]).filter(expected => !page.includes(squash(expected)));
+      return [...tableMissing, ...rowsMissing.map(expected => `${path}: ${expected}`)];
     });
     expect(missing).toEqual([]);
   });
