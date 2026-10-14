@@ -1,0 +1,89 @@
+{
+  "description": "The TrueSeal Agent Skills index (docs ADR-0005). Lists the three workflow skills with sha256 digests of every file, built from a pinned trueseal-skills ref by scripts/sync-skills-index.ts — never edited by hand.",
+  "schemaVersion": 1,
+  "plugin": {
+    "name": "trueseal",
+    "version": "0.6.0"
+  },
+  "source": {
+    "repo": "julianbonomini/trueseal-skills",
+    "ref": "a037a64a37d8f729805a7826d7d2dbc249a6a872",
+    "tag": null,
+    "tagNote": "Pinned to a commit until the first TrueSeal Release tags trueseal-skills v0.6.0; the Release Conductor re-runs the sync script against the tag and this field flips."
+  },
+  "install": {
+    "marketplace": "/plugin marketplace add julianbonomini/trueseal-skills && /plugin install trueseal@trueseal-skills",
+    "npx": "npx skills add julianbonomini/trueseal-skills"
+  },
+  "skills": [
+    {
+      "name": "trueseal:integrate",
+      "path": "skills/integrate",
+      "description": "Add TrueSeal end-to-end encrypted sync to an app — pick and install the Swift, Kotlin or TS SDK, open a session against a relay, register the message handler, and send and receive. Use when a developer wants to add device-to-device sync, E2EE sync, or \"TrueSeal\" to a project, or when debugging why messages are not arriving after an integration.",
+      "files": [
+        {
+          "path": "skills/integrate/SKILL.md",
+          "sha256": "3be6ab831f2f22760509b4d10356d9b9a5d627e1bf2c8aaa06866ecb78e6059f"
+        },
+        {
+          "path": "skills/integrate/references/swift.md",
+          "sha256": "bc1d6de798b9acb002cedf6cb85077fadc6f6a26ef379bbe456502b780797546"
+        },
+        {
+          "path": "skills/integrate/references/kotlin.md",
+          "sha256": "a06b07a263a49b7868c2807932a3ec43d3e1684a8f5ed51b29f29de5582c7416"
+        },
+        {
+          "path": "skills/integrate/references/ts.md",
+          "sha256": "68433850af762d9392b4e3edb6e4eaaf5f94b502a457727aaea857f728892c8c"
+        }
+      ]
+    },
+    {
+      "name": "trueseal:pairing",
+      "path": "skills/pairing",
+      "description": "Build the TrueSeal pairing flow — two devices exchanging a Pairing Token with explicit admission on both sides, the Pending Join state, failure and restart handling, and the membership lifecycle after pairing (add, remove, leave, Destroy Group). Use when implementing pairing UI, join-by-QR/token flows, member management, or group teardown.",
+      "files": [
+        {
+          "path": "skills/pairing/SKILL.md",
+          "sha256": "994d02cbdaf742274103e1bee990c9911e7c79d651a184db8653cf1ebabed38f"
+        },
+        {
+          "path": "skills/pairing/references/swift.md",
+          "sha256": "cc1cd173a7db6e87e96c80c3aca8855fe32b9487eacdbe6d5e331b7428af411e"
+        },
+        {
+          "path": "skills/pairing/references/kotlin.md",
+          "sha256": "14a86f0583179860f6d487b23c8031f9200607970d2cc20b1faeb5cd8b46c574"
+        },
+        {
+          "path": "skills/pairing/references/ts.md",
+          "sha256": "56658b6e9b1f82f87e6263bd9e957e4637257dc728379f60596b24eb6b810588"
+        }
+      ]
+    },
+    {
+      "name": "trueseal:relay",
+      "path": "skills/relay",
+      "description": "Run a TrueSeal relay — local development or a single self-hosted Docker node. Covers first-start keypair generation, printing the Relay Address for clients, health checks, operator limits, logging modes, upgrades and backups. Use when a developer needs a relay to develop against, wants to self-host one, or is debugging relay connectivity, refusals or upgrades.",
+      "files": [
+        {
+          "path": "skills/relay/SKILL.md",
+          "sha256": "28dd899648f491bd37a695044730fb7d18b751a5eb8274730923cbb52cedc182"
+        },
+        {
+          "path": "skills/relay/references/swift.md",
+          "sha256": "ca328076a51d3dd03d45f2ef38f6a63c9358bf46cbbedaeac35e30a240c1e881"
+        },
+        {
+          "path": "skills/relay/references/kotlin.md",
+          "sha256": "ce2fd789906d93bfe70d439e33d9b6cdda0b6946ced8b83054ac4d1bde3b81ed"
+        },
+        {
+          "path": "skills/relay/references/ts.md",
+          "sha256": "478de3e6786121c13d4ee29db9aae83ccd6988bc1d9d26745e9f8ba9c18357e1"
+        }
+      ]
+    }
+  ]
+}
