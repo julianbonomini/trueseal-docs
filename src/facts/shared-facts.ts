@@ -4,13 +4,12 @@
 // vendored source changes both surfaces, and the assertions at the bottom fail the build when a case set
 // here drifts from the core's list. The prose (meaning, action) is authored here from the ADRs.
 // A fact no ADR settles carries `todo: 'TODO: …'`, never a guess.
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import type { SharedFacts } from './facts';
+import upstreamJson from './upstream/shared-facts.json';
 
 /** The core's generated Shared Facts (docs ADR-0003), vendored byte-pinned. The one source for every
  *  value and case set below that the core exports. */
-const upstream = JSON.parse(readFileSync(join(import.meta.dir, 'upstream/shared-facts.json'), 'utf8')) as {
+const upstream = upstreamJson as {
   versions: { transportVersion: number; endToEndVersion: number; storeVersion: number; storeMigrationFloor: number };
   relayAddress: { format: string; scheme: string; defaultReceivePort: number; defaultPushPort: number };
   limits: { maxPayloadBytes: number; maxGroupSize: number; maxHeldBlobs: number };
