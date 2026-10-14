@@ -1,11 +1,10 @@
 // Every public name of the TrueSeal API (trueseal-sync ADR-0028, as amended by ADR-0029, ADR-0032 and ADR-0034),
-// with its spelling in Swift, Kotlin and TypeScript. Spellings follow the ADR-0028 sketch (`sketch: true`) where the
-// ADRs leave them open. Today's SDKs predate ADR-0028 (`gap`); a name no ADR or the sketch settles carries a `todo`.
+// with its spelling in Swift, Kotlin and TypeScript. All three SDKs implement this surface; the error, event and
+// delivery-issue case sets derive from the core's generated export (src/facts/shared-facts.ts). Spellings follow the
+// ADR-0028 sketch (`sketch: true`) where the ADRs leave them open; a name no ADR or the sketch settles carries a `todo`.
 import type { ApiReference } from './api.ts';
 
 const adr = 'trueseal-sync ADR-0028';
-const missingToday = 'missing from all three SDKs today (SYNC-15)';
-const subscribeGap = 'today Swift uses `AsyncStream`s, Kotlin a cold `Flow` and TS an `EventEmitter`; none returns a `Subscription` (SYNC-15)';
 const typeNameTodo = 'TODO: the sketch names the Kotlin event and delivery-issue types only; no ADR names the Swift and TS ones.';
 
 export const apiReference = {
@@ -15,7 +14,6 @@ export const apiReference = {
       platforms: { swift: 'import TrueSealSync', kotlin: 'import dev.trueseal.sync.*', typescript: 'import { TrueSeal, RelayAddress, TrueSealError } from "@trueseal/sync"' },
       meaning: 'Each SDK is one package with one public module.',
       source: { adr: [adr, 'trueseal-sync ADR-0030'], sketch: true },
-      gap: 'today the Swift module is `TruesealSync`, Kotlin ships from JitPack coordinates, and the TS package is `trueseal-sync-ts`',
     },
     {
       section: 'open', name: 'TrueSeal', kind: 'type', shared: 'TrueSeal',
@@ -23,7 +21,6 @@ export const apiReference = {
       meaning: 'One device in one namespace. The object outlives group membership. After a removal, `leave()` or `destroyGroup()`, the library wipes the namespace, makes a fresh identity and reports `statusChanged(notJoined, reason)`, and the same object can pair again.',
       action: 'Open one object per namespace when the app starts and keep it. Never rebuild it after leaving a group.',
       source: { adr: [adr], sketch: true },
-      gap: 'today the type is `TruesealSyncClient` in all three SDKs, and `destroyGroup` leaves it unusable',
     },
     {
       section: 'open', name: 'TrueSeal.open', kind: 'method',
@@ -37,7 +34,6 @@ export const apiReference = {
       throws: ['invalidRelayAddress', 'invalidNamespace', 'storage', 'storeTooNew'],
       facts: ['protocolSizeLimit'],
       source: { adr: [adr, 'trueseal-sync ADR-0025', 'trueseal-sync ADR-0032'], sketch: true },
-      gap: 'today Swift and TS construct `TruesealSyncClient` directly, and the Kotlin constructor takes a `Context`',
       todo: 'TODO: the sketch shows the Swift and Kotlin `open` taking a `RelayAddress` only; no ADR says how they take the string form.',
     },
     {
@@ -45,7 +41,6 @@ export const apiReference = {
       platforms: { swift: 'func close() async', kotlin: 'fun close()', typescript: 'close(): Promise<void>' },
       meaning: 'Stops the relay connection and every handler, and keeps Session State. After `close()`, every call fails with `closed`.',
       source: { adr: [adr], sketch: true },
-      gap: 'Swift has no `close()` today, and TS has `dispose()`',
     },
     {
       section: 'open', name: 'RelayAddress', kind: 'type',
@@ -58,7 +53,6 @@ export const apiReference = {
       meaning: 'The typed form of a Relay Address. `TrueSeal.open` takes it or the string the relay CLI prints. The port is never dropped.',
       facts: ['relayAddressFormat', 'defaultReceivePort', 'defaultPushPort'],
       source: { adr: [adr], sketch: true },
-      gap: 'today the SDKs take a host and a key, and Swift drops the port; `ffi.rs` `TruesealFfiSession::create` takes a host and no port',
     },
     {
       section: 'open', name: 'RelayAddress.parse', kind: 'method', shared: 'RelayAddress.parse(address: string) -> RelayAddress',
@@ -66,7 +60,6 @@ export const apiReference = {
       meaning: 'Reads a Relay Address string into the typed form.',
       action: 'Use it to check a configured address before calling `TrueSeal.open`.',
       source: { adr: [adr], sketch: true },
-      gap: missingToday,
       todo: 'TODO: no ADR says what `parse` throws on a bad string.',
     },
     {
@@ -78,7 +71,6 @@ export const apiReference = {
       },
       meaning: 'Where Session State lives. Kotlin always takes an explicit location, and `Storage.android(context)` builds it from an Android context.',
       source: { adr: [adr], sketch: true },
-      gap: missingToday,
       todo: 'TODO: no ADR names the TS default directory.',
     },
     {
@@ -86,14 +78,12 @@ export const apiReference = {
       platforms: { swift: 'var status: GroupStatus', kotlin: 'val status: StateFlow<GroupStatus>', typescript: 'readonly status: GroupStatus' },
       meaning: 'Where this device is in a Sync Group. Swift observes it through `@Observable`, Kotlin through `StateFlow`, and TS through the `statusChanged` event.',
       source: { adr: [adr], sketch: true },
-      gap: missingToday,
     },
     {
       section: 'state', name: 'me', kind: 'property', shared: 'me: Member',
       platforms: { swift: 'var me: Member', kotlin: 'val me: Member', typescript: 'readonly me: Member' },
       meaning: 'This device. Its `id` changes when the library makes a fresh identity.',
       source: { adr: [adr], sketch: true },
-      gap: 'today each SDK has `localNodeId` and `localDeviceName` instead of `me`',
     },
     {
       section: 'state', name: 'members', kind: 'property', shared: 'members: Member[]',
@@ -101,35 +91,30 @@ export const apiReference = {
       meaning: 'Every other member of the Sync Group, as a whole list and never a delta. It can briefly show a member leave and rejoin while a concurrent change is re-applied.',
       action: 'Render the whole list each time it changes.',
       source: { adr: [adr, 'trueseal-sync ADR-0027'], sketch: true },
-      gap: 'today `members` reads a snapshot on each access, of `SyncMember` in Swift and Kotlin, and changes arrive on a separate stream or event',
     },
     {
       section: 'state', name: 'connection', kind: 'property', shared: 'connection: Connection',
       platforms: { swift: 'var connection: Connection', kotlin: 'val connection: StateFlow<Connection>', typescript: 'readonly connection: Connection' },
       meaning: 'The relay connection. TS reports changes through the `connectionChanged` event.',
       source: { adr: [adr], sketch: true },
-      gap: 'today each SDK has its own connection stream or event',
     },
     {
       section: 'state', name: 'GroupStatus', kind: 'type', shared: 'GroupStatus', valueSet: 'status',
       platforms: { swift: 'enum GroupStatus', kotlin: 'GroupStatus', typescript: 'type GroupStatus' },
       meaning: 'The device\'s place in a Sync Group. `destroying` lasts until the relay has accepted a Revoke for every member, with no timeout.',
       source: { adr: [adr, 'trueseal-sync ADR-0029'], sketch: true },
-      gap: missingToday,
     },
     {
       section: 'state', name: 'Connection', kind: 'type', shared: 'Connection', valueSet: 'connection', tsValues: 'state',
       platforms: { swift: 'enum Connection', kotlin: 'Connection', typescript: 'type Connection' },
       meaning: 'The relay connection state. `relayVersionUnsupported` carries the Transport Versions the relay accepts; versions are never negotiated.',
       source: { adr: [adr, 'trueseal-sync ADR-0022'], sketch: true },
-      gap: 'today Swift and Kotlin stream a `ConnectionState`, and TS emits `connectionChanged` with a boolean',
     },
     {
       section: 'state', name: 'Member', kind: 'type', shared: 'Member{id, name}',
       platforms: { swift: 'Member(id:name:)', kotlin: 'Member(id, name)', typescript: 'interface Member { id; name }' },
       meaning: 'A device in the Sync Group. `name` is a label the device chose, never authentication.',
       source: { adr: [adr, 'trueseal-sync ADR-0023'], sketch: true },
-      gap: 'today Swift and Kotlin call the type `SyncMember`',
     },
     {
       section: 'receive', name: 'onMessage', kind: 'method', shared: 'onMessage(handler: async (Message) -> void) -> Subscription',
@@ -143,7 +128,6 @@ export const apiReference = {
       throws: ['messageHandlerAlreadySet'],
       facts: ['handlerAttempts'],
       source: { adr: [adr, 'trueseal-sync ADR-0026'], sketch: true },
-      gap: 'today messages arrive on a stream or event, with no awaited handler',
     },
     {
       section: 'receive', name: 'Message', kind: 'type', shared: 'Message{id: MessageId, from: Member, body: bytes}',
@@ -154,7 +138,6 @@ export const apiReference = {
       },
       meaning: 'One received message. `from.id` is the same id as in `members`. `body` is the bytes the sender passed to `send()`.',
       source: { adr: [adr], sketch: true },
-      gap: 'today TS uses `Buffer`, and no SDK carries a `Member` as the sender',
     },
     {
       section: 'receive', name: 'MessageId', kind: 'type', shared: 'MessageId',
@@ -177,7 +160,6 @@ export const apiReference = {
       throws: ['payloadTooLarge', 'notMember'],
       facts: ['protocolSizeLimit'],
       source: { adr: [adr, 'trueseal-sync ADR-0025', 'trueseal-sync ADR-0026'], sketch: true },
-      gap: 'today Swift and Kotlin call the method `publish`, with a text overload, TS `send` takes a `Buffer`, and none returns a `MessageId`',
     },
     {
       section: 'pairing', name: 'startPairing', kind: 'method', shared: 'startPairing() -> string',
@@ -185,7 +167,6 @@ export const apiReference = {
       meaning: 'Opens the pairing window on an admitting device and returns the Pairing Token. Join requests arrive as `joinRequest` events.',
       action: 'Show the token as a QR code or copyable text on the admitting device.',
       source: { adr: [adr, 'trueseal-sync ADR-0023'], sketch: true },
-      gap: 'today the method is `generatePairingToken` (Swift, Kotlin) or `pairingToken` (TS)',
       todo: 'TODO: no ADR names the error `startPairing` raises outside `member`.',
     },
     {
@@ -193,10 +174,9 @@ export const apiReference = {
       platforms: { swift: 'func accept(_ request: JoinRequest) async throws', kotlin: 'suspend fun accept(request: JoinRequest)', typescript: 'accept(request: JoinRequest): Promise<void>' },
       meaning: 'Admits the device that sent `request`. The window closes after it.',
       action: 'Call it only after the user confirms the request comes from the device in front of them.',
-      throws: ['pairingClosed', 'groupFull'],
+      throws: ['pairingClosed', 'groupFull', 'manifestVersionExhausted'],
       facts: ['maxGroupSize'],
       source: { adr: [adr, 'trueseal-sync ADR-0023'], sketch: true },
-      gap: 'today the method is `acceptPairingRequest`',
     },
     {
       section: 'pairing', name: 'cancelPairing', kind: 'method', shared: 'cancelPairing()',
@@ -209,7 +189,6 @@ export const apiReference = {
       platforms: { swift: 'JoinRequest(id:name:)', kotlin: 'JoinRequest(id, name)', typescript: 'interface JoinRequest { id; name }' },
       meaning: 'A device asking to join. `name` is a label the device chose, never authentication.',
       source: { adr: [adr, 'trueseal-sync ADR-0023'], sketch: true },
-      gap: 'today Swift and Kotlin use `PairingRequest(token, deviceName)`, and TS passes `(requestToken, name)` to a `memberRequest` listener',
     },
     {
       section: 'pairing', name: 'join', kind: 'method', shared: 'async join(token: string)',
@@ -217,29 +196,27 @@ export const apiReference = {
       meaning: 'Asks to join the Sync Group behind `token` and moves the device to `pendingJoin`, which survives restarts. Once admitted, the device reports `statusChanged(member, joined)`.',
       throws: ['alreadyInGroup', 'invalidPairingToken'],
       source: { adr: [adr, 'trueseal-sync ADR-0023'], sketch: true },
-      gap: 'today the method is `joinGroup`',
     },
     {
       section: 'pairing', name: 'cancelJoin', kind: 'method', shared: 'cancelJoin()',
       platforms: { swift: 'func cancelJoin()', kotlin: 'fun cancelJoin()', typescript: 'cancelJoin(): void' },
       meaning: 'Moves a `pendingJoin` device back to `notJoined`.',
       source: { adr: [adr], sketch: true },
-      gap: missingToday,
     },
     {
       section: 'membership', name: 'remove', kind: 'method', shared: 'async remove(memberId: Member.id)',
       platforms: { swift: 'func remove(_ memberId: Member.ID) async throws', kotlin: 'suspend fun remove(memberId: String)', typescript: 'remove(memberId: string): Promise<void>' },
       meaning: 'Removes another member. Any member may remove any other member. The removed device wipes and makes a fresh identity.',
+      throws: ['manifestVersionExhausted'],
       source: { adr: [adr, 'trueseal-sync ADR-0027'], sketch: true },
-      gap: 'today the method is `removeMember`, taking a `SyncMember` in Swift and Kotlin',
       todo: 'TODO: no ADR fixes the Swift and Kotlin member id type, which error `remove` raises outside `member`, or whether it raises `memberNotFound`.',
     },
     {
       section: 'membership', name: 'leave', kind: 'method', shared: 'async leave()',
       platforms: { swift: 'func leave() async throws', kotlin: 'suspend fun leave()', typescript: 'leave(): Promise<void>' },
       meaning: 'Leaves the Sync Group. The device moves to `leaving`, then to `notJoined` with reason `left`.',
+      throws: ['manifestVersionExhausted'],
       source: { adr: [adr, 'trueseal-sync ADR-0027'], sketch: true },
-      gap: missingToday,
       todo: 'TODO: no ADR names the error `leave` raises outside `member`.',
     },
     {
@@ -249,7 +226,6 @@ export const apiReference = {
       action: 'Show `destroying` until `statusChanged` reports `notJoined`, then pair again.',
       facts: ['relayTtlMax'],
       source: { adr: [adr, 'trueseal-sync ADR-0029'], sketch: true },
-      gap: 'today Revoke is sent once without retry, and the session is unusable afterwards',
       todo: 'TODO: trueseal-sync ADR-0029 says `destroyGroup()` in `pendingJoin` fails with "typed error: not in a group" without naming the case; the same holds for `notJoined`.',
     },
     {
@@ -262,7 +238,6 @@ export const apiReference = {
       meaning: 'Registers an event listener. Any number may be registered. Events raised before the first listener are buffered.',
       aliases: ['TrueSealEvent'],
       source: { adr: [adr], sketch: true },
-      gap: subscribeGap,
       todo: typeNameTodo,
     },
     {
@@ -275,7 +250,6 @@ export const apiReference = {
       meaning: 'Registers a delivery-issue listener. It is optional, and ignoring issues is safe. Every issue stays on the device; nothing goes back to the sender.',
       aliases: ['DeliveryIssue'],
       source: { adr: [adr, 'trueseal-sync ADR-0026'], sketch: true },
-      gap: subscribeGap,
       todo: typeNameTodo,
     },
     {
@@ -284,7 +258,6 @@ export const apiReference = {
       meaning: 'The handle every `on` call returns. Cancelling it removes the handler or listener.',
       fields: ['cancel'],
       source: { adr: [adr], sketch: true },
-      gap: missingToday,
     },
     {
       section: 'info', name: 'TrueSeal.info', kind: 'constant', shared: 'TrueSeal.info: {sdkVersion, transportVersion, endToEndVersion}',
@@ -297,7 +270,6 @@ export const apiReference = {
       fields: ['sdkVersion', 'transportVersion', 'endToEndVersion'],
       facts: ['trueSealRelease', 'transportVersion', 'endToEndVersion'],
       source: { adr: [adr, 'trueseal-sync ADR-0022', 'trueseal-sync ADR-0030'] },
-      gap: missingToday,
     },
     {
       section: 'info', name: 'TrueSeal.maxPayloadBytes', kind: 'constant', shared: 'TrueSeal.maxPayloadBytes',
@@ -306,7 +278,6 @@ export const apiReference = {
       aliases: ['MAX_PAYLOAD_BYTES'],
       facts: ['protocolSizeLimit'],
       source: { adr: [adr, 'trueseal-sync ADR-0025'], sketch: true },
-      gap: missingToday,
     },
     {
       section: 'info', name: 'TrueSeal.maxGroupSize', kind: 'constant', shared: 'TrueSeal.maxGroupSize',
@@ -315,7 +286,6 @@ export const apiReference = {
       aliases: ['MAX_GROUP_SIZE'],
       facts: ['maxGroupSize'],
       source: { adr: [adr, 'trueseal-sync ADR-0027'], sketch: true },
-      gap: missingToday,
     },
     {
       section: 'errors', name: 'TrueSealError', kind: 'type', shared: 'TrueSealError',
@@ -327,7 +297,6 @@ export const apiReference = {
       meaning: 'The error a failing call throws. Its case is one of the cases below, and the case fields are typed extras.',
       aliases: ['TrueSealException'],
       source: { adr: [adr, 'trueseal-sync ADR-0032'], sketch: true },
-      gap: 'today each SDK has `TruesealSyncError` with 8 cases (`invalidRelayURL`, `pushFailed`, `notInGroup`, `groupDestroyed` and others), TS has no `code`, and `ffi.rs` reports store errors as `InvalidNamespace`',
     },
   ],
 } satisfies ApiReference;
