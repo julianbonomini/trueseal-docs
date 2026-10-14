@@ -26,14 +26,15 @@ export const apiReference = {
       section: 'open', name: 'TrueSeal.open', kind: 'method',
       shared: 'static async open(relay: RelayAddress | string, storage: Storage, namespace: string = "default", maxPayloadBytes?: int) -> TrueSeal',
       platforms: {
-        swift: 'static func open(relay: RelayAddress, storage: Storage, namespace: String = "default", maxPayloadBytes: Int? = nil) async throws -> TrueSeal',
-        kotlin: 'suspend fun open(relay: RelayAddress, storage: Storage, namespace: String = "default", maxPayloadBytes: Int? = null): TrueSeal',
+        swift: 'static func open(relay: RelayAddress, storage: URL, namespace: String = "default", maxPayloadBytes: UInt32? = nil) async throws -> TrueSeal',
+        kotlin: 'suspend fun open(relay: RelayAddress, storage: Storage, namespace: String = "default", maxPayloadBytes: UInt? = null): TrueSeal',
         typescript: 'static open(options: { relay: RelayAddress | string; storageDir?: string; namespace?: string; maxPayloadBytes?: number }): Promise<TrueSeal>',
       },
       meaning: 'Opens the device stored in `storage` under `namespace`. It returns before the relay connection is up and connects in the background, and `send()` works at once. `maxPayloadBytes` may lower the Protocol Size Limit; a higher value is clamped to it.',
       throws: ['invalidRelayAddress', 'invalidNamespace', 'storage', 'storeTooNew'],
       facts: ['protocolSizeLimit'],
       source: { adr: [adr, 'trueseal-sync ADR-0025', 'trueseal-sync ADR-0032'], sketch: true },
+      gap: 'Swift and Kotlin each ship two overloads: the `relay: String` form and the typed `relay: RelayAddress` form. Swift takes `storage` as a plain `URL`, not a `Storage` type.',
       todo: 'TODO: the sketch shows the Swift and Kotlin `open` taking a `RelayAddress` only; no ADR says how they take the string form.',
     },
     {
@@ -65,12 +66,15 @@ export const apiReference = {
     {
       section: 'open', name: 'Storage', kind: 'type', shared: 'Storage',
       platforms: {
-        swift: 'Storage.applicationSupport | Storage.directory(URL)',
+        swift: 'storage: URL (a parameter of TrueSeal.open)',
         kotlin: 'Storage.android(context) | Storage.directory(File)',
         typescript: 'storageDir?: string (an option of TrueSeal.open)',
       },
-      meaning: 'Where Session State lives. Kotlin always takes an explicit location, and `Storage.android(context)` builds it from an Android context.',
+      meaning: 'Where Session State lives. Kotlin always takes an explicit location, and `Storage.android(context)` builds it from an Android context. Swift takes the location as a plain `URL` on `open`; TS takes it as the `storageDir` option.',
+      // The real per-platform names a doc may cite: the Kotlin factories and the TS option. The check reads aliases.
+      aliases: ['Storage.android', 'Storage.directory', 'storageDir'],
       source: { adr: [adr], sketch: true },
+      gap: "the sketch's Swift factories `Storage.applicationSupport` and `Storage.directory(URL)` are unshipped: Swift's `open` takes the location as a plain `URL`.",
       todo: 'TODO: no ADR names the TS default directory.',
     },
     {
@@ -114,6 +118,8 @@ export const apiReference = {
       section: 'state', name: 'Member', kind: 'type', shared: 'Member{id, name}',
       platforms: { swift: 'Member(id:name:)', kotlin: 'Member(id, name)', typescript: 'interface Member { id; name }' },
       meaning: 'A device in the Sync Group. `name` is a label the device chose, never authentication.',
+      // The dotted forms signatures declare (`remove(memberId: Member.id)`). Bare 'id'/'name' are prose words — not aliases.
+      aliases: ['Member.id', 'Member.name'],
       source: { adr: [adr, 'trueseal-sync ADR-0023'], sketch: true },
     },
     {

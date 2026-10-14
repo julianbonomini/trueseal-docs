@@ -202,6 +202,15 @@ describe('apiNames', () => {
       expect({ name, listed: names.includes(name) }).toEqual({ name, listed: true });
     }
   });
+
+  // A dotted `Type.member` written in any signature is a name a doc or skill may cite verbatim (the skills cite
+  // `Storage.android`); when it isn't an entry, an alias or a field, the reference check flags a real SDK name.
+  test('every dotted Type.member declared in a real-data signature is a known name', () => {
+    const names = new Set(apiNames());
+    const signatures = apiReference.entries.flatMap(entry => [entry.shared ?? '', ...Object.values(entry.platforms)]);
+    const members = [...new Set(signatures.flatMap(s => [...s.matchAll(/\b([A-Z][A-Za-z0-9]*\.[a-z][A-Za-z0-9]*)\b/g)].map(([, m]) => m)))];
+    expect(members.filter(m => !names.has(m))).toEqual([]);
+  });
 });
 
 describe('the API reference data', () => {
