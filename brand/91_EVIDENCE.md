@@ -12,104 +12,40 @@ Sibling-repo paths are relative to the folder that holds `trueseal-docs`. Line n
 
 | Claim | Verdict | Evidence | Date |
 |---|---|---|---|
-| "About ten lines" | removed | The SDKs as they stand take 18 lines of Swift, 16 of Kotlin and 10 of TypeScript ([counts below](#about-ten-lines)). Two of three are over ten, so the Landing states the counts instead. The 0.6 API the Landing shows isn't released, so it can't be counted yet. | 2026-10-08 |
-| "About ten lines" for the 0.6 SDKs | pending human check | Count the [0.6 snippets](#the-06-snippets-on-the-landing) against the released 0.6 packages, with the accept step written out, and compile each one. | 2026-10-08 |
+| "About ten lines" | removed | With the canonical API as it ships in the SDK repos, the same four steps take 18 lines of Swift, 19 of Kotlin and 16 of TypeScript ([counts below](#the-snippets-on-the-landing)). All three are over ten, so the claim is out and the Landing states the counts instead. (Earlier counts — 18/16/10 — were of the pre-canonical `TruesealSyncClient` API, which no longer exists.) | 2026-10-14 |
+| Line counts on the Landing (18 Swift / 19 Kotlin / 16 TypeScript) | verified | The [snippets](#the-snippets-on-the-landing) use the real canonical API, symbol-for-symbol against the SDK READMEs and sources — Swift at `1480349`, Kotlin at `c7baeca`, TypeScript at `db88816` — with the accept step written out (`accept(requestId:)` / `accept(event.request.id)`). Counted by the rule below. Still open: compile each snippet against the *published* 0.6 packages once OPS-4 publishes them. | 2026-10-14 |
 | "Three screens" | removed | Never in Landing copy. Nothing counts the screens an app needs, and it depends on the app's own pairing UI. | 2026-10-08 |
-| "A relay in one container" | pending human check | The Operate pages as written run it as one container: `src/content/docs/operate/running-a-relay.mdx` has one compose service, `relay`, with its data on one volume. Relay ADR-0012 line 5 makes that the one supported deployment. Still to do: follow that page on a clean machine with the released image. Until then the Landing doesn't say "one container". | 2026-10-08 |
+| "A relay in one container" | pending human check | Verified on a maintainer machine on 2026-10-14 by following `src/content/docs/operate/running-a-relay.mdx` against `trueseal-relay` at `e0db41d`: `docker compose up -d --build` starts exactly one container (`relay`, one `relay-data` volume); first start auto-generated the keypair (logged, mode 0600); `/healthz` returned `{"status":"ok","dev_mode":false,"transport_version":1}`; `pubkey` and `address --host` printed the documented values; `docker compose ps` reported `healthy`. Still to do: the same steps on a genuinely clean machine with the *released* image (the run above built from source). Until then the Landing doesn't say "one container". | 2026-10-14 |
 | Life360 data-broker report (The Markup, December 2021) | removed | Not cited anywhere on the site. No primary source was checked. | 2026-10-08 |
 | Etebase's current status | removed | Not named anywhere on the site. No primary source was checked. | 2026-10-08 |
 | The IP sentence, wording | verified | `src/components/landing/Trust.astro` and `running-a-relay.mdx` quote it verbatim from `trueseal-relay/docs/adr/0012-self-hosted-preview-baseline.md`, section "IP addresses", "Public wording". `tests/landing.test.ts` checks the Landing text. | 2026-10-08 |
-| The IP sentence, relay behaviour | pending human check | Relay ADR-0012 is accepted but not yet implemented. `trueseal-relay` at `0170fce` still logs the client address when a listener hits its connection limit and when a long push session closes (`cmd/trueseal-relay/main.go:138`, :156, :171). ADR-0012's release gate (an e2e run that fails if a client address appears in the log or in `inbox.db`) has to pass on the released relay before the sentence is true of it. The Landing keeps the sentence because the ticket requires ADR-0012's wording there. | 2026-10-08 |
+| The IP sentence, relay behaviour | verified | The behaviour the sentence claims is implemented and gate-checked: RELAY-4 (`trueseal-relay` `9790244`) removed every IP, key-prefix, size and per-client log (zero `RemoteAddr` in non-test code, source-scanned by `TestNoRemoteAddrInNonTestCode`); RELAY-9 (`d8c4a24`) keeps dev mode address-free with a real-TCP binary-level test; and the G7 release gate (E2E-7, `trueseal-e2e` `dab8861` and later) runs full sessions over real TCP in both modes and fails if a client address appears in the log or in `inbox.db`. Verified at relay `e0db41d`. | 2026-10-14 |
 
-## About ten lines
+## The snippets on the Landing
+
+`src/components/landing/Integrate.astro` shows the canonical API (trueseal-sync ADR-0028; package names ADR-0030), verified symbol-for-symbol on 2026-10-14 against the SDK repos — Swift at `1480349`, Kotlin at `c7baeca`, TypeScript at `db88816` — including the accept step, which ADR-0028 settles as `accept(requestId)` on the join-request event. The earlier "0.6 snippets" (accept left as a comment, 10/11/10 lines) are gone; so are the counts of the pre-canonical `TruesealSyncClient` API (18/16/10), which no longer exists in any SDK repo.
 
 A minimal integration is one device's code for all four steps: open the client, handle incoming messages, pair (make a token, accept the request, and join on the other device) and send. The count is every line except blank lines and comment-only lines, with the code laid out the way each language's usual formatter lays it out. Imports count. App code the snippet calls (`store`, `repository`, `db`, `location`, `scannedToken`, `relayPublicKey`, `scope`, `context`) doesn't.
 
 ### Swift: 18 lines
 
-`trueseal-sync-swift` at `61ff921`. API: `TruesealSyncClient(relayURL:relayPublicKey:)` (`Sources/TruesealSync/TruesealSyncClient.swift:89`), `blobs` (:51), `pairingRequests` (:63), `generatePairingToken()` (:147), `joinGroup(token:)` (:159), `acceptPairingRequest(_:)` (:173), `publish(_:)` (:193), `ReceivedBlob.messageId` and `.data` (`Sources/TruesealSync/Models.swift:19`, :11).
+Matches `trueseal-sync-swift/README.md` at `1480349` ("Open", "Pair two devices", "Send & receive"): `TrueSeal.open(relay:storage:)` takes a storage `URL`, `startPairing()` and `join(token:)` throw, the event case is `.joinRequest(let request)`, and `accept(requestId:)` throws.
 
-```swift
-import TruesealSync
+### Kotlin: 19 lines
 
-let client = try TruesealSyncClient(
-    relayURL: URL(string: "tcp://relay.example.com")!,
-    relayPublicKey: relayPublicKey
-)
+Matches `trueseal-sync-kotlin/README.md` at `c7baeca`: `TrueSeal.open` is suspend with `storage = Storage.android(context)`, the event is `TrueSealEvent.JoinRequestReceived`, and `accept(event.request.id)` is suspend — the listener dispatches it with `scope.launch` (listeners must never call back into the object synchronously). The two extra lines over Swift are the `TrueSealEvent`/`kotlinx.coroutines` imports.
 
-Task {
-    for await blob in client.blobs {
-        try await store.save(blob.messageId, blob.data)
-    }
-}
-Task {
-    for await request in client.pairingRequests {
-        client.acceptPairingRequest(request)
-    }
-}
+### TypeScript: 16 lines
 
-let token = client.generatePairingToken() // show it as a QR code
-try client.joinGroup(token: scannedToken) // on the other device
-try await client.publish(location)
-```
+Matches `trueseal-sync-ts/README.md` at `db88816`: `TrueSeal.open(address, { storageDir })` takes an options object, events are matched on `event.type === 'joinRequest'`, and `startPairing()`, `join(token)` and `accept(id)` are synchronous while `send` returns the Message ID.
 
-### Kotlin: 16 lines
-
-`trueseal-sync-kotlin` at `9670a4a`. API: `TruesealSyncClient(context, relayHost, relayPublicKey)` (`lib/src/main/kotlin/dev/trueseal/sync/TruesealSyncClient.kt:52`), `blobs` (:79), `pairingRequests` (:95), `generatePairingToken()` (:161), `joinGroup(token)` (:174), `acceptPairingRequest(request)` (:190), `publish(data)` (:223), `ReceivedBlob.messageId` and `.data` (`lib/src/main/kotlin/dev/trueseal/sync/Models.kt:20`, :13).
-
-```kotlin
-import dev.trueseal.sync.TruesealSyncClient
-import kotlinx.coroutines.launch
-
-val client = TruesealSyncClient(
-    context = context,
-    relayHost = "relay.example.com",
-    relayPublicKey = relayPublicKey,
-)
-
-scope.launch {
-    client.blobs.collect { blob -> repository.save(blob.messageId, blob.data) }
-}
-scope.launch {
-    client.pairingRequests.collect { request -> client.acceptPairingRequest(request) }
-}
-
-val token = client.generatePairingToken() // show it as a QR code
-client.joinGroup(scannedToken) // on the other device
-client.publish(location)
-```
-
-### TypeScript: 10 lines
-
-`trueseal-sync-ts` at `76b008f`, package `trueseal-sync-ts` (`package.json:2`). API: `TruesealSyncClient.create(config)` (`src/index.ts:133`) with `relayHost` and `relayPublicKey` (:49, :51), the `message` event (:92), `onMemberRequest` (:229), `acceptPairingRequest` (:234), `pairingToken()` (:201), `joinGroup(token)` (:209), `send(blob)` (:263).
-
-```ts
-import { TruesealSyncClient } from 'trueseal-sync-ts'
-
-const client = await TruesealSyncClient.create({
-  relayHost: 'relay.example.com',
-  relayPublicKey,
-})
-
-client.on('message', (blob, senderId, messageId) => db.put(messageId, blob))
-client.onMemberRequest((request) => client.acceptPairingRequest(request))
-
-const token = client.pairingToken() // show it as a QR code
-client.joinGroup(scannedToken) // on the other device
-await client.send(location)
-```
-
-None of the three was compiled. The counts are of the source as written here.
-
-### The 0.6 snippets on the Landing
-
-`src/components/landing/Integrate.astro` shows the 0.6 API from trueseal-sync ADR-0028 and the package names from ADR-0030. Without comments they are 10 lines of Swift, 11 of Kotlin and 10 of TypeScript. They leave the accept step as a comment, because ADR-0028 names the `joinRequest(request)` event but doesn't settle how each language matches on it. Those counts aren't evidence for "about ten lines" until the step is written out and the code runs against the released packages.
+None of the three was compiled — the 0.6 packages aren't published yet (OPS-4). The counts are of the source as written on the Landing, verified against the repos named above. Compiling all three against the published packages is the last open step of this claim.
 
 ## Comparison table
 
 The table compares TrueSeal with libsodium plus your own pairing, and with CloudKit encrypted fields. It had a "Your own backend" column. That column describes code the reader writes, so it has no primary source, and it was removed. The "ordering" half of "Offline outbox and ordering" was removed too: Apple's docs don't state an order for CKSyncEngine.
 
-Sources, all read on 2026-10-08:
+Sources, all read on 2026-10-08. The 2026-10-14 pass re-verified the TrueSeal column against the current ADRs and code (pins updated where the cited code moved) and re-checked every cell against the Landing copy in `src/components/landing/Overview.astro` (identical). The external pages (libsodium, Apple) were not re-fetched in this pass; their dated citations below are the bound of those cells — re-read them if a row changes or before a major launch push:
 
 - [L1] libsodium documentation, Introduction, https://libsodium.gitbook.io/doc (latest version 1.0.22-stable). "Sodium is a modern, easy-to-use software library for encryption, decryption, signatures, password hashing, and more." It runs on Windows, iOS and Android, has JavaScript and WebAssembly versions, and "bindings for all common programming languages". Its table of contents has key exchange and no pairing, membership, networking or storage.
 - [A1] Apple, `CKRecord.encryptedValues`, https://developer.apple.com/documentation/cloudkit/ckrecord/encryptedvalues. "CloudKit encrypts the fields' values on-device before saving them to iCloud ... When you enable Advanced Data Protection, the encryption keys are available exclusively to the record's owner and, if the user shares the record, that share's participants." `CKAsset` is encrypted by default, references aren't encrypted, and encryption isn't allowed in the public database. Available on iOS 15, iPadOS 15, Mac Catalyst 15, macOS 12, tvOS 15, visionOS 1 and watchOS 8.
@@ -128,7 +64,7 @@ Sources, all read on 2026-10-08:
 | Pairing and membership | TrueSeal | Included | verified | sync ADR-0023 (pairing), ADR-0027 (membership). |
 | Offline outbox | libsodium | You build it | verified | L1: no networking or storage. |
 | Offline outbox | CloudKit | Included, with CKSyncEngine | verified | A3. |
-| Offline outbox | TrueSeal | Included | verified | sync ADR-0026 line 5; `trueseal-sync-swift` at `61ff921`, `publish(_:)` queues the blob in a durable local outbox when the relay is unreachable (`Sources/TruesealSync/TruesealSyncClient.swift:186`). |
+| Offline outbox | TrueSeal | Included | verified | sync ADR-0026 (the durable outbox, line 11); `trueseal-sync` at `af16c4e` and later — `send()` returns once the entry is durably queued and one background pump per session drains the outbox while connected, replaying after reconnect (`src/session/sender.rs:1-5`). (The 2026-10-08 citation named the pre-canonical Swift client, which no longer exists.) |
 | Platforms | libsodium | Any | verified | L1. |
 | Platforms | CloudKit | Apple platforms | verified | A1 availability list. Was "Apple". |
 | Platforms | TrueSeal | Swift, Kotlin, TypeScript | verified | sync ADR-0030 lines 9 to 11; the three SDK repos. |

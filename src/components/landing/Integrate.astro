@@ -4,67 +4,86 @@ import LandingSection from './LandingSection.astro';
 import CodeTabs, { type CodeTab } from './CodeTabs.astro';
 import { agentSnippet } from '../../agent-snippet/agent-snippet';
 
-// The 0.6 API: names follow trueseal-sync ADR-0028 and package names ADR-0030. The SDK repos still ship
-// TruesealSyncClient, and the line counts in the copy below are for those (brand/91_EVIDENCE.md).
-// The accept step stays a comment because ADR-0028 doesn't settle how each language matches on an event.
+// The current canonical SDK API (trueseal-sync ADR-0028; package names ADR-0030), with the accept
+// step written out. Verified symbol-for-symbol against the SDK repos on 2026-10-14 — Swift at
+// 1480349, Kotlin at c7baeca, TypeScript at db88816 (brand/91_EVIDENCE.md). Line counts in the
+// copy below follow the section-10 counting rule: every line except blanks and comment-only
+// lines; imports count; app code the snippet calls (store, repository, db, location,
+// scannedToken, scope, context) needs no definition.
 const snippets: CodeTab[] = [
   {
     label: 'Swift',
     code: `// Package.swift: .package(url: "https://github.com/julianbonomini/trueseal-sync-swift", from: "0.6.0")
 import TruesealSync
 
-let trueseal = try await TrueSeal.open(
-  relay: "trueseal://9f2c…e41a@relay.example.com",
-  storage: .applicationSupport
+let ts = try await TrueSeal.open(
+    relay: "trueseal://9f2c…e41a@relay.example.com",
+    storage: try FileManager.default.url(
+        for: .applicationSupportDirectory, in: .userDomainMask,
+        appropriateFor: nil, create: true)
 )
 
-trueseal.onMessage { message in
-  try await store.save(message.id, message.body)
+ts.onMessage { message in
+    try await store.save(message.id, message.body)
+}
+ts.onEvent { event in
+    if case .joinRequest(let request) = event {
+        try? ts.accept(requestId: request.id)
+    }
 }
 
-// Show the token as a QR code. The other device calls join(token),
-// and this one calls accept(request) on its joinRequest event.
-let token = try await trueseal.startPairing()
-try await trueseal.send(location)`,
+let token = try ts.startPairing() // show it as a QR code
+try ts.join(token: scannedToken) // on the other device
+try ts.send(location)`,
   },
   {
     label: 'Kotlin',
     code: `// build.gradle.kts: implementation("dev.trueseal:trueseal-sync:0.6.0")
 import dev.trueseal.sync.Storage
 import dev.trueseal.sync.TrueSeal
+import dev.trueseal.sync.TrueSealEvent
+import kotlinx.coroutines.launch
 
-val trueseal = TrueSeal.open(
-  relay = "trueseal://9f2c…e41a@relay.example.com",
-  storage = Storage.android(context),
+val ts = TrueSeal.open(
+    relay = "trueseal://9f2c…e41a@relay.example.com",
+    storage = Storage.android(context),
 )
 
-trueseal.onMessage { message ->
-  repository.save(message.id, message.body)
+ts.onMessage { message ->
+    repository.save(message.id, message.body)
+}
+ts.onEvent { event ->
+    if (event is TrueSealEvent.JoinRequestReceived) {
+        scope.launch { ts.accept(event.request.id) }
+    }
 }
 
-// Show the token as a QR code. The other device calls join(token),
-// and this one calls accept(request) on its joinRequest event.
-val token = trueseal.startPairing()
-trueseal.send(location)`,
+val token = ts.startPairing() // show it as a QR code
+ts.join(scannedToken) // on the other device
+ts.send(location)`,
   },
   {
     label: 'TypeScript',
     code: `// npm install @trueseal/sync
 import { TrueSeal } from '@trueseal/sync'
 
-const trueseal = await TrueSeal.open(
+const ts = await TrueSeal.open(
   'trueseal://9f2c…e41a@relay.example.com',
-  './trueseal-state',
+  { storageDir: './trueseal-state' },
 )
 
-trueseal.onMessage(async (message) => {
+ts.onMessage(async (message) => {
   await db.put(message.id, message.body)
 })
+ts.onEvent((event) => {
+  if (event.type === 'joinRequest') {
+    ts.accept(event.request.id)
+  }
+})
 
-// Show the token as a QR code. The other device calls join(token),
-// and this one calls accept(request) on its joinRequest event.
-const token = await trueseal.startPairing()
-await trueseal.send(location)`,
+const token = ts.startPairing() // show it as a QR code
+ts.join(scannedToken) // on the other device
+await ts.send(location)`,
   },
 ];
 ---
@@ -83,8 +102,9 @@ await trueseal.send(location)`,
     read it.</em>
   </p>
   <p>
-    The code here is the 0.6 API, which isn't released yet. With the SDKs on GitHub today, the same steps take 18 lines
-    of Swift, 16 of Kotlin and 10 of TypeScript.
+    This is the current SDK API, with the accept step written out: 18 lines of Swift, 19 of Kotlin and 16 of
+    TypeScript, counted against the SDK repos. The 0.6 packages aren't published yet; until they are, install from
+    the repos.
   </p>
 
   <CodeTabs slot="aside" name="integrate-code" tabs={snippets} />
