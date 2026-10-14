@@ -168,9 +168,17 @@ describe('the Shared Facts data', () => {
   });
 });
 
+import upstreamFacts from './upstream/shared-facts.json';
+
 describe('the Shared Facts cases', () => {
-  test('there are 13 errors, 5 events and 5 delivery issues, each with what the app should do', () => {
-    expect([sharedFacts.errors.length, sharedFacts.events.length, sharedFacts.deliveryIssues.length]).toEqual([13, 5, 5]);
+  test('the case counts match the core\'s generated export, each with what the app should do', () => {
+    // The counts come from the vendored generated source, never a hand-written number: the core added
+    // the 14th error case (manifestVersionExhausted) when ADR-0028 was amended, and this test followed.
+    expect([sharedFacts.errors.length, sharedFacts.events.length, sharedFacts.deliveryIssues.length]).toEqual([
+      upstreamFacts.errors.length,
+      upstreamFacts.events.length,
+      upstreamFacts.deliveryIssues.length,
+    ]);
     const cases = [...sharedFacts.errors, ...sharedFacts.events, ...sharedFacts.deliveryIssues];
     expect(cases.filter(c => !c.action?.trim()).map(c => c.id)).toEqual([]);
   });

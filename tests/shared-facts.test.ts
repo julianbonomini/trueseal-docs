@@ -65,11 +65,12 @@ describe('Shared Facts', () => {
         cpSync(join(repo, entry), join(tmp, entry), { recursive: true });
       }
       symlinkSync(join(repo, 'node_modules'), join(tmp, 'node_modules'));
-      const data = join(tmp, 'src', 'facts', 'shared-facts.ts');
-      const original = "value: { kind: 'bytes', value: 61440 }";
+      // The value's one source is the vendored core export: change it there and both surfaces must move.
+      const data = join(tmp, 'src', 'facts', 'upstream', 'shared-facts.json');
+      const original = '"maxPayloadBytes": 61440';
       const source = readFileSync(data, 'utf8');
       expect(source.split(original).length - 1).toBe(1);
-      writeFileSync(data, source.replace(original, "value: { kind: 'bytes', value: 51200 }"));
+      writeFileSync(data, source.replace(original, '"maxPayloadBytes": 51200'));
 
       const build = Bun.spawnSync([join(repo, 'node_modules', '.bin', 'astro'), 'build'], {
         cwd: tmp,
