@@ -1,6 +1,8 @@
 # Checks that every test the Threat Model names exists in its repo at the pinned commit
-# (src/config/threatModelPins.json). It lists tests the sibling repos haven't written yet, so it isn't
-# a required check until the pins point at commits that have them.
+# (src/config/threatModelPins.json). The check exits 3 when no token is set: that is NOT RUN, not a
+# pass — the job turns it into a loud warning annotation and a step-summary banner and stays green so
+# docs PRs aren't blocked, but G10 counts a NOT RUN leg as a failure at release. Once the
+# SIBLING_REPOS_TOKEN secret is set (maintainer item), this leg verifies every named test for real.
 name: Threat Model
 
 on:
@@ -21,6 +23,21 @@ jobs:
         with:
           bun-version: 1.4.2
       - run: bun install --frozen-lockfile
-      - run: bun scripts/check-threat-model.ts
+      - name: Every named test exists at its pinned commit
         env:
           GITHUB_TOKEN: ${{ secrets.SIBLING_REPOS_TOKEN }}
+        run: |
+          code=0
+          bun scripts/check-threat-model.ts || code=$?
+          if [ "$code" -eq 3 ]; then
+            echo "::warning title=Threat Model named-tests leg NOT RUN::SIBLING_REPOS_TOKEN is not set, so no named test was verified. Every claim on the Threat Model page is UNVERIFIED until this leg runs green. G10 counts NOT RUN as a failure at release."
+            {
+              echo "## ⚠️ Threat Model named-tests leg: NOT RUN"
+              echo ""
+              echo "\`SIBLING_REPOS_TOKEN\` is not set on this repository, so the check could not verify that the tests the Threat Model names exist in their repos at the pinned commits."
+              echo ""
+              echo "**This is a visible skip, not a pass.** Every claim on the Threat Model page is unverified until this leg runs green, and G10 counts a NOT RUN leg as a failure at release. Maintainer item: set the secret."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          exit "$code"

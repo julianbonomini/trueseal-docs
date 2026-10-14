@@ -5,8 +5,9 @@ import pins from './threatModelPins.json';
 
 const protocolSizeLimit = factText('protocolSizeLimit');
 const relayTtlDefault = factText('relayTtlDefault');
-const relayTtlMax = factText('relayTtlMax');
 const replayWindow = factText('replayWindow');
+// factText('relayTtlMax') is intentionally not bound: the delivery claim names no numeric lifetime
+// until the TTL boundary tests land (see the KNOWN GAP comment on the delivery claim).
 
 export type Repo = 'trueseal-sync' | 'trueseal-noise' | 'trueseal-relay' | 'trueseal-e2e';
 
@@ -74,6 +75,12 @@ const sync = (path: string, name: string): TestRef => ({ repo: 'trueseal-sync', 
 const noise = (path: string, name: string): TestRef => ({ repo: 'trueseal-noise', path, name });
 const relay = (path: string, name: string): TestRef => ({ repo: 'trueseal-relay', path, name });
 const e2e = (name: string): TestRef => ({ repo: 'trueseal-e2e', path: 'test/system.test.mjs', name });
+const e2ePrivacy = (name: string): TestRef => ({ repo: 'trueseal-e2e', path: 'test/privacy.test.mjs', name });
+
+// The G7 privacy suite's parent test: a full push → deliver → ack cycle over real TCP in BOTH logging
+// modes, then byte scans of the captured log and inbox.db for client addresses, metadata and payload
+// markers (E2E-7). One test name covers both modes.
+const g7PrivacySuite = e2ePrivacy('G7: relay log and store privacy in normal and dev mode');
 
 export const claims: readonly Claim[] = defineClaims([
   {
@@ -83,8 +90,9 @@ export const claims: readonly Claim[] = defineClaims([
     tests: [
       sync('src/crypto.rs', 'wrong_key_decrypt_returns_error'),
       sync('src/session/tests/push.rs', 'envelope_addressed_to_wrong_key_is_silently_dropped'),
-      sync('src/session/tests/sealed_envelope.rs', 'seal_binds_version_recipient_and_ephemeral_key'),
-      e2e('relay store holds only sealed payloads'),
+      sync('src/session/tests/sealed_envelope.rs', 'outer_envelope_carries_only_version_recipient_and_payload'),
+      // The G7 store byte-scan proves the relay store holds only sealed payloads (payload markers absent).
+      g7PrivacySuite,
     ],
   },
   {
@@ -106,9 +114,9 @@ export const claims: readonly Claim[] = defineClaims([
       sync('src/session/tests/destroy_group.rs', 'destroy_group_fires_on_group_destroyed_on_all_members'),
       sync('src/session/tests/destroy_group.rs', 'store_wipe_clears_keypair_and_manifest'),
       sync('src/session/tests/destroy_group.rs', 'push_sync_after_destroy_returns_group_destroyed'),
-      sync('src/session/tests/destroy_group.rs', 'receiver_forwards_revoke_to_known_members'),
+      sync('src/session/tests/destroy_group.rs', 'destroy_group_drops_sync_sends_and_replays_revoke_after_reconnect'),
+      sync('src/session/tests/destroy_group_state.rs', 'forwarded_revoke_reaches_concurrently_admitted_device'),
       e2e('Destroy Group reaches every current member'),
-      e2e('nothing is addressed to old keys after Destroy Group'),
     ],
   },
   {
@@ -116,14 +124,14 @@ export const claims: readonly Claim[] = defineClaims([
     claim: "A message is accepted only if a current member signed it. The relay can't modify, re-address or forge it.",
     decision: 'sync ADR-0031',
     tests: [
-      sync('src/envelope.rs', 'tampered_payload_fails_verification'),
-      sync('src/envelope.rs', 'tampered_sequence_fails_verification'),
-      sync('src/envelope.rs', 'wrong_author_key_fails_verification'),
+      sync('src/envelope.rs', 'tampered_payload_fails'),
+      sync('src/envelope.rs', 'tampered_version_fails'),
       sync('src/envelope.rs', 'attribution_forgery_is_rejected'),
+      sync('src/envelope.rs', 'weak_author_key_forgery_fails'),
+      sync('src/envelope.rs', 'readdressed_envelope_fails'),
+      sync('src/envelope.rs', 'ephemeral_swapped_envelope_fails'),
       sync('src/session/tests/manifest_filter.rs', 'message_from_non_member_is_discarded'),
-      sync('src/session/tests/sealed_envelope.rs', 'readdressed_blob_is_rejected'),
-      sync('src/session/tests/sealed_envelope.rs', 'swapped_ephemeral_key_is_rejected'),
-      sync('src/session/tests/manifest_hijack.rs', 'manifestless_device_drops_sync_from_non_member'),
+      sync('src/session/tests/pairing_trust_anchor.rs', 'manifestless_device_drops_sync_and_revoke'),
     ],
   },
   {
@@ -132,10 +140,10 @@ export const claims: readonly Claim[] = defineClaims([
       "A joining device trusts only the group whose Pairing Token it scanned, and never accepts a Group Manifest it didn't ask for.",
     decision: 'sync ADR-0023',
     tests: [
-      sync('src/session/tests/manifest_hijack.rs', 'joiner_accepts_only_initiator_manifest'),
-      sync('src/session/tests/manifest_hijack.rs', 'device_that_never_joined_rejects_unsolicited_manifest'),
-      sync('src/session/tests/manifest_hijack.rs', 'relay_cannot_inject_manifest'),
-      sync('src/session/tests/manifest_hijack.rs', 'pair_signing_pub_must_match_envelope_signer'),
+      sync('src/session/tests/pairing_trust_anchor.rs', 'joiner_accepts_only_initiator_manifest'),
+      sync('src/session/tests/pairing_trust_anchor.rs', 'device_that_never_joined_rejects_unsolicited_manifest'),
+      sync('src/session/tests/pairing_trust_anchor.rs', 'relay_cannot_inject_manifest'),
+      sync('src/session/tests/pair_signer_binding.rs', 'pair_signing_pub_must_match_envelope_signer'),
     ],
   },
   {
@@ -143,13 +151,14 @@ export const claims: readonly Claim[] = defineClaims([
     claim: 'A message reaches the handler at most once, even when a malicious relay delivers it again.',
     decision: 'sync ADR-0031, ADR-0034',
     tests: [
-      e2e('byte-identical replay reaches the handler once'),
-      sync('src/session/tests/replay_window.rs', 'future_dated_message_deduplicated_past_handling_window'),
+      e2e('duplicate envelope is delivered once — the library dedups (ADR-0031)'),
+      sync('src/session/tests/sealed_envelope.rs', 'future_dated_message_is_accepted_and_dedup_record_is_clamped_forward'),
     ],
     limit: {
       value: `the Replay Window, ${replayWindow.text}`,
-      inside: sync('src/session/tests/replay_window.rs', 'blob_59_days_old_is_accepted'),
-      outside: sync('src/session/tests/replay_window.rs', 'blob_61_days_old_is_rejected'),
+      // One test proves both sides of the boundary; it is named under each label.
+      inside: sync('src/session/tests/sealed_envelope.rs', 'replay_window_accepts_59_days_and_rejects_61_days'),
+      outside: sync('src/session/tests/sealed_envelope.rs', 'replay_window_accepts_59_days_and_rejects_61_days'),
     },
   },
   {
@@ -160,16 +169,15 @@ export const claims: readonly Claim[] = defineClaims([
     tests: [
       e2e('offline recipient drains durable relay inbox after process restart'),
       e2e('sender outbox replays after relay restart'),
-      e2e('messages from one sender arrive in send order'),
+      sync('src/session/tests/delivery_contract.rs', 'per_sender_order_is_preserved'),
       sync('src/session/tests/outbox.rs', 'outbox_survives_crash_and_replays_on_reconnect'),
       sync('src/session/tests/outbox.rs', 'undelivered_entries_replayed_after_reconnect'),
       relay('internal/relay/e2e_test.go', 'TestE2E_TCPDropBeforeAck_Redelivers'),
     ],
-    limit: {
-      value: `the relay message lifetime, at most ${relayTtlMax.text}`,
-      inside: e2e('message delivered just inside the relay TTL'),
-      outside: e2e('message dropped just past the relay TTL'),
-    },
+    // KNOWN GAP (release-blocking, reported from DOCS-4): no test yet pins the relay message lifetime
+    // on both sides of the boundary, so this claim names no numeric limit. The boundary tests are
+    // E2E-2 scope (trueseal-e2e#6, "TTL boundaries"); when they land, restore the limit block:
+    //   value: `the relay message lifetime, at most ${relayTtlMax.text}` with inside/outside refs.
   },
   {
     property: 'Metadata privacy',
@@ -178,23 +186,23 @@ export const claims: readonly Claim[] = defineClaims([
     decision: 'sync ADR-0031',
     tests: [
       sync('src/session/tests/push.rs', 'push_does_not_expose_stable_noise_key_to_relay'),
-      sync('src/session/tests/sealed_envelope.rs', 'two_sends_share_only_version_and_recipient'),
+      sync('src/envelope.rs', 'two_sends_share_only_version_and_recipient'),
     ],
   },
   {
     property: 'Metadata privacy',
     claim: 'The relay never logs, stores or uses your IP address.',
     decision: 'relay ADR-0012',
-    tests: [e2e('relay log and store hold no client address in normal and dev mode')],
+    tests: [g7PrivacySuite],
   },
   {
     property: 'Metadata privacy',
-    claim: 'Outside dev mode the relay logs no client metadata, and it ships no log viewer and no metrics endpoint.',
+    claim: 'Outside dev mode the relay logs no client metadata.',
     decision: 'relay ADR-0012',
-    tests: [
-      e2e('normal-mode relay log holds no client metadata'),
-      relay('cmd/trueseal-relay/main_test.go', 'TestServer_NoMetricsEndpoint'),
-    ],
+    tests: [g7PrivacySuite, relay('internal/relay/logging_privacy_test.go', 'TestLogs_NoClientMetadata')],
+    // "Ships no log viewer and no metrics endpoint" names no test, so it is not a claim (the DOCS-4
+    // rule). The shipped compose file carries only the relay since RELAY-15; a relay-side test that an
+    // unknown path on the health listener answers 404 is the follow-up that would let it return.
   },
   {
     property: 'Forward secrecy',

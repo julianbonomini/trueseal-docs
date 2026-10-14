@@ -19,7 +19,21 @@ test('runs on pull requests, pushes to main and by hand, with read-only contents
 
 test('runs the check with the sibling repos token and no other secret', () => {
   expect(steps.find(step => step.uses?.startsWith('oven-sh/setup-bun'))?.with?.['bun-version']).toBe('1.4.2');
-  const check = steps.find(step => step.run === 'bun scripts/check-threat-model.ts');
+  const check = steps.find(step => step.run?.includes('bun scripts/check-threat-model.ts'));
   expect(check?.env?.GITHUB_TOKEN).toBe('${{ secrets.SIBLING_REPOS_TOKEN }}');
   expect(source.match(/secrets\.\w+/g)).toEqual(['secrets.SIBLING_REPOS_TOKEN']);
+});
+
+test('a missing token is a loud NOT RUN, never silent green', () => {
+  const check = steps.find(step => step.run?.includes('bun scripts/check-threat-model.ts'));
+  // Exit 3 (no token) becomes a workflow warning annotation plus a step-summary banner, and the job
+  // stays green so docs PRs aren't blocked — but the wording must say NOT RUN and that G10 fails on it.
+  expect(check?.run).toContain('code=0');
+  expect(check?.run).toContain('[ "$code" -eq 3 ]');
+  expect(check?.run).toContain('::warning title=Threat Model named-tests leg NOT RUN::');
+  expect(check?.run).toContain('$GITHUB_STEP_SUMMARY');
+  expect(check?.run).toContain('NOT RUN');
+  expect(check?.run).toContain('G10 counts NOT RUN as a failure');
+  // Any other exit code (1 = a named test is missing, 2 = fetch failed) fails the job.
+  expect(check?.run).toContain('exit "$code"');
 });

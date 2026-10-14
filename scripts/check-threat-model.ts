@@ -3,14 +3,20 @@
 //
 //   GITHUB_TOKEN=$(gh auth token) bun scripts/check-threat-model.ts
 //
-// Exits 0 when every named test exists, 1 when any is missing, 2 when it can't fetch a file.
+// Exits 0 when every named test exists, 1 when any is missing, 2 when it can't fetch a file, and 3
+// when no token is set. Exit 3 is NOT RUN, not a pass: the Threat Model CI workflow turns it into a
+// loud warning annotation and a step-summary banner, and G10 counts a NOT RUN leg as a failure at
+// release. Never swallow exit 3 as silent green.
 import { missingTests } from './declared-tests.ts';
 import { testLocation, testRefs, type TestRef } from '../src/config/threatModel.ts';
 
 const token = process.env.GITHUB_TOKEN;
 if (!token) {
-  console.error('Set GITHUB_TOKEN to a token that can read the trueseal repos, trueseal-e2e included.');
-  process.exit(2);
+  console.log('THREAT MODEL NAMED-TESTS LEG: NOT RUN — GITHUB_TOKEN is not set, so the cross-repo');
+  console.log('test-existence check could not run. Every claim on the Threat Model page is UNVERIFIED');
+  console.log('until this leg runs green. This is a visible skip, not a pass: G10 counts NOT RUN as a');
+  console.log('failure at release. Set a token that can read the trueseal repos, trueseal-e2e included.');
+  process.exit(3);
 }
 
 const fileKey = (ref: TestRef) => `${ref.repo}/${ref.path}`;
