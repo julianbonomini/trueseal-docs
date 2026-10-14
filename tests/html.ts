@@ -16,9 +16,11 @@ export function text(html: string): string {
   return decode(html.replace(/<(script|style)[\s\S]*?<\/\1>/g, ' ').replace(/<[^>]+>/g, ' '));
 }
 
-/** The visible text outside code blocks. */
+/** The visible text outside code: no <pre> blocks and no inline <code>. Code quotes identifiers
+ *  verbatim (test names, API names), so the brandbook voice rules — which govern prose — don't apply
+ *  inside it. Banned terms in the claims data itself stay checked at the source (threat-model.test.ts). */
 export function prose(html: string): string {
-  return text(html.replace(/<pre[\s\S]*?<\/pre>/g, ' '));
+  return text(html.replace(/<pre[\s\S]*?<\/pre>/g, ' ').replace(/<code[\s\S]*?<\/code>/g, ' '));
 }
 
 /** The page's `<title>`, entities decoded. */
